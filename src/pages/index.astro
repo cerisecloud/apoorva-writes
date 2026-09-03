@@ -1,0 +1,37 @@
+---
+import { Image } from 'astro:assets';
+import apoorva from '../assets/apoorva.jpg';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<Image src={apoorva} alt="Apoorva Pothula" width={240} height={240} class="avatar" />
+			<h1>Hi, I'm Apoorva 👋</h1>
+			<p>
+				I'm a product manager and 0-to-1 builder. Over the last seven years I've built products
+				across e-pharmacy, insurance, food delivery and quick commerce — in India and Europe —
+				including a few industry firsts: India's first GLP-1 weight-loss medicine, its first OPD
+				insurance product, and its first multi-brand cloud kitchen.
+			</p>
+			<p>
+				This is my corner of the internet, where I write about product, health-tech, and what I
+				learn building things from scratch. When I'm not working, I'm usually deep in a board game
+				or tinkering on a quirky side project.
+			</p>
+			<p>
+				Start with <a href="/blog">the blog</a>, or read <a href="/about">more about me</a>.
+			</p>
+		</main>
+		<Footer />
+	</body>
+</html>

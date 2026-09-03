@@ -1,0 +1,179 @@
+/*
+  Dark, minimal, typography-led theme for Apoorva Pothula.
+  Base structure derived from Bear Blog's default CSS (MIT).
+ */
+
+:root {
+	--bg: #1a1a1a;
+	--accent: #7aa2ff;
+	--accent-hover: #a9c2ff;
+	--border: #2a2a2e;
+	--black: 245, 245, 246; /* headings / near-white */
+	--gray: 150, 152, 158; /* muted meta text (dates, captions) */
+	--gray-light: 42, 42, 46; /* surfaces: inline code background */
+	--gray-dark: 226, 227, 229; /* primary body text */
+	--gray-gradient: #202024, var(--bg);
+	--box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+body {
+	font-family: var(--font-inter);
+	margin: 0;
+	padding: 0;
+	text-align: left;
+	background: var(--bg);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	color: rgb(var(--gray-dark));
+	font-size: 20px;
+	line-height: 1.65;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+main {
+	width: 680px;
+	max-width: calc(100% - 2em);
+	margin: auto;
+	padding: 3em 1em;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0 0 0.5rem 0;
+	color: rgb(var(--black));
+	line-height: 1.25;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+h1 {
+	font-size: 2.25em;
+}
+h2 {
+	font-size: 1.6em;
+	margin-top: 1.6em;
+}
+h3 {
+	font-size: 1.3em;
+	margin-top: 1.3em;
+}
+h4 {
+	font-size: 1.1em;
+}
+h5 {
+	font-size: 1em;
+}
+strong,
+b {
+	font-weight: 600;
+	color: rgb(var(--black));
+}
+a {
+	color: var(--accent);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+	text-decoration-color: rgba(122, 162, 255, 0.4);
+	transition:
+		color 0.15s ease,
+		text-decoration-color 0.15s ease;
+}
+a:hover {
+	color: var(--accent-hover);
+	text-decoration-color: var(--accent-hover);
+}
+p {
+	margin-bottom: 1.2em;
+}
+.prose p {
+	margin-bottom: 1.5em;
+}
+textarea {
+	width: 100%;
+	font-size: 16px;
+}
+input {
+	font-size: 16px;
+}
+table {
+	width: 100%;
+}
+img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+}
+code {
+	padding: 2px 6px;
+	background-color: rgb(var(--gray-light));
+	border-radius: 4px;
+	font-size: 0.9em;
+}
+pre {
+	padding: 1.25em;
+	border-radius: 8px;
+	border: 1px solid var(--border);
+	overflow-x: auto;
+}
+pre > code {
+	all: unset;
+}
+blockquote {
+	border-left: 3px solid var(--accent);
+	padding: 0 0 0 1.2em;
+	margin: 0 0 1.2em 0;
+	font-size: 1.1em;
+	font-style: italic;
+	color: rgb(var(--gray-dark));
+}
+hr {
+	border: none;
+	border-top: 1px solid var(--border);
+	margin: 2.5em 0;
+}
+
+/* Round profile photo used on the home and About pages */
+.avatar {
+	display: block;
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 1px solid var(--border);
+	margin-bottom: 1.5em;
+}
+.avatar-center {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+@media (max-width: 720px) {
+	body {
+		font-size: 18px;
+	}
+	main {
+		padding: 1em;
+	}
+	h1 {
+		font-size: 1.9em;
+	}
+}
+
+.sr-only {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	position: absolute !important;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+	/* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+	clip: rect(1px 1px 1px 1px);
+	/* maybe deprecated but we need to support legacy browsers */
+	clip: rect(1px, 1px, 1px, 1px);
+	/* modern browsers, clip-path works inwards from each corner */
+	clip-path: inset(50%);
+	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
+	white-space: nowrap;
+}
