@@ -18,8 +18,9 @@ import Header from '../components/Header.astro';
 			<h1>Live Jobs Track</h1>
 			<p class="lede">
 				Product roles in Bangalore, picked up from LinkedIn within minutes of going live. A watcher
-				checks a rolling 30-minute window every few minutes and records everything it sees, so a role
-				usually lands here well before the applicant count climbs.
+				checks a rolling 30-minute window every five minutes and records everything it sees, so a role
+				usually lands here well before the applicant count climbs. The page refreshes itself
+				every minute, so you can leave it open.
 			</p>
 
 			<div id="status" class="status">Loading…</div>
@@ -366,6 +367,16 @@ import Header from '../components/Header.astro';
 						});
 				}
 				load(0);
+
+				// Poll the feed every 60s. The watcher checks LinkedIn every 5 min, so
+				// this is comfortably faster than new data can arrive. Pauses while the
+				// tab is hidden so a background tab is not making pointless requests.
+				setInterval(function () {
+					if (!document.hidden) load(0);
+				}, 60000);
+				document.addEventListener('visibilitychange', function () {
+					if (!document.hidden) load(0);
+				});
 			})();
 		</script>
 	</body>
