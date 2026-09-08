@@ -1,0 +1,342 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Live Jobs Track"
+			description="Product roles in Bangalore, picked up from LinkedIn within minutes of being posted."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="jobs-main">
+			<h1>Live Jobs Track</h1>
+			<p class="lede">
+				Product roles in Bangalore, picked up from LinkedIn within minutes of going live. A watcher
+				checks a rolling 30-minute window every few minutes and records everything it sees, so a role
+				usually lands here well before the applicant count climbs.
+			</p>
+
+			<div id="status" class="status">Loading…</div>
+
+			<div class="controls">
+				<input id="q" type="search" placeholder="Search title or company…" autocomplete="off" />
+				<select id="bucket">
+					<option value="matched">Product roles in Bangalore</option>
+					<option value="other">Everything filtered out</option>
+					<option value="all">Both</option>
+				</select>
+				<select id="sort">
+					<option value="found_desc">Newest found first</option>
+					<option value="found_asc">Oldest found first</option>
+					<option value="age_asc">Freshest when found</option>
+					<option value="company">Company A–Z</option>
+					<option value="title">Title A–Z</option>
+				</select>
+				<select id="since">
+					<option value="0">All time</option>
+					<option value="1">Last hour</option>
+					<option value="6">Last 6 hours</option>
+					<option value="24">Last 24 hours</option>
+					<option value="168">Last 7 days</option>
+				</select>
+				<span id="count" class="count"></span>
+			</div>
+
+			<div class="tablewrap">
+				<table id="tbl">
+					<thead>
+						<tr>
+							<th>Found</th>
+							<th>Age when found</th>
+							<th>Role</th>
+							<th>Company</th>
+							<th>Location</th>
+							<th>Seen</th>
+							<th class="why">Why filtered</th>
+						</tr>
+					</thead>
+					<tbody id="rows"></tbody>
+				</table>
+			</div>
+
+			<details class="health">
+				<summary>Watcher health</summary>
+				<p class="note" id="qnote"></p>
+				<pre id="polls"></pre>
+			</details>
+		</main>
+		<Footer />
+
+		<style>
+			.jobs-main {
+				width: 1040px;
+				max-width: calc(100% - 2em);
+				margin: auto;
+				padding: 2em 1em 3em;
+			}
+			.jobs-main h1 {
+				margin: 0 0 0.4em;
+			}
+			.lede {
+				color: rgb(var(--gray));
+				font-size: 0.9em;
+				margin: 0 0 1.5em;
+				max-width: 62ch;
+			}
+			.status {
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 0.7em 1em;
+				font-size: 0.72em;
+				color: rgb(var(--gray));
+				margin-bottom: 1.4em;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5em 1.6em;
+				align-items: center;
+			}
+			.status b {
+				color: rgb(var(--black));
+				font-weight: 600;
+			}
+			.status .live {
+				color: #6cc38f;
+			}
+			.status .stale {
+				color: #e0a33e;
+			}
+			.controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6em;
+				align-items: center;
+				margin-bottom: 1em;
+			}
+			.controls input,
+			.controls select {
+				background: #202024;
+				color: rgb(var(--gray-dark));
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 0.5em 0.7em;
+				font: inherit;
+				font-size: 0.72em;
+			}
+			.controls input {
+				flex: 1 1 200px;
+				min-width: 160px;
+			}
+			.controls input:focus,
+			.controls select:focus {
+				outline: none;
+				border-color: var(--accent);
+			}
+			.count {
+				color: rgb(var(--gray));
+				font-size: 0.7em;
+				margin-left: auto;
+			}
+			.tablewrap {
+				overflow-x: auto;
+				border: 1px solid var(--border);
+				border-radius: 10px;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.72em;
+			}
+			th {
+				text-align: left;
+				font-size: 0.82em;
+				letter-spacing: 0.05em;
+				text-transform: uppercase;
+				color: rgb(var(--gray));
+				font-weight: 600;
+				padding: 0.7em 0.9em;
+				border-bottom: 1px solid var(--border);
+				white-space: nowrap;
+			}
+			td {
+				padding: 0.65em 0.9em;
+				border-bottom: 1px solid var(--border);
+				vertical-align: top;
+			}
+			tbody tr:last-child td {
+				border-bottom: none;
+			}
+			.mono {
+				font-variant-numeric: tabular-nums;
+				color: rgb(var(--gray));
+				white-space: nowrap;
+			}
+			td a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+			td a:hover {
+				color: var(--accent-hover);
+				text-decoration: underline;
+			}
+			.whycell {
+				color: #e0a33e;
+				font-size: 0.9em;
+			}
+			.empty {
+				padding: 2em 1em;
+				text-align: center;
+				color: rgb(var(--gray));
+				font-style: italic;
+			}
+			.health {
+				margin-top: 2em;
+				font-size: 0.75em;
+				color: rgb(var(--gray));
+			}
+			.health summary {
+				cursor: pointer;
+				color: rgb(var(--gray));
+			}
+			.health pre {
+				background: #202024;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 0.9em;
+				overflow-x: auto;
+				font-size: 0.9em;
+				line-height: 1.7;
+			}
+			.note {
+				font-size: 0.95em;
+			}
+			@media (max-width: 720px) {
+				.why,
+				.whycell {
+					display: none;
+				}
+				.count {
+					margin-left: 0;
+					width: 100%;
+				}
+			}
+		</style>
+
+		<script is:inline>
+			(function () {
+				var DATA = null;
+				var el = function (id) { return document.getElementById(id); };
+				var esc = function (s) {
+					return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+						return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+					});
+				};
+				var pref = function (k, v) {
+					try {
+						if (v === undefined) return localStorage.getItem('ljt_' + k);
+						localStorage.setItem('ljt_' + k, v);
+					} catch (e) {}
+					return null;
+				};
+
+				function fmtWhen(iso) {
+					if (!iso) return '—';
+					var d = new Date(iso);
+					if (isNaN(d)) return iso;
+					var day = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+					var t = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+					return t + ' <span class="mono">' + day + '</span>';
+				}
+
+				function render() {
+					if (!DATA) return;
+					var q = el('q').value.trim().toLowerCase();
+					var bucket = el('bucket').value;
+					var sort = el('sort').value;
+					var since = parseFloat(el('since').value);
+					pref('bucket', bucket); pref('sort', sort); pref('since', since);
+
+					var cutoff = since > 0 ? Date.now() - since * 3600 * 1000 : 0;
+					var list = DATA.jobs.filter(function (j) {
+						if (bucket === 'matched' && j.bucket !== 'matched') return false;
+						if (bucket === 'other' && j.bucket === 'matched') return false;
+						if (cutoff && new Date(j.first_seen).getTime() < cutoff) return false;
+						if (q && (j.title + ' ' + j.company).toLowerCase().indexOf(q) === -1) return false;
+						return true;
+					});
+
+					list.sort(function (a, b) {
+						if (sort === 'found_asc') return a.first_seen.localeCompare(b.first_seen);
+						if (sort === 'found_desc') return b.first_seen.localeCompare(a.first_seen);
+						if (sort === 'age_asc') return (a.age_min == null ? 1e9 : a.age_min) - (b.age_min == null ? 1e9 : b.age_min);
+						if (sort === 'company') return (a.company || '').localeCompare(b.company || '');
+						if (sort === 'title') return (a.title || '').localeCompare(b.title || '');
+						return 0;
+					});
+
+					el('count').textContent = list.length + ' of ' + DATA.jobs.length + ' recorded';
+					if (!list.length) {
+						el('rows').innerHTML = '<tr><td colspan="7" class="empty">Nothing matches these filters yet.</td></tr>';
+						return;
+					}
+					el('rows').innerHTML = list.map(function (j) {
+						return '<tr>' +
+							'<td class="mono">' + fmtWhen(j.first_seen) + '</td>' +
+							'<td class="mono">' + esc(j.age_label || '—') + '</td>' +
+							'<td><a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + '</a></td>' +
+							'<td>' + esc(j.company) + '</td>' +
+							'<td>' + esc(j.location) + '</td>' +
+							'<td class="mono">' + (j.times_seen || 1) + '&times;</td>' +
+							'<td class="whycell">' + esc(j.reason || '') + '</td>' +
+						'</tr>';
+					}).join('');
+				}
+
+				function status() {
+					var c = DATA.counts || {};
+					var stale = DATA.stale_min == null ? 9999 : DATA.stale_min;
+					var every = DATA.poll_every_min || 5;
+					var live = stale < every * 2;
+					el('status').innerHTML =
+						'<span><b>' + (c.matched || 0) + '</b> product roles in Bangalore</span>' +
+						'<span><b>' + (c.other || 0) + '</b> filtered out</span>' +
+						'<span><b>' + (c.polls || 0) + '</b> checks</span>' +
+						'<span class="' + (live ? 'live' : 'stale') + '">' +
+							(live ? '&#9679; live' : '&#9679; paused') +
+							' &middot; last checked ' + Math.round(stale) + ' min ago</span>' +
+						(c.http429 ? '<span class="stale">' + c.http429 + ' rate limits</span>' : '');
+					var qy = DATA.query || {};
+					el('qnote').textContent =
+						'Query: keywords "' + qy.keywords + '", location "' + qy.location +
+						'", rolling window ' + qy.window + ', checked every ' + every + ' min. ' +
+						'Every posting seen is recorded, including the ones filtered out, so nothing is lost.';
+					el('polls').textContent = (DATA.polls || []).slice(0, 30).map(function (p) {
+						return p.ts + '  pages=' + p.pages + '  http=' + p.codes +
+							'  seen=' + p.seen + '  new=' + p.new + '  matched=' + p.matched;
+					}).join('\n') || 'No checks recorded yet.';
+				}
+
+				['bucket', 'sort', 'since'].forEach(function (k) {
+					var v = pref(k);
+					if (v !== null && el(k)) el(k).value = v;
+				});
+				['q', 'bucket', 'sort', 'since'].forEach(function (id) {
+					el(id).addEventListener(id === 'q' ? 'input' : 'change', render);
+				});
+
+				fetch('/jobs.json?t=' + Date.now())
+					.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+					.then(function (d) { DATA = d; status(); render(); })
+					.catch(function (e) {
+						el('status').innerHTML = '<span class="stale">Could not load the job feed (' + esc(e.message) + ').</span>';
+						el('rows').innerHTML = '<tr><td colspan="7" class="empty">No data yet.</td></tr>';
+					});
+			})();
+		</script>
+	</body>
+</html>
