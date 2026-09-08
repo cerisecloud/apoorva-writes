@@ -229,7 +229,14 @@ import Header from '../components/Header.astro';
 
 		<script is:inline>
 			(function () {
+				// ---- CONFIG -------------------------------------------------------
+				// After deploying the data Worker, put its /feed URL here to get live
+				// data on every page load. Blank means read the committed snapshot.
+				var WORKER_FEED = '';
+				// -------------------------------------------------------------------
+
 				var DATA = null;
+				var SOURCE = null;
 				var el = function (id) { return document.getElementById(id); };
 				var esc = function (s) {
 					return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -309,6 +316,10 @@ import Header from '../components/Header.astro';
 						'<span class="' + (live ? 'live' : 'stale') + '">' +
 							(live ? '&#9679; live' : '&#9679; paused') +
 							' &middot; last checked ' + Math.round(stale) + ' min ago</span>' +
+						'<span title="' + (SOURCE && SOURCE.label === 'live'
+							? 'Read straight from the data API, current on every load'
+							: 'Read from a snapshot committed to the site') + '">' +
+							(SOURCE && SOURCE.label === 'live' ? 'via API' : 'via snapshot') + '</span>' +
 						(c.http429 ? '<span class="stale">' + c.http429 + ' rate limits</span>' : '');
 					var qy = DATA.query || {};
 					el('qnote').textContent =
@@ -329,13 +340,32 @@ import Header from '../components/Header.astro';
 					el(id).addEventListener(id === 'q' ? 'input' : 'change', render);
 				});
 
-				fetch('/jobs.json?t=' + Date.now())
-					.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-					.then(function (d) { DATA = d; status(); render(); })
-					.catch(function (e) {
-						el('status').innerHTML = '<span class="stale">Could not load the job feed (' + esc(e.message) + ').</span>';
+				// Sources are tried in order. The Worker serves live data; /jobs.json is a
+				// committed snapshot used until the Worker is up, or if it ever goes down.
+				var sources = [];
+				if (WORKER_FEED) sources.push({ url: WORKER_FEED, label: 'live' });
+				sources.push({ url: '/jobs.json', label: 'snapshot' });
+
+				function load(i) {
+					if (i >= sources.length) {
+						el('status').innerHTML = '<span class="stale">Could not load the job feed.</span>';
 						el('rows').innerHTML = '<tr><td colspan="7" class="empty">No data yet.</td></tr>';
-					});
+						return;
+					}
+					var src = sources[i];
+					var u = src.url + (src.url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
+					fetch(u)
+						.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+						.then(function (d) {
+							if (!d || !Array.isArray(d.jobs)) throw new Error('unexpected feed shape');
+							DATA = d; SOURCE = src; status(); render();
+						})
+						.catch(function (e) {
+							if (window.console) console.warn('feed source failed: ' + src.url + ' — ' + e.message);
+							load(i + 1);
+						});
+				}
+				load(0);
 			})();
 		</script>
 	</body>

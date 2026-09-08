@@ -1,7 +1,7 @@
 {
- "generated": "2026-09-08T18:01:48Z",
- "last_poll": "2026-09-08T18:00:14Z",
- "stale_min": 1.6,
+ "generated": "2026-09-08T18:24:39Z",
+ "last_poll": "2026-09-08T18:24:39Z",
+ "stale_min": 0.0,
  "poll_every_min": 5,
  "query": {
   "keywords": "Product",
@@ -10,11 +10,179 @@
  },
  "counts": {
   "matched": 12,
-  "other": 38,
-  "polls": 15,
+  "other": 47,
+  "polls": 36,
   "http429": 0
  },
  "polls": [
+  {
+   "ts": "2026-09-08T18:24:39Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 16,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:24:20Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 10,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:23:00Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 16,
+   "new": 7,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:22:12Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 14,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:20:21Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:19:13Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:17:53Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:17:06Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:15:21Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 16,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:14:13Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 10,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:12:52Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:12:05Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:10:15Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:09:07Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 16,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:07:51Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 16,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:07:04Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:05:14Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:04:01Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 14,
+   "new": 2,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:02:45Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 10,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:02:14Z",
+   "pages": 1,
+   "codes": "200",
+   "seen": 1,
+   "new": 0,
+   "matched": 0
+  },
+  {
+   "ts": "2026-09-08T18:02:04Z",
+   "pages": 2,
+   "codes": "200,200",
+   "seen": 10,
+   "new": 0,
+   "matched": 0
+  },
   {
    "ts": "2026-09-08T18:00:14Z",
    "pages": 1,
@@ -138,6 +306,132 @@
  ],
  "jobs": [
   {
+   "id": "4452523196",
+   "title": "Senior Applied Scientist",
+   "company": "Oracle",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4452523196/",
+   "age_label": "34 minutes ago",
+   "age_min": 34,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4463548099",
+   "title": "Business Analyst",
+   "company": "Swiggy",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4463548099/",
+   "age_label": "30 minutes ago",
+   "age_min": 30,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4417883859",
+   "title": "Lead Software Technologist I - UI",
+   "company": "Philips",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4417883859/",
+   "age_label": "31 minutes ago",
+   "age_min": 31,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4443234316",
+   "title": "Advisory Solution Consultant - BFSI",
+   "company": "ServiceNow",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4443234316/",
+   "age_label": "31 minutes ago",
+   "age_min": 31,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4463544260",
+   "title": "Crypto Trading Intern",
+   "company": "Pipraiser",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4463544260/",
+   "age_label": "22 minutes ago",
+   "age_min": 22,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4442841790",
+   "title": "Support Engineer - Customer support",
+   "company": "Vendavo",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4442841790/",
+   "age_label": "37 minutes ago",
+   "age_min": 37,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4462540410",
+   "title": ".Net + Angular",
+   "company": "HCLTech",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4462540410/",
+   "age_label": "26 minutes ago",
+   "age_min": 26,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:23:00Z",
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 1
+  },
+  {
+   "id": "4464638747",
+   "title": "Full Stack Engineer - AVP",
+   "company": "Deutsche Bank",
+   "location": "Bengaluru, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4464638747/",
+   "age_label": "5 minutes ago",
+   "age_min": 5,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:04:01Z",
+   "last_seen": "2026-09-08T18:22:12Z",
+   "times_seen": 2
+  },
+  {
+   "id": "4445470897",
+   "title": "Senior Electrical Engineer I",
+   "company": "Beckman Coulter Diagnostics",
+   "location": "Bengaluru East, Karnataka, India",
+   "url": "https://www.linkedin.com/jobs/view/4445470897/",
+   "age_label": "21 minutes ago",
+   "age_min": 21,
+   "bucket": "rejected",
+   "reason": "no 'product' in title",
+   "first_seen": "2026-09-08T18:04:01Z",
+   "last_seen": "2026-09-08T18:22:12Z",
+   "times_seen": 2
+  },
+  {
    "id": "4288699900",
    "title": "Product Manager, Engagement",
    "company": "Skillz",
@@ -148,8 +442,8 @@
    "bucket": "matched",
    "reason": "",
    "first_seen": "2026-09-08T18:00:14Z",
-   "last_seen": "2026-09-08T18:00:14Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 2
   },
   {
    "id": "4464645589",
@@ -162,8 +456,8 @@
    "bucket": "matched",
    "reason": "",
    "first_seen": "2026-09-08T18:00:14Z",
-   "last_seen": "2026-09-08T18:00:14Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:23:00Z",
+   "times_seen": 2
   },
   {
    "id": "4452815583",
@@ -176,8 +470,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 6
   },
   {
    "id": "4463531189",
@@ -190,8 +484,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 8
   },
   {
    "id": "4455763882",
@@ -204,8 +498,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 6
   },
   {
    "id": "4464640360",
@@ -218,8 +512,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 6
   },
   {
    "id": "4463543093",
@@ -232,8 +526,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 8
   },
   {
    "id": "4445491051",
@@ -246,8 +540,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:40:11Z",
-   "last_seen": "2026-09-08T17:40:11Z",
-   "times_seen": 1
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 6
   },
   {
    "id": "4445491325",
@@ -260,8 +554,8 @@
    "bucket": "matched",
    "reason": "",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:58:54Z",
-   "times_seen": 10
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 30
   },
   {
    "id": "4463542064",
@@ -274,8 +568,8 @@
    "bucket": "matched",
    "reason": "",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4463545037",
@@ -288,8 +582,8 @@
    "bucket": "matched",
    "reason": "",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4445715543",
@@ -302,8 +596,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4387839555",
@@ -316,8 +610,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4444888908",
@@ -330,8 +624,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 14
   },
   {
    "id": "4388377406",
@@ -344,8 +638,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4297376850",
@@ -358,8 +652,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4445991227",
@@ -372,8 +666,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4464639420",
@@ -386,8 +680,8 @@
    "bucket": "rejected",
    "reason": "no 'product' in title",
    "first_seen": "2026-09-08T17:38:47Z",
-   "last_seen": "2026-09-08T17:48:53Z",
-   "times_seen": 3
+   "last_seen": "2026-09-08T18:24:39Z",
+   "times_seen": 13
   },
   {
    "id": "4445140269",
