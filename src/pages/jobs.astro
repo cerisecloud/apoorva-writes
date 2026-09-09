@@ -9,7 +9,7 @@ import Header from '../components/Header.astro';
 	<head>
 		<BaseHead
 			title="Live Jobs Track"
-			description="Product roles in Bangalore, picked up from LinkedIn within minutes of being posted."
+			description="Product roles in Bangalore, picked up from LinkedIn, Naukri and Hirist within minutes of being posted."
 		/>
 	</head>
 	<body>
@@ -17,13 +17,13 @@ import Header from '../components/Header.astro';
 		<main class="jobs-main">
 			<h1>Live Jobs Track</h1>
 			<p class="lede">
-				Product roles in Bangalore, picked up from LinkedIn within minutes of going live. A watcher
-				checks a rolling 30-minute window every ten minutes and records everything it sees, so a role
-				usually lands here well before the applicant count climbs. The page refreshes itself
-				every minute, so you can leave it open.
+				Product roles in Bangalore, gathered from LinkedIn, Naukri and Hirist. Watchers check each
+				board on its own schedule and record everything they see, so a role usually lands here well
+				before the applicant count climbs. This page refreshes itself every minute.
 			</p>
 
-			<div id="status" class="status">Loading…</div>
+			<div id="cards" class="cards"></div>
+			<div id="stale" class="stalebox"></div>
 
 			<div class="controls">
 				<input id="q" type="search" placeholder="Search title or company…" autocomplete="off" />
@@ -32,10 +32,17 @@ import Header from '../components/Header.astro';
 					<option value="other">Everything filtered out</option>
 					<option value="all">Both</option>
 				</select>
+				<select id="src">
+					<option value="all">All sources</option>
+					<option value="linkedin">LinkedIn</option>
+					<option value="naukri">Naukri</option>
+					<option value="hirist">Hirist</option>
+				</select>
 				<select id="sort">
 					<option value="found_desc">Newest found first</option>
 					<option value="found_asc">Oldest found first</option>
-					<option value="age_asc">Freshest when found</option>
+					<option value="lag_asc">Caught fastest first</option>
+					<option value="lag_desc">Caught slowest first</option>
 					<option value="company">Company A–Z</option>
 					<option value="title">Title A–Z</option>
 				</select>
@@ -46,17 +53,25 @@ import Header from '../components/Header.astro';
 					<option value="24">Last 24 hours</option>
 					<option value="168">Last 7 days</option>
 				</select>
-				<span id="count" class="count"></span>
+				<select id="pagesize">
+					<option value="25">25 per page</option>
+					<option value="50">50 per page</option>
+					<option value="100">100 per page</option>
+					<option value="0">Show all</option>
+				</select>
 			</div>
 
-			<div class="tablewrap">
-				<table id="tbl">
+			<div id="tablemeta" class="tablemeta"></div>
+
+			<div class="wrap">
+				<table>
 					<thead>
 						<tr>
 							<th>Found</th>
-							<th>Age when found</th>
+							<th>Caught after</th>
 							<th>Role</th>
 							<th>Company</th>
+							<th>Source</th>
 							<th>Location</th>
 							<th>Seen</th>
 							<th class="why">Why filtered</th>
@@ -65,97 +80,156 @@ import Header from '../components/Header.astro';
 					<tbody id="rows"></tbody>
 				</table>
 			</div>
+			<div id="pager" class="pager"></div>
 
-			<details class="health">
-				<summary>Watcher health</summary>
-				<p class="note" id="qnote"></p>
-				<pre id="polls"></pre>
-			</details>
+			<h2>Detection latency</h2>
+			<p class="note">
+				How long after a role was posted we actually caught it. Backfilled roles are counted
+				separately, because they are recovered after an outage and so are late by definition.
+			</p>
+			<div id="latency" class="latency"></div>
+
+			<h2>Run log</h2>
+			<p class="note" id="qnote"></p>
+			<div class="wrap">
+				<table class="logtable">
+					<thead>
+						<tr>
+							<th>When (UTC)</th>
+							<th>Pages</th>
+							<th>HTTP</th>
+							<th>Seen</th>
+							<th>New</th>
+							<th>Matched</th>
+						</tr>
+					</thead>
+					<tbody id="logrows"></tbody>
+				</table>
+			</div>
+			<div id="logpager" class="pager"></div>
 		</main>
 		<Footer />
 
-		<style>
+		<style is:global>
 			.jobs-main {
-				width: 1040px;
+				width: 1080px;
 				max-width: calc(100% - 2em);
 				margin: auto;
 				padding: 2em 1em 3em;
 			}
-			.jobs-main h1 {
-				margin: 0 0 0.4em;
-			}
-			.lede {
-				color: rgb(var(--gray));
-				font-size: 0.9em;
-				margin: 0 0 1.5em;
-				max-width: 62ch;
-			}
-			.status {
-				border: 1px solid var(--border);
-				border-radius: 10px;
-				padding: 0.7em 1em;
-				font-size: 0.72em;
-				color: rgb(var(--gray));
-				margin-bottom: 1.4em;
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.5em 1.6em;
-				align-items: center;
-			}
-			.status b {
+			.jobs-main h1 { margin: 0 0 0.4em; }
+			.jobs-main h2 {
+				font-size: 1em;
+				margin: 2.4em 0 0.3em;
 				color: rgb(var(--black));
-				font-weight: 600;
 			}
-			.status .live {
-				color: #6cc38f;
+			.jobs-main .lede {
+				color: rgb(var(--gray));
+				font-size: 0.85em;
+				margin: 0 0 1.6em;
+				max-width: 66ch;
 			}
-			.status .stale {
-				color: #e0a33e;
+			.jobs-main .note {
+				color: rgb(var(--gray));
+				font-size: 0.7em;
+				margin: 0 0 1em;
+				max-width: 74ch;
 			}
-			.controls {
+
+			/* ---- big headline numbers ---- */
+			.jobs-main .cards {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 0.6em;
+				gap: 12px;
+				margin: 0 0 1.2em;
+			}
+			.jobs-main .card {
+				background: #202024;
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 18px 24px;
+				flex: 1 1 150px;
+				min-width: 140px;
+			}
+			.jobs-main .card b {
+				display: block;
+				font-size: 2.1em;
+				line-height: 1.1;
+				font-weight: 600;
+				color: rgb(var(--black));
+				font-variant-numeric: tabular-nums;
+			}
+			.jobs-main .card span {
+				display: block;
+				margin-top: 4px;
+				font-size: 0.62em;
+				letter-spacing: 0.07em;
+				text-transform: uppercase;
+				color: rgb(var(--gray));
+			}
+			.jobs-main .card b i {
+				font-style: normal;
+				font-size: 0.4em;
+				font-weight: 500;
+				margin-left: 3px;
+				color: rgb(var(--gray));
+			}
+			.card.ok b { color: #6cc38f; }
+			.card.warn b { color: #e0a33e; }
+
+			.stalebox { margin: 0 0 1.2em; }
+			.jobs-main .stalebox .msg {
+				background: #3d1d1d;
+				border: 1px solid #f85149;
+				color: #ffa198;
+				border-radius: 10px;
+				padding: 12px 16px;
+				font-size: 0.72em;
+			}
+			.stalebox .msg b { color: #f85149; margin-right: 8px; letter-spacing: 0.06em; }
+
+			/* ---- controls ---- */
+			.jobs-main .controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.55em;
 				align-items: center;
-				margin-bottom: 1em;
+				margin-bottom: 0.9em;
 			}
 			.controls input,
-			.controls select {
+			.jobs-main .controls select {
 				background: #202024;
 				color: rgb(var(--gray-dark));
 				border: 1px solid var(--border);
 				border-radius: 8px;
 				padding: 0.5em 0.7em;
 				font: inherit;
-				font-size: 0.72em;
-			}
-			.controls input {
-				flex: 1 1 200px;
-				min-width: 160px;
-			}
-			.controls input:focus,
-			.controls select:focus {
-				outline: none;
-				border-color: var(--accent);
-			}
-			.count {
-				color: rgb(var(--gray));
 				font-size: 0.7em;
-				margin-left: auto;
 			}
-			.tablewrap {
+			.controls input { flex: 1 1 190px; min-width: 150px; }
+			.controls input:focus,
+			.controls select:focus { outline: none; border-color: var(--accent); }
+			.jobs-main .tablemeta {
+				font-size: 0.68em;
+				color: rgb(var(--gray));
+				margin-bottom: 0.6em;
+			}
+
+			/* ---- tables ---- */
+			.jobs-main .wrap {
 				overflow-x: auto;
 				border: 1px solid var(--border);
 				border-radius: 10px;
 			}
-			table {
+			.jobs-main table {
 				width: 100%;
 				border-collapse: collapse;
 				font-size: 0.72em;
+				background: var(--bg);
 			}
-			th {
+			.jobs-main th {
 				text-align: left;
-				font-size: 0.82em;
+				font-size: 0.8em;
 				letter-spacing: 0.05em;
 				text-transform: uppercase;
 				color: rgb(var(--gray));
@@ -164,80 +238,120 @@ import Header from '../components/Header.astro';
 				border-bottom: 1px solid var(--border);
 				white-space: nowrap;
 			}
-			td {
-				padding: 0.65em 0.9em;
+			.jobs-main td {
+				padding: 0.6em 0.9em;
 				border-bottom: 1px solid var(--border);
 				vertical-align: top;
 			}
-			tbody tr:last-child td {
-				border-bottom: none;
-			}
-			.mono {
+			tbody tr:last-child td { border-bottom: none; }
+			td a { color: var(--accent); text-decoration: none; }
+			td a:hover { color: var(--accent-hover); text-decoration: underline; }
+			.jobs-main .m {
 				font-variant-numeric: tabular-nums;
 				color: rgb(var(--gray));
 				white-space: nowrap;
 			}
-			td a {
-				color: var(--accent);
-				text-decoration: none;
-			}
-			td a:hover {
-				color: var(--accent-hover);
-				text-decoration: underline;
-			}
-			.whycell {
-				color: #e0a33e;
-				font-size: 0.9em;
-			}
-			.empty {
+			.dim { color: #484f58; }
+			.whycell { color: #e0a33e; font-size: 0.92em; }
+			.jobs-main .empty {
 				padding: 2em 1em;
 				text-align: center;
 				color: rgb(var(--gray));
 				font-style: italic;
 			}
-			.health {
-				margin-top: 2em;
-				font-size: 0.75em;
-				color: rgb(var(--gray));
+			.logtable td { font-variant-numeric: tabular-nums; color: rgb(var(--gray)); }
+
+			/* ---- pagination ---- */
+			.jobs-main .pager {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+				align-items: center;
+				margin: 0.9em 0 0;
+				font-size: 0.68em;
 			}
-			.health summary {
-				cursor: pointer;
-				color: rgb(var(--gray));
-			}
-			.health pre {
+			.jobs-main .pager button {
 				background: #202024;
+				color: rgb(var(--gray-dark));
 				border: 1px solid var(--border);
-				border-radius: 8px;
-				padding: 0.9em;
-				overflow-x: auto;
-				font-size: 0.9em;
-				line-height: 1.7;
+				border-radius: 7px;
+				padding: 0.42em 0.75em;
+				font: inherit;
+				font-size: 1em;
+				cursor: pointer;
+				font-variant-numeric: tabular-nums;
 			}
-			.note {
-				font-size: 0.95em;
+			.pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+			.jobs-main .pager button[aria-current='true'] {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #10131a;
+				font-weight: 600;
 			}
-			@media (max-width: 720px) {
-				.why,
-				.whycell {
-					display: none;
-				}
-				.count {
-					margin-left: 0;
-					width: 100%;
-				}
+			.pager button:disabled { opacity: 0.35; cursor: default; }
+			.pager .gap { color: rgb(var(--gray)); padding: 0 2px; }
+			.pager .of { color: rgb(var(--gray)); margin-left: 6px; }
+
+			/* ---- latency panels ---- */
+			.latency { display: flex; flex-wrap: wrap; gap: 12px; }
+			.jobs-main .lgroup {
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 14px 18px;
+				flex: 1 1 270px;
+			}
+			.jobs-main .lhead {
+				font-size: 0.6em;
+				text-transform: uppercase;
+				letter-spacing: 0.07em;
+				color: rgb(var(--gray));
+				margin-bottom: 10px;
+				font-weight: 600;
+			}
+			.lrow { display: flex; align-items: baseline; gap: 10px; font-size: 0.72em; }
+			.jobs-main .lrow b {
+				min-width: 74px;
+				color: rgb(var(--black));
+				font-variant-numeric: tabular-nums;
+			}
+			.lrow span { color: rgb(var(--gray)); }
+			.lnote { margin-top: 9px; font-size: 0.62em; color: #565a63; font-style: italic; }
+
+			/* ---- source pills + lag colours ---- */
+			.jobs-main .src {
+				font-size: 0.82em;
+				padding: 1px 7px;
+				border-radius: 20px;
+				border: 1px solid var(--border);
+				color: rgb(var(--gray));
+				white-space: nowrap;
+			}
+			.src-linkedin { color: #7aa2ff; border-color: #2c3c66; }
+			.src-hirist { color: #d9a05b; border-color: #5c4426; }
+			.src-naukri { color: #7fc4a8; border-color: #2c4f42; }
+			.lagA { color: #6cc38f; }
+			.lagB { color: #9ec96c; }
+			.lagC { color: #d29922; }
+			.lagD { color: #c96c6c; }
+
+			@media (max-width: 760px) {
+				.why, .whycell { display: none; }
+				.card { padding: 14px 16px; }
+				.card b { font-size: 1.7em; }
 			}
 		</style>
 
 		<script is:inline>
 			(function () {
 				// ---- CONFIG -------------------------------------------------------
-				// After deploying the data Worker, put its /feed URL here to get live
-				// data on every page load. Blank means read the committed snapshot.
+				// The deployed data API. Blank falls back to the committed jobs.json.
 				var WORKER_FEED = 'https://apoorva-jobs-api.pothulaa245.workers.dev/feed';
 				// -------------------------------------------------------------------
 
-				var DATA = null;
-				var SOURCE = null;
+				var DATA = null, SOURCE = null;
+				var page = 1, logPage = 1;
+				var LOG_PER_PAGE = 20;
+
 				var el = function (id) { return document.getElementById(id); };
 				var esc = function (s) {
 					return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -256,124 +370,247 @@ import Header from '../components/Header.astro';
 					if (!iso) return '—';
 					var d = new Date(iso);
 					if (isNaN(d)) return iso;
-					var day = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-					var t = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
-					return t + ' <span class="mono">' + day + '</span>';
+					return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) +
+					       ' <span class="dim">' +
+					       d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) + '</span>';
 				}
 
-				function render() {
-					if (!DATA) return;
+				function lagCell(j) {
+					if (j.detect_lag_min == null) return '<span class="dim">unknown</span>';
+					var m = j.detect_lag_min;
+					var cls = m < 5 ? 'lagA' : m < 15 ? 'lagB' : m < 30 ? 'lagC' : 'lagD';
+					var txt = m < 60 ? m + ' min' : (m / 60).toFixed(m < 600 ? 1 : 0) + ' hr';
+					var via = (j.reason || '').indexOf('backfill') >= 0 ? ' (backfilled)' : '';
+					return '<span class="' + cls + '" title="posted ' + esc(j.posted_at || '?') + '">' +
+					       txt + via + '</span>';
+				}
+
+				// Filtering runs over the WHOLE dataset. Pagination only slices the
+				// result at the very end, so a filter never sees just one page.
+				function filtered() {
 					var q = el('q').value.trim().toLowerCase();
 					var bucket = el('bucket').value;
+					var src = el('src').value;
 					var sort = el('sort').value;
 					var since = parseFloat(el('since').value);
-					pref('bucket', bucket); pref('sort', sort); pref('since', since);
-
 					var cutoff = since > 0 ? Date.now() - since * 3600 * 1000 : 0;
+
 					var list = DATA.jobs.filter(function (j) {
 						if (bucket === 'matched' && j.bucket !== 'matched') return false;
 						if (bucket === 'other' && j.bucket === 'matched') return false;
+						if (src !== 'all' && (j.source || 'linkedin') !== src) return false;
 						if (cutoff && new Date(j.first_seen).getTime() < cutoff) return false;
 						if (q && (j.title + ' ' + j.company).toLowerCase().indexOf(q) === -1) return false;
 						return true;
 					});
 
+					var big = 1e9;
 					list.sort(function (a, b) {
 						if (sort === 'found_asc') return a.first_seen.localeCompare(b.first_seen);
 						if (sort === 'found_desc') return b.first_seen.localeCompare(a.first_seen);
-						if (sort === 'age_asc') return (a.age_min == null ? 1e9 : a.age_min) - (b.age_min == null ? 1e9 : b.age_min);
+						if (sort === 'lag_asc')
+							return (a.detect_lag_min == null ? big : a.detect_lag_min) -
+							       (b.detect_lag_min == null ? big : b.detect_lag_min);
+						if (sort === 'lag_desc')
+							return (b.detect_lag_min == null ? -1 : b.detect_lag_min) -
+							       (a.detect_lag_min == null ? -1 : a.detect_lag_min);
 						if (sort === 'company') return (a.company || '').localeCompare(b.company || '');
 						if (sort === 'title') return (a.title || '').localeCompare(b.title || '');
 						return 0;
 					});
+					return list;
+				}
 
-					el('count').textContent = list.length + ' of ' + DATA.jobs.length + ' recorded';
-					if (!list.length) {
-						el('rows').innerHTML = '<tr><td colspan="7" class="empty">Nothing matches these filters yet.</td></tr>';
+				function pagerHtml(cur, total, fnName) {
+					if (total <= 1) return '';
+					var out = ['<button ' + (cur === 1 ? 'disabled' : '') +
+					           ' onclick="' + fnName + '(' + (cur - 1) + ')">Prev</button>'];
+					var nums = [];
+					for (var i = 1; i <= total; i++) {
+						if (i === 1 || i === total || Math.abs(i - cur) <= 2) nums.push(i);
+					}
+					var last = 0;
+					nums.forEach(function (i) {
+						if (last && i - last > 1) out.push('<span class="gap">…</span>');
+						out.push('<button ' + (i === cur ? 'aria-current="true"' : '') +
+						         ' onclick="' + fnName + '(' + i + ')">' + i + '</button>');
+						last = i;
+					});
+					out.push('<button ' + (cur === total ? 'disabled' : '') +
+					         ' onclick="' + fnName + '(' + (cur + 1) + ')">Next</button>');
+					out.push('<span class="of">page ' + cur + ' of ' + total + '</span>');
+					return out.join('');
+				}
+
+				function renderTable() {
+					var list = filtered();
+					var per = parseInt(el('pagesize').value, 10);
+					var total = per === 0 ? 1 : Math.max(1, Math.ceil(list.length / per));
+					if (page > total) page = total;
+					var slice = per === 0 ? list : list.slice((page - 1) * per, page * per);
+
+					var from = list.length ? (per === 0 ? 1 : (page - 1) * per + 1) : 0;
+					var to = per === 0 ? list.length : Math.min(page * per, list.length);
+					el('tablemeta').innerHTML = list.length
+						? 'Showing <b>' + from + '–' + to + '</b> of <b>' + list.length +
+						  '</b> matching · ' + DATA.jobs.length + ' recorded in total'
+						: 'Nothing matches these filters · ' + DATA.jobs.length + ' recorded in total';
+
+					if (!slice.length) {
+						el('rows').innerHTML = '<tr><td colspan="8" class="empty">Nothing matches these filters.</td></tr>';
+						el('pager').innerHTML = '';
 						return;
 					}
-					el('rows').innerHTML = list.map(function (j) {
+					el('rows').innerHTML = slice.map(function (j) {
+						var s = j.source || 'linkedin';
 						return '<tr>' +
-							'<td class="mono">' + fmtWhen(j.first_seen) + '</td>' +
-							'<td class="mono">' + esc(j.age_label || '—') + '</td>' +
-							'<td><a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + '</a></td>' +
+							'<td class="m">' + fmtWhen(j.first_seen) + '</td>' +
+							'<td class="m">' + lagCell(j) + '</td>' +
+							'<td><a href="' + esc(j.url) + '" target="_blank" rel="noopener">' +
+								esc(j.title) + '</a></td>' +
 							'<td>' + esc(j.company) + '</td>' +
+							'<td><span class="src src-' + esc(s) + '">' + esc(s) + '</span></td>' +
 							'<td>' + esc(j.location) + '</td>' +
-							'<td class="mono">' + (j.times_seen || 1) + '&times;</td>' +
+							'<td class="m">' + (j.times_seen || 1) + '&times;</td>' +
 							'<td class="whycell">' + esc(j.reason || '') + '</td>' +
 						'</tr>';
 					}).join('');
+					el('pager').innerHTML = pagerHtml(page, total, 'ljtGoPage');
 				}
 
-				function status() {
+				function renderLog() {
+					var polls = DATA.polls || [];
+					var total = Math.max(1, Math.ceil(polls.length / LOG_PER_PAGE));
+					if (logPage > total) logPage = total;
+					var slice = polls.slice((logPage - 1) * LOG_PER_PAGE, logPage * LOG_PER_PAGE);
+					if (!slice.length) {
+						el('logrows').innerHTML = '<tr><td colspan="6" class="empty">No runs recorded yet.</td></tr>';
+						el('logpager').innerHTML = '';
+						return;
+					}
+					el('logrows').innerHTML = slice.map(function (p) {
+						var bad = (p.codes || '').indexOf('429') >= 0;
+						return '<tr>' +
+							'<td>' + esc(p.ts) + '</td>' +
+							'<td>' + p.pages + '</td>' +
+							'<td' + (bad ? ' class="whycell"' : '') + '>' + esc(p.codes) + '</td>' +
+							'<td>' + p.seen + '</td>' +
+							'<td>' + p.new + '</td>' +
+							'<td>' + p.matched + '</td>' +
+						'</tr>';
+					}).join('');
+					el('logpager').innerHTML = pagerHtml(logPage, total, 'ljtGoLogPage');
+				}
+
+				function renderHeader() {
 					var c = DATA.counts || {};
 					var stale = DATA.stale_min == null ? 9999 : DATA.stale_min;
-					var every = DATA.poll_every_min || 5;
+					var every = DATA.poll_every_min || 10;
 					var live = stale < every * 2;
-					el('status').innerHTML =
-						'<span><b>' + (c.matched || 0) + '</b> product roles in Bangalore</span>' +
-						'<span><b>' + (c.other || 0) + '</b> filtered out</span>' +
-						'<span><b>' + (c.polls || 0) + '</b> checks</span>' +
-						'<span class="' + (live ? 'live' : 'stale') + '">' +
-							(live ? '&#9679; live' : '&#9679; paused') +
-							' &middot; last checked ' + Math.round(stale) + ' min ago</span>' +
-						'<span title="' + (SOURCE && SOURCE.label === 'live'
-							? 'Read straight from the data API, current on every load'
-							: 'Read from a snapshot committed to the site') + '">' +
-							(SOURCE && SOURCE.label === 'live' ? 'via API' : 'via snapshot') + '</span>' +
-						(c.http429 ? '<span class="stale">' + c.http429 + ' rate limits</span>' : '');
+					var via = SOURCE ? ({ live: 'via API', local: 'via local file',
+					                      snapshot: 'via snapshot' })[SOURCE.label] : '';
+
+					el('cards').innerHTML =
+						'<div class="card ok"><b>' + (c.matched || 0) + '</b>' +
+							'<span>Product roles</span></div>' +
+						'<div class="card"><b>' + (c.other || 0) + '</b>' +
+							'<span>Filtered out</span></div>' +
+						'<div class="card"><b>' + (c.polls || 0) + '</b>' +
+							'<span>Checks logged</span></div>' +
+						'<div class="card ' + (c.http429 ? 'warn' : '') + '"><b>' +
+							(c.http429 || 0) + '</b><span>Rate limits</span></div>' +
+						'<div class="card ' + (live ? 'ok' : 'warn') + '"><b>' +
+							Math.round(stale) + '<i>min</i></b>' +
+							'<span>Since last check</span></div>';
+
+					el('stale').innerHTML = live ? '' :
+						'<div class="msg"><b>STALLED</b> last check was ' + Math.round(stale) +
+						' min ago, expected every ' + every + ' min. The watcher may not be collecting.</div>';
+
 					var qy = DATA.query || {};
 					el('qnote').textContent =
-						'Query: keywords "' + qy.keywords + '", location "' + qy.location +
-						'", rolling window ' + qy.window + ', checked every ' + every + ' min. ' +
-						'Every posting seen is recorded, including the ones filtered out, so nothing is lost.';
-					el('polls').textContent = (DATA.polls || []).slice(0, 30).map(function (p) {
-						return p.ts + '  pages=' + p.pages + '  http=' + p.codes +
-							'  seen=' + p.seen + '  new=' + p.new + '  matched=' + p.matched;
-					}).join('\n') || 'No checks recorded yet.';
+						'LinkedIn query: keywords "' + qy.keywords + '", location "' + qy.location +
+						'", rolling window ' + qy.window + ', every ' + every + ' min. ' +
+						'Naukri and Hirist run on their own schedules and are not listed here. ' +
+						'The run log below shows the most recent ' +
+						((DATA.counts || {}).polls_shown || 0) + ' of ' +
+						((DATA.counts || {}).polls || 0) + ' checks. ' +
+						'Every posting seen is recorded, including filtered-out ones, which are ' +
+						'deleted after ' + (DATA.reject_keep_days || 3) + ' days. Feed read ' + via + '.';
 				}
 
-				['bucket', 'sort', 'since'].forEach(function (k) {
+				function renderLatency() {
+					var L = DATA.latency || {};
+					function block(t, st, note) {
+						if (!st) return '';
+						return '<div class="lgroup"><div class="lhead">' + t + '</div>' +
+							'<div class="lrow"><b>' + st.median + ' min</b><span>median</span></div>' +
+							'<div class="lrow"><b>' + st.p90 + ' min</b><span>90th percentile</span></div>' +
+							'<div class="lrow"><b>' + st.best + ' min</b><span>fastest</span></div>' +
+							'<div class="lrow"><b>' + Math.round(st.under15 / st.n * 100) + '%</b>' +
+								'<span>within 15 min</span></div>' +
+							'<div class="lnote">' + st.n + ' roles · ' + note + '</div></div>';
+					}
+					el('latency').innerHTML =
+						block('Caught live by polling', L.live, 'the number that matters') +
+						block('Recovered by backfill', L.backfilled,
+						      'found after an outage, so late by definition');
+				}
+
+				function renderAll() {
+					if (!DATA) return;
+					renderHeader(); renderLatency(); renderTable(); renderLog();
+				}
+
+				// pagers are wired via inline onclick, so they need globals
+				window.ljtGoPage = function (p) { page = p; renderTable();
+					document.querySelector('.controls').scrollIntoView({ block: 'nearest' }); };
+				window.ljtGoLogPage = function (p) { logPage = p; renderLog(); };
+
+				// any filter change resets to page 1, otherwise you can end up
+				// stranded on a page that no longer exists
+				['q', 'bucket', 'src', 'sort', 'since', 'pagesize'].forEach(function (id) {
+					el(id).addEventListener(id === 'q' ? 'input' : 'change', function () {
+						page = 1;
+						pref(id, el(id).value);
+						renderTable();
+					});
+				});
+				['bucket', 'src', 'sort', 'since', 'pagesize'].forEach(function (k) {
 					var v = pref(k);
 					if (v !== null && el(k)) el(k).value = v;
 				});
-				['q', 'bucket', 'sort', 'since'].forEach(function (id) {
-					el(id).addEventListener(id === 'q' ? 'input' : 'change', render);
-				});
 
-				// Sources are tried in order. The Worker serves live data; /jobs.json is a
-				// committed snapshot used until the Worker is up, or if it ever goes down.
-				var sources = [];
-				if (WORKER_FEED) sources.push({ url: WORKER_FEED, label: 'live' });
-				sources.push({ url: '/jobs.json', label: 'snapshot' });
+				// On localhost prefer this machine's own feed so you can watch local
+				// collection before publishing. In production the Worker comes first.
+				var isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+				var local = { url: '/jobs.json', label: 'local' };
+				var worker = WORKER_FEED ? { url: WORKER_FEED, label: 'live' } : null;
+				var sources = isLocal ? [local].concat(worker ? [worker] : [])
+				                      : (worker ? [worker, local] : [local]);
 
 				function load(i) {
 					if (i >= sources.length) {
-						el('status').innerHTML = '<span class="stale">Could not load the job feed.</span>';
-						el('rows').innerHTML = '<tr><td colspan="7" class="empty">No data yet.</td></tr>';
+						el('cards').innerHTML = '';
+						el('stale').innerHTML = '<div class="msg"><b>ERROR</b> could not load the job feed.</div>';
 						return;
 					}
-					var src = sources[i];
-					var u = src.url + (src.url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
+					var s = sources[i];
+					var u = s.url + (s.url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
 					fetch(u)
 						.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
 						.then(function (d) {
 							if (!d || !Array.isArray(d.jobs)) throw new Error('unexpected feed shape');
-							DATA = d; SOURCE = src; status(); render();
+							DATA = d; SOURCE = s; renderAll();
 						})
 						.catch(function (e) {
-							if (window.console) console.warn('feed source failed: ' + src.url + ' — ' + e.message);
+							if (window.console) console.warn('feed source failed: ' + s.url + ' — ' + e.message);
 							load(i + 1);
 						});
 				}
 				load(0);
 
-				// Poll the feed every 60s. The watcher checks LinkedIn every 5 min, so
-				// this is comfortably faster than new data can arrive. Pauses while the
-				// tab is hidden so a background tab is not making pointless requests.
-				setInterval(function () {
-					if (!document.hidden) load(0);
-				}, 60000);
+				setInterval(function () { if (!document.hidden) load(0); }, 60000);
 				document.addEventListener('visibilitychange', function () {
 					if (!document.hidden) load(0);
 				});
