@@ -14,6 +14,9 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			// Share-card image. Separate from heroImage so a post can have a
+			// social card without also showing it as a banner on the page.
+			ogImage: z.optional(image()),
 		}),
 });
 
