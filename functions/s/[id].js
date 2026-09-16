@@ -3,18 +3,18 @@
  * sends a human on to the game.
  *
  * It renders real HTML rather than redirecting: a redirect would bounce the
- * crawler to pizza.html and it would read the generic cover instead.
+ * crawler to the game page and it would read the generic cover instead.
  */
 const esc = s => String(s).replace(/[&<>"]/g, c =>
   ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
 export async function onRequestGet({ params, env, request }) {
   const id = String(params.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 32);
-  if (!id) return Response.redirect(new URL('/pizza.html', request.url), 302);
+  if (!id) return Response.redirect(new URL('/pizza', request.url), 302);
 
   const origin = new URL(request.url).origin;
   const img    = origin + '/i/' + id;
-  const game   = origin + '/pizza.html';
+  const game   = origin + '/pizza';
   const exists = env.PIZZAS ? await env.PIZZAS.get('img:' + id, 'stream') : null;
   const cover  = exists ? img : origin + '/og-cover.jpg';
 
