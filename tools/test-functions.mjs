@@ -57,7 +57,7 @@ console.log('\nupload');
   ok('og:image points at the stored pizza',
       html.includes('property="og:image" content="https://site.test/i/' + j.id + '"'));
   ok('twitter card is large image', html.includes('name="twitter:card" content="summary_large_image"'));
-  ok('links back to the game', html.includes('https://site.test/pizza.html'));
+  ok('links back to the game', html.includes('https://site.test/pizza'));
 
   const pr2 = await page.onRequestGet({ params:{ id:'doesnotexist' }, env, request: req('https://site.test/s/doesnotexist') });
   const html2 = await pr2.text();
