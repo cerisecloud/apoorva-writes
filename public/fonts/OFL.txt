@@ -1,0 +1,10 @@
+Silkscreen is licensed under the SIL Open Font License, Version 1.1.
+
+Copyright (c) 2001-2023, Jason Kottke (https://kottke.org)
+with Reserved Font Name "Silkscreen".
+
+The full licence text: https://openfontlicense.org
+
+This site ships only the latin subset at weight 400, taken from the file Google
+Fonts serves. It is self-hosted rather than loaded from fonts.gstatic.com so the
+page makes no third-party request before it can render.

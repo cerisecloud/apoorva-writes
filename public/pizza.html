@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Marco's Trattoria — Apoorva Pothula</title>
+<meta name="description" content="Marco's Trattoria. Build a pizza, bake it, see what comes out.">
+
+<!-- Crawlers read these from the HTML; they never run the game, so this cover
+     is the same for everyone. A shared pizza gets its own page at /s/<id>
+     whose tags point at that pizza. SITE must be the live origin. -->
+<meta property="og:type"            content="website">
+<meta property="og:site_name"       content="Marco's Trattoria">
+<meta property="og:title"           content="Marco's Trattoria">
+<meta property="og:description"     content="Build a pizza, bake it in a wood-fired oven, and see what comes out. Think you can do better?">
+<meta property="og:url"             content="https://apoorva-writes.pages.dev/pizza.html">
+<meta property="og:image"           content="https://apoorva-writes.pages.dev/og-cover.jpg">
+<meta property="og:image:width"     content="1200">
+<meta property="og:image:height"    content="630">
+<meta name="twitter:card"           content="summary_large_image">
+<meta name="twitter:title"          content="Marco's Trattoria">
+<meta name="twitter:description"    content="Build a pizza, bake it in a wood-fired oven, and see what comes out. Think you can do better?">
+<meta name="twitter:image"          content="https://apoorva-writes.pages.dev/og-cover.jpg">
+<link rel="preload" href="/fonts/silkscreen-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%235C94FC'/%3E%3Ccircle cx='8' cy='8' r='6.5' fill='%23E3C489'/%3E%3Ccircle cx='8' cy='8' r='5' fill='%23C8301C'/%3E%3Ccircle cx='6' cy='6' r='1.6' fill='%23D4432E'/%3E%3Ccircle cx='10' cy='9' r='1.6' fill='%23D4432E'/%3E%3C/svg%3E">
+<style>
+  /* Self-hosted, same origin, 3.5KB. The Google version cost a DNS lookup and a
+     TLS handshake to a third party before a single pixel could be drawn. Only
+     weight 400 and the latin subset are shipped, because that is all this uses.
+     Silkscreen by Jason Kottke, SIL Open Font License 1.1 - see fonts/OFL.txt */
+  @font-face{
+    font-family:'Silkscreen';
+    font-style:normal;
+    font-weight:400;
+    font-display:swap;
+    src:url('/fonts/silkscreen-400.woff2') format('woff2');
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#1a1a1a;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center;
+       font-family:Silkscreen,ui-monospace,Menlo,monospace;-webkit-font-smoothing:none;
+       touch-action:none;user-select:none}
+  #stage{position:relative;line-height:0}
+  #stage canvas{position:absolute;left:0;top:0;display:block;cursor:default}
+  #c{image-rendering:pixelated;image-rendering:crisp-edges;z-index:2}
+  #real{image-rendering:auto;z-index:1;background:#140D08}
+
+  #share{position:fixed;inset:0;z-index:50;display:flex;align-items:center;
+         justify-content:center;background:rgba(8,5,3,.88);padding:16px;overflow:auto}
+  #share[hidden]{display:none}
+  #share .sheet{width:min(430px,100%);max-height:100%;overflow:auto;background:#2A1A12;
+         border:3px solid #14100C;box-shadow:0 0 0 3px #6A4A2E,0 18px 40px rgba(0,0,0,.7);
+         padding:14px;font-family:Silkscreen,monospace;color:#F3EADB;user-select:text}
+  #share .hdr{font-size:14px;color:#FFC63C;letter-spacing:.06em;margin-bottom:10px}
+  /* the preview shrinks rather than pushing the buttons out of a short frame */
+  #share img{max-height:34vh;max-width:100%;width:auto;display:block;margin:0 auto 10px;
+         border:3px solid #14100C;image-rendering:auto;background:#140D08}
+  #share .lbl{display:block;font-size:9px;color:#B08A66;letter-spacing:.08em;margin-bottom:5px}
+  #share textarea{width:100%;background:#150E09;color:#F3EADB;border:2px solid #6A4A2E;
+         font-family:Silkscreen,monospace;font-size:11px;line-height:1.55;padding:8px;
+         resize:vertical;-webkit-font-smoothing:none}
+  #share textarea:focus{outline:none;border-color:#FFC63C}
+  #share .btns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 4px}
+  #share button,#share .btns a{font-family:Silkscreen,monospace;font-size:12px;
+         letter-spacing:.05em;padding:13px 6px;color:#F3EADB;background:#3E7D4E;
+         border:2px solid #14100C;cursor:pointer;text-align:center;text-decoration:none;
+         display:block}
+  #share button:hover,#share .btns a:hover{background:#56A36B}
+  #share .note{font-size:9px;line-height:1.55;color:#B08A66;margin:8px 0 10px}
+  #share #shareClose{width:100%;background:#5A2A1A}
+  #share #shareClose:hover{background:#7A3A24}
+</style>
+</head>
+<body>
+<div id="share" hidden>
+  <div class="sheet">
+    <div class="hdr">SHARE YOUR PIZZA</div>
+    <img id="shareImg" alt="Your baked pizza">
+    <label class="lbl" for="shareMsg">MESSAGE &mdash; EDIT IT HOWEVER YOU LIKE</label>
+    <textarea id="shareMsg" rows="4" spellcheck="false"></textarea>
+    <div class="btns">
+      <a id="btnWa" data-to="wa" target="_blank" rel="noopener noreferrer">WHATSAPP</a>
+      <a id="btnX"  data-to="x"  target="_blank" rel="noopener noreferrer">X</a>
+    </div>
+    <p class="note" id="shareNote"></p>
+    <button id="shareClose">CLOSE</button>
+  </div>
+</div>
+<div id="stage">
+  <canvas id="real"></canvas>
+  <canvas id="c" width="640" height="400"></canvas>
+</div>
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   MARCO'S TRATTORIA — v0.2
+   v0.1 was the counter. v0.2 adds the oven and the reveal: the pixel pizza you
+   built is re-rendered in full realism, with every topping in the exact place
+   you put it. Chef Marco and the score are v0.3.
+   See PIZZA-PLAN.md. The v1 build is in archive/ and is not the base for this.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const BUILD = '0.4.2';
+const CV = document.getElementById('c'), X = CV.getContext('2d');
+X.imageSmoothingEnabled = false;
+const W = 640, H = 400;
+/* the realistic reveal renders at 3x on its own canvas underneath */
+const RSC = 3;
+const RCV = document.getElementById('real'), RX = RCV.getContext('2d');
+RCV.width = W*RSC; RCV.height = H*RSC;
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §1  PALETTE — 16-bit. More ramps than v1, because shading is what makes a
+       bell pepper read as a bell pepper instead of a green disc.
+   ─────────────────────────────────────────────────────────────────────────── */
+const P = {
+  ink:'#2A1B12', shadow:'#3E2A1C',
+  /* Evening service. Dark warm room, one lamp over the counter, the oven
+     glowing off to the right. The food is now the brightest thing on screen -
+     which is the actual fix for the background stealing attention. */
+  wall:'#45312A', wallHi:'#66483A', wallLo:'#291C18', wallTile:'#E8EEF8',
+  wood:'#6E4726', woodHi:'#9A6836', woodLo:'#412815', woodEdge:'#4E301722',
+  flour:'#F3EADB', flourLo:'#DCD0BC',
+  lamp:'#FFD79A', glow:'#C2601C',
+  dough:'#F0D9A8', dough2:'#E3C489', dough3:'#C9A567', crust:'#A87838',
+  tomato:'#C8301C', tomatoHi:'#E04A2E', tomatoLo:'#9A1E10',
+  pesto:'#6B9A3A', pestoHi:'#86B94E', pestoLo:'#4A7025',
+  white:'#F2E8D5', whiteLo:'#DCCDB2',
+  nut:'#4A2C18', nutHi:'#6B4228',
+  mozz:'#FBF4E4', mozz2:'#EDE0C8', mozz3:'#D6C4A4',
+  ched:'#E8A33D', chedHi:'#F5BE5E', chedLo:'#C17E22',
+  gorg:'#F0EADC', gorgVein:'#6A7A8C', gorgLo:'#D6CEBC',
+  pep:'#D4432E', pepHi:'#E85C42', pepLo:'#A32A19', pepSpot:'#8B1E10',
+  mush:'#D8BC93', mushHi:'#EBD7B4', mushLo:'#9C7A52', mushGill:'#75593A',
+  bell:'#4CA832', bellHi:'#8CE066', bellLo:'#245E14', bellFlesh:'#CDEBA8',
+  pineCore:'#FFF1B8', pineFibre:'#D9A82C',
+  tile:'#59635A', tileLo:'#4A534B', tileGap:'#3D453E', tileEdge:'#343B35',
+  green:'#3E7D4E', greenHi:'#56A36B', greenLo:'#16351F',
+  /* the oven - these were being referenced before they existed, so every
+     brick and flame silently inherited the previous fillStyle */
+  brick:'#B84A22', brickLo:'#8A3212', crustDark:'#8A5A28',
+  flame:'#F87A18', ember:'#FFC63C', soot:'#3A2418',
+  onion:'#B378C0', onionHi:'#EBDCEF', onionLo:'#7A4686',
+  olive:'#4A414E', oliveHi:'#6B5F72', oliveLo:'#2A2430',
+  pine:'#F5C542', pineHi:'#FFE486', pineLo:'#C99A1E',
+  basil:'#3E8C34', basilHi:'#63B354',
+  oreg:'#7A9440', oregLo:'#586B2C',
+  chil:'#D4432E', chilHi:'#F07A3D',
+  saus:'#8C5A34', sausHi:'#AD7449', sausLo:'#5E3A20', sausFleck:'#E8D4B0',
+  ham2:'#E88DA0', hamHi:'#F7B9C6', hamLo:'#B85E73',
+  parm:'#F5EEDC', parmLo:'#DCCFB0',
+  bowl:'#DCC9AE', bowlHi:'#F0E2CC', bowlLo:'#A88F6E', bowlRim:'#8A7052',
+  ui:'#3A2A1E', uiHi:'#5A4230', uiText:'#F3EADB', gold:'#FFC63C', red:'#D4432E',
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §2  PIXEL-ART TOOLKIT
+       Every sprite is authored by hand below. 16 ingredients is few enough
+       that each one gets its own routine — which is the entire reason the
+       roster was cut from 93.
+   ─────────────────────────────────────────────────────────────────────────── */
+function canvasOf(w,h){ const c = document.createElement('canvas'); c.width=w; c.height=h; return c; }
+const hx = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+/* three-tone dithered falloff: how the era faked a light source */
+const ramp = (x,y,l,lo,mid,hi) =>
+  l > 0.66 ? (dith(x,y,(l-0.66)*3) ? hi : mid)
+: l > 0.33 ? (dith(x,y,(l-0.33)*3) ? mid : lo) : lo;
+
+function Pix(w,h){
+  const buf = new Array(w*h).fill(null);
+  const api = {
+    w, h, buf,
+    px(x,y,c){ x=Math.round(x); y=Math.round(y);
+      if(c && x>=0 && y>=0 && x<w && y<h) buf[y*w+x]=c; return api; },
+    get(x,y){ return (x>=0&&y>=0&&x<w&&y<h) ? buf[y*w+x] : null; },
+    box(x,y,bw,bh,c){ for(let j=0;j<bh;j++) for(let i=0;i<bw;i++) api.px(x+i,y+j,c); return api; },
+    disc(cx,cy,r,c,inner){
+      for(let y=Math.floor(cy-r);y<=cy+r;y++) for(let x=Math.floor(cx-r);x<=cx+r;x++){
+        const d=Math.hypot(x-cx,y-cy);
+        if(d<=r && (inner===undefined||d>=inner)) api.px(x,y,typeof c==='function'?c(x,y,d):c);
+      } return api;
+    },
+    ellipse(cx,cy,rx,ry,c){
+      for(let y=Math.floor(cy-ry);y<=cy+ry;y++) for(let x=Math.floor(cx-rx);x<=cx+rx;x++){
+        const u=(x-cx)/rx, v=(y-cy)/ry, d=Math.sqrt(u*u+v*v);
+        if(d<=1) api.px(x,y,typeof c==='function'?c(x,y,d):c);
+      } return api;
+    },
+    /* one-pixel ink outline around everything drawn so far — the unifier */
+    outline(c){
+      const out = buf.slice();
+      for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+        if(buf[y*w+x]) continue;
+        if((x>0&&buf[y*w+x-1])||(x<w-1&&buf[y*w+x+1])||
+           (y>0&&buf[(y-1)*w+x])||(y<h-1&&buf[(y+1)*w+x])) out[y*w+x]=c||P.ink;
+      }
+      for(let i=0;i<buf.length;i++) buf[i]=out[i];
+      return api;
+    },
+    bake(){
+      const cv = canvasOf(w,h), g = cv.getContext('2d');
+      const img = g.createImageData(w,h), d = img.data;
+      const hex = {};
+      for(let i=0;i<buf.length;i++){
+        const c = buf[i]; if(!c) continue;
+        let t = hex[c];
+        if(!t){ t = hex[c] = [parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]; }
+        d[i*4]=t[0]; d[i*4+1]=t[1]; d[i*4+2]=t[2]; d[i*4+3]=255;
+      }
+      g.putImageData(img,0,0);
+      return cv;
+    },
+  };
+  return api;
+}
+/* 4x4 ordered (Bayer) dither. EGA and early VGA games shaded almost nothing
+   with flat fills - they interleaved two palette colours in a checkerboard and
+   let the eye blend them. It is the single most period-accurate technique
+   available, and the reason Monster Bash's grass and dirt read the way they do. */
+const BAYER = [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+/* floors its inputs: sprites drawn in polar coordinates hand it floats, and
+   BAYER[0.31] is undefined rather than an error you can see */
+const dith = (x,y,t) => (BAYER[((Math.round(y)%4)+4)%4][((Math.round(x)%4)+4)%4] + 0.5)/16 < t;
+/* pick between two colours at blend t, on the dither grid */
+const dcol = (x,y,t,a,b) => dith(x,y,t) ? a : b;
+
+/* deterministic noise so every sprite is identical on every load */
+function rnd(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)|0;
+  let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §3  THE SIXTEEN
+       Sizes are proportional to a 224px pizza: a pepperoni is ~14% of the
+       diameter because that is what it is on a real pizza. v1 drew it at 5%.
+   ─────────────────────────────────────────────────────────────────────────── */
+const ART = {};
+
+/* ── pepperoni: cupped disc, charred speckles, rim darker than the face ── */
+ART.pepperoni = () => { const s=34, p=Pix(s,s), c=16.5, R=15, r=rnd(11);
+  p.disc(c,c,R,(x,y,d)=> d>R-2.0 ? P.pepLo
+                       : d>R-5.0 ? dcol(x,y,0.5,P.pep,P.pepLo)
+                       : d>R*0.42 ? P.pep
+                       : dcol(x,y,0.55,P.pepHi,P.pep));
+  /* crescent sheen along the upper-left rim only */
+  p.disc(c,c,R-2.6,(x,y,d)=>{ if(d < R-6.5) return null;
+    let a=Math.atan2(y-c,x-c); return (a<-0.35 && a>-2.6) ? P.pepHi : null; });
+  for(let i=0;i<5;i++){ const a=r()*6.28, dd=2+r()*(R-7);
+    p.box(c+Math.cos(a)*dd-1, c+Math.sin(a)*dd-1, 2, 2, P.pepSpot); }
+  p.disc(c,c,R,(x,y,d)=> (d>R-2.4 && y>c+5) ? '#8B1E10' : null);   /* cupped lip */
+  return p.outline().bake(); };
+
+/* ── mushroom: a slice. Cap dome, gills, stem. ── */
+ART.mushroom = () => { const s=30, p=Pix(s,s);
+  p.box(11,13,8,13,P.mushLo);                       /* stem */
+  p.box(12,13,6,12,P.mush);
+  p.box(12,13,2,12,P.mushHi);
+  p.ellipse(15,12,12,9,(x,y,d)=> d>0.88 ? P.mushLo
+                               : d>0.62 ? dcol(x,y,0.5,P.mush,P.mushLo)
+                               : P.mush);                  /* cap */
+  p.ellipse(11.5,8.5,6,4,(x,y,d)=> d>0.7?null:P.mushHi);   /* highlight */
+  for(let x=4;x<26;x+=1){                            /* gills */
+    const t=(x-15)/11, yy=17-Math.round(Math.abs(t)*2.4);
+    p.px(x,yy,P.mushGill); p.px(x,yy+1,P.mushGill); }
+  p.box(11,16,8,2,P.mushLo);
+  return p.outline().bake(); };
+
+/* ── bell pepper: a curved strip, not a disc ── */
+ART.bell = () => { const s=36, p=Pix(s,s), c=17.5;
+  /* A closed LOBED ring, not a crescent. A pepper slice keeps the lobes of the
+     whole pepper, the wall is thick and pale on the cut face, and the glossy
+     skin is only a thin line on the outer edge. The C-shape had none of that. */
+  /* Two harmonics rather than one. A single 3-lobe wave reads as a rounded
+     triangle and a 4-lobe one as a rounded square; mixing them gives the
+     irregular lobed outline a real pepper slice actually has. */
+  const OUT  = a => 15.0 + Math.cos(a*3 + 0.5)*1.5 + Math.cos(a*4 + 1.3)*0.95;
+  const HOLE = a =>  7.4 + Math.cos(a*3 + 0.5)*0.9 + Math.cos(a*4 + 1.3)*0.55;
+  for(let y=0;y<s;y++) for(let x=0;x<s;x++){
+    const dx=x-c, dy=y-c, d=Math.hypot(dx,dy);
+    let a=Math.atan2(dy,dx); if(a<0)a+=6.283;
+    const R=OUT(a), h=HOLE(a);
+    if(d>R || d<h) continue;
+    const t=(d-h)/(R-h);                                 /* 0 at hole, 1 at skin */
+    p.px(x, y, t>0.88 ? P.bellLo                         /* thin glossy skin    */
+             : t>0.78 ? dcol(x,y,0.5,P.bell,P.bellLo)
+             : t>0.58 ? P.bell                           /* most of the wall    */
+             : t>0.40 ? dcol(x,y,0.5,P.bellFlesh,P.bell)
+             : dcol(x,y,0.8,P.bellFlesh,P.bell));        /* pale cut face       */
+  }
+  /* wet highlight along the top-left skin */
+  for(let a=3.3;a<5.3;a+=0.015){
+    const R=OUT(a); p.px(c+Math.cos(a)*(R-0.8), c+Math.sin(a)*(R-0.8), P.bellHi); }
+  /* pale ribs poking into the hole, as in the reference */
+  for(let k=0;k<3;k++){ const a=k*2.0944 + 0.5, h=HOLE(a);
+    for(let d=h-1.6; d<h+1.2; d+=0.4)
+      p.px(c+Math.cos(a)*d, c+Math.sin(a)*d, P.bellFlesh); }
+  return p.outline().bake(); };
+
+/* ── red onion: concentric ring, translucent centre ── */
+ART.onion = () => { const s=32, p=Pix(s,s), c=16;
+  p.disc(c,c,14,(x,y,d)=>{ if(d<5.5) return null;
+    if(d>13) return P.onionLo;
+    const band=(d-5.5)%3.2;
+    return band<0.8 ? P.onionHi
+         : band<1.4 ? dcol(x,y,0.5,P.onionHi,P.onion)
+         : band<2.2 ? P.onion
+         : dcol(x,y,0.5,P.onion,P.onionLo); });
+  p.disc(c-2,c-3,11,(x,y,d)=> d>9.4||d<6.5?null:P.onionHi);
+  return p.outline().bake(); };
+
+/* ── black olive: ring with a wet highlight ── */
+ART.olive = () => { const s=22, p=Pix(s,s), c=11;
+  p.disc(c,c,9.5,(x,y,d)=> d<3.4 ? null
+                         : d>8.6 ? P.oliveLo
+                         : d>7.2 ? dcol(x,y,0.5,P.olive,P.oliveLo)
+                         : P.olive);
+  p.disc(c-2,c-2.5,6.5,(x,y,d)=> d>4.6||Math.hypot(x-c,y-c)<3.8?null:P.oliveHi);
+  return p.outline().bake(); };
+
+/* ── pineapple: a ridged chunk ── */
+ART.pineapple = () => { const s=32, p=Pix(s,s), c=15.5;
+  /* A RING, with the hole. The arc-segment version had no hole and no fibres,
+     so it was just a yellow shape. The hole and the radial grain are the only
+     two things that make pineapple read instantly as pineapple. */
+  const lobes=[]; const r=rnd(71);
+  for(let i=0;i<9;i++) lobes.push(1 - r()*0.11);      /* scalloped rim, where the eyes were cut out */
+  const outer = a => { const f=((a%6.283+6.283)/6.283)*9, i0=Math.floor(f)%9,
+    i1=(i0+1)%9, t=f-Math.floor(f); return 14*(lobes[i0]*(1-t)+lobes[i1]*t); };
+  const HOLE = 4.6;
+  for(let y=0;y<s;y++) for(let x=0;x<s;x++){
+    const dx=x-c, dy=y-c, d=Math.hypot(dx,dy); let a=Math.atan2(dy,dx); if(a<0)a+=6.283;
+    const R=outer(a);
+    if(d>R || d<HOLE) continue;
+    const t=(d-HOLE)/(R-HOLE);                         /* pale at the core, deep at the rim */
+    p.px(x, y, t>0.86 ? P.pineLo
+             : t>0.58 ? dcol(x,y,0.5,P.pine,P.pineLo)
+             : t>0.26 ? P.pine
+             : dcol(x,y,0.55,P.pineCore,P.pine));
+  }
+  /* radial fibres - the grain of the fruit */
+  for(let k=0;k<26;k++){ const a=(k/26)*6.283 + 0.06;
+    const R=outer(a);
+    for(let d=HOLE+1; d<R-0.8; d+=0.45)
+      p.px(c+Math.cos(a)*d, c+Math.sin(a)*d, d>(HOLE+R)/2 ? P.pineFibre : P.pineHi); }
+  /* wet highlight on the upper left, and a darker inner lip on the hole */
+  for(let a=3.5;a<5.2;a+=0.02) p.px(c+Math.cos(a)*10.4, c+Math.sin(a)*10.4, P.pineHi);
+  for(let a=0;a<6.283;a+=0.04) p.px(c+Math.cos(a)*(HOLE+0.5), c+Math.sin(a)*(HOLE+0.5), P.pineFibre);
+  return p.outline().bake(); };
+
+/* ── mozzarella: a melted irregular pool ── */
+ART.mozzarella = () => { const s=40, p=Pix(s,18+20), c=20, cy=17, r=rnd(7);
+  const wob=[]; for(let i=0;i<12;i++) wob.push(0.7+r()*0.34);
+  const rad=a=>{ const f=(a/6.283)*12, i0=Math.floor(f)%12, i1=(i0+1)%12, t=f-Math.floor(f);
+    return wob[i0]*(1-t)+wob[i1]*t; };
+  /* flatter than it is wide - it spread when it melted */
+  for(let y=0;y<38;y++) for(let x=0;x<40;x++){
+    const dx=(x-c)/18, dy=(y-cy)/12; let a=Math.atan2(dy,dx); if(a<0)a+=6.283;
+    const d=Math.sqrt(dx*dx+dy*dy), R=rad(a);
+    if(d>R) continue;
+    /* lit from the upper left, faded across the pool with a dither */
+    const l = clamp(0.62 - (dx+dy)*0.62, 0, 1);
+    p.px(x,y, d>R-0.16 ? P.mozz3 : ramp(x,y,l,P.mozz3,P.mozz2,P.mozz)); }
+  p.ellipse(c-5,cy-4,6.5,3.4,(x,y,d)=> d>0.8?null:P.mozz);
+  p.ellipse(c+5,cy+3,4,2.2,(x,y,d)=> d>0.8?null:P.mozz3);
+  return p.outline().bake(); };
+
+/* ── cheddar: a pile of shreds ── */
+ART.cheddar = () => { const s=32, p=Pix(s,s), r=rnd(3);
+  for(let k=0;k<5;k++){
+    const y0=5+k*4.6+(r()*1.6), x0=4+r()*3, len=20+r()*5;
+    for(let i=0;i<len;i++){ const x=x0+i, y=y0+i*0.26+(k%2?0.6:0);
+      p.px(x,y, k%2?P.chedHi:P.ched); p.px(x,y+1,P.ched); p.px(x,y+2,P.chedLo); } }
+  return p.outline().bake(); };
+
+/* ── gorgonzola: crumbled, veined ── */
+ART.gorgonzola = () => { const s=28, p=Pix(s,s), c=14, r=rnd(19);
+  const wob=[]; for(let i=0;i<8;i++) wob.push(0.78+r()*0.24);
+  p.disc(c,c,12,(x,y,d)=>{ let a=Math.atan2(y-c,x-c); if(a<0)a+=6.283;
+    const f=(a/6.283)*8, i0=Math.floor(f)%8, i1=(i0+1)%8, t=f-Math.floor(f);
+    const R=12*(wob[i0]*(1-t)+wob[i1]*t);
+    if(d>R) return null;
+    return d>R-2 ? P.gorgLo : d>R-4 ? dcol(x,y,0.5,P.gorg,P.gorgLo) : P.gorg; });
+  for(let k=0;k<5;k++){ const a=r()*6.283, dd=r()*7, x=c+Math.cos(a)*dd, y=c+Math.sin(a)*dd;
+    for(let i=0;i<3+((r()*3)|0);i++) p.px(x+i*(r()<0.5?1:-1), y+((i*0.7)|0), P.gorgVein); }
+  return p.outline().bake(); };
+
+/* ── sausage: crumbled, lumpy, cooked ── */
+ART.sausage = () => { const s=30, p=Pix(s,s), c=15, r=rnd(23);
+  const wob=[]; for(let i=0;i<9;i++) wob.push(0.68+r()*0.36);
+  p.disc(c,c,13,(x,y,d)=>{ let a=Math.atan2(y-c,x-c); if(a<0)a+=6.283;
+    const f=(a/6.283)*9, i0=Math.floor(f)%9, i1=(i0+1)%9, t=f-Math.floor(f);
+    const R=13*(wob[i0]*(1-t)+wob[i1]*t);
+    if(d>R) return null;
+    if(d>R-2) return P.sausLo;
+    const l = clamp(0.6 - ((x-c)+(y-c))*0.055, 0, 1);
+    return ramp(x,y,l,P.sausLo,P.saus,P.sausHi); });
+  for(let i=0;i<6;i++){ const a=r()*6.28, dd=r()*8;
+    p.box(c+Math.cos(a)*dd, c+Math.sin(a)*dd, 2, 2, r()<0.4?P.sausFleck:P.sausLo); }
+  return p.outline().bake(); };
+
+/* ── ham: a torn folded slice ── */
+ART.ham = () => { const s=32, p=Pix(s,s), c=16, r=rnd(29);
+  const wob=[]; for(let i=0;i<10;i++) wob.push(0.74+r()*0.3);
+  p.disc(c,c,14,(x,y,d)=>{ let a=Math.atan2(y-c,x-c); if(a<0)a+=6.283;
+    const f=(a/6.283)*10, i0=Math.floor(f)%10, i1=(i0+1)%10, t=f-Math.floor(f);
+    const R=14*(wob[i0]*(1-t)+wob[i1]*t);
+    if(d>R) return null;
+    if(d>R-1.8) return P.hamLo;
+    const l = clamp(0.62 - ((x-c)+(y-c))*0.05, 0, 1);
+    return ramp(x,y,l,P.hamLo,P.ham2,P.hamHi); });
+  for(let x=3;x<29;x++){ const y=c-3+Math.sin((x-3)*0.42)*3.2;    /* the fold */
+    p.px(x,y,P.hamHi); p.px(x,y+1,P.hamHi); p.px(x,y+2,P.hamLo); }
+  for(let i=0;i<4;i++){ const a=r()*6.28, dd=3+r()*8;
+    p.box(c+Math.cos(a)*dd, c+Math.sin(a)*dd, 2, 2, P.hamHi); }
+  return p.outline().bake(); };
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §4  THE ROSTER
+       Three ways to apply a thing, because there are three ways in a kitchen:
+
+         paint    - sauces. Press and drag.
+         place    - anything that arrives in pieces: meat, veg, mozzarella.
+         scatter  - anything that arrives grated or crumbled. Which is MOST
+                    cheese: cheddar, parmesan and gorgonzola are shaken on,
+                    not laid down. Only mozzarella is placed in blobs.
+
+       `layer` decides what ends up on top: grated cheese goes under the
+       toppings, seasoning goes over them, the way you would actually build it.
+   ─────────────────────────────────────────────────────────────────────────── */
+const ING = [
+  /* ── SAUCE ── */
+  {id:'tomato',  n:'TOMATO',  cat:'sauce', mode:'paint', col:P.tomato, col2:P.tomatoLo},
+  {id:'pesto',   n:'PESTO',   cat:'sauce', mode:'paint', col:P.pesto,  col2:P.pestoLo},
+  {id:'white',   n:'WHITE',   cat:'sauce', mode:'paint', col:P.white,  col2:P.whiteLo},
+  {id:'nutella', n:'NUTELLA', cat:'sauce', mode:'paint', col:P.nut,    col2:'#33200F'},
+
+  /* ── CHEESE — one placed, three grated ── */
+  {id:'mozzarella', n:'MOZZARELLA', cat:'cheese', mode:'place', art:'mozzarella'},
+  {id:'cheddar',    n:'CHEDDAR',    cat:'cheese', mode:'scatter', layer:'under',
+   bits:{cols:[P.ched,P.chedHi,P.chedLo], shred:true, spread:32, n:7, sz:4}},
+  {id:'parmesan',   n:'PARMESAN',   cat:'cheese', mode:'scatter', layer:'under',
+   bits:{cols:[P.parm,P.parmLo,'#FFFFFF'], shred:false, spread:34, n:7, sz:2}},
+  {id:'gorgonzola', n:'GORGONZOLA', cat:'cheese', mode:'scatter', layer:'under',
+   bits:{cols:[P.gorg,P.gorgLo,P.gorgVein], shred:false, spread:26, n:4, sz:4}},
+
+  /* ── MEAT ── */
+  {id:'pepperoni', n:'PEPPERONI', cat:'meat', mode:'place', art:'pepperoni'},
+  {id:'sausage',   n:'SAUSAGE',   cat:'meat', mode:'place', art:'sausage'},
+  {id:'ham',       n:'HAM',       cat:'meat', mode:'place', art:'ham'},
+
+  /* ── TOPPING ── */
+  {id:'mushroom',  n:'MUSHROOM',  cat:'top', mode:'place', art:'mushroom'},
+  {id:'bell',      n:'PEPPER',    cat:'top', mode:'place', art:'bell'},
+  {id:'onion',     n:'ONION',     cat:'top', mode:'place', art:'onion'},
+  {id:'olive',     n:'OLIVE',     cat:'top', mode:'place', art:'olive'},
+  {id:'pineapple', n:'PINEAPPLE', cat:'top', mode:'place', art:'pineapple'},
+
+  /* ── SEASONING ── */
+  {id:'oregano',       n:'OREGANO', cat:'season', mode:'scatter', layer:'over',
+   bits:{cols:[P.oreg,P.oregLo,P.basilHi], shred:false, spread:26, n:4, sz:3}},
+  {id:'chilli_flakes', n:'CHILLI',  cat:'season', mode:'scatter', layer:'over',
+   bits:{cols:[P.chil,P.chilHi,P.pepLo],   shred:false, spread:26, n:4, sz:3}},
+  {id:'basil',         n:'BASIL',   cat:'season', mode:'scatter', layer:'over',
+   bits:{cols:[P.basil,P.basilHi,P.pesto], shred:true,  spread:24, n:3, sz:4}},
+];
+const CATS = [
+  {k:'sauce',  label:'SAUCE'},
+  {k:'cheese', label:'CHEESE'},
+  {k:'meat',   label:'MEAT'},
+  {k:'top',    label:'TOPPING'},
+  {k:'season', label:'SEASONING'},
+];
+const BY = {}; ING.forEach(i => BY[i.id] = i);
+ING.forEach(i => { if (i.art) i.img = ART[i.art](); });
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §5  GEOMETRY + STATE
+   ─────────────────────────────────────────────────────────────────────────── */
+const PZ = {cx:320, cy:156, R:112, dough:100};          /* 224px across */
+const SH = {top:272};                                    /* shelf */
+
+const S = {
+  sel:null, scrape:false, scale:1, t:0, cat:'sauce', page:0,
+  screen:'build', ovenT:0, revealT:0, ovenStart:0, used:new Set(), err:null, baked:false,
+  tops:[],          /* {id,x,y,flip} relative to pizza centre */
+  bits:[],          /* seasoning particles */
+  charge:0, lastP:null, painting:false,
+};
+
+/* sauce lives on its own half-res canvas: 112x112 cells over a 224px pizza,
+   blitted at x2 so every brush mark stays visibly chunky */
+const SAUCE_N = 112;
+const sauceCv = canvasOf(SAUCE_N, SAUCE_N), sauceX = sauceCv.getContext('2d');
+sauceX.imageSmoothingEnabled = false;
+let sauceUsed = false;
+
+function resize(){
+  /* Integer scaling above 1x keeps the pixels crisp. Below 1x we shrink
+     fractionally rather than overflow - a clipped canvas is worse than a
+     slightly soft one, and small windows are real. */
+  const raw = Math.min(innerWidth/W, innerHeight/H);
+  const s = raw >= 1 ? Math.floor(raw) : raw;
+  S.scale = s;
+  for (const el of [CV, RCV]){ el.style.width=(W*s)+'px'; el.style.height=(H*s)+'px'; }
+  document.getElementById('stage').style.width=(W*s)+'px';
+  document.getElementById('stage').style.height=(H*s)+'px';
+}
+addEventListener('resize', resize); resize();
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §6  SAUCE AS PAINT
+       A splatter you drag out. The brush carries a charge that runs down as
+       you pull away from where you pressed, so the colour thins toward the
+       end of a stroke the way watercolour does. Press again to reload.
+   ─────────────────────────────────────────────────────────────────────────── */
+function toCell(x,y){ return [(x-(PZ.cx-PZ.R))/2, (y-(PZ.cy-PZ.R))/2]; }
+
+function paintSauce(x, y, fresh){
+  const ing = BY[S.sel]; if(!ing || ing.cat!=='sauce') return;
+  const [cxp, cyp] = toCell(x, y);
+  if (fresh) S.charge = 1;
+  const load = S.charge;
+  if (load <= 0.05) return;
+  const g = sauceX;
+  const rad = 7 + load*4.5;                   /* fat when loaded, fine when dry */
+  /* Flat tones plus a dither at the dry end, not alpha. Alpha made every
+     overlapping stroke darker and the whole base went blotchy. */
+  const thin = load < 0.34;
+  g.fillStyle = load > 0.62 ? ing.col : ing.col2;
+  const r2 = rad*rad;
+  for(let j=-Math.ceil(rad); j<=rad; j++) for(let i=-Math.ceil(rad); i<=rad; i++){
+    const dd = i*i+j*j; if(dd > r2) continue;
+    const px = Math.round(cxp+i), py = Math.round(cyp+j);
+    if (thin && ((px+py) & 1)) continue;                     /* dithered, running out */
+    if (dd > r2*0.86 && ((px*3+py) % 3 === 0)) continue;     /* ragged brush edge */
+    const dx = (px-SAUCE_N/2), dy = (py-SAUCE_N/2);
+    if (dx*dx+dy*dy > (PZ.dough/2)*(PZ.dough/2)) continue;   /* stay off the crust */
+    g.fillRect(px, py, 1, 1);
+  }
+  sauceUsed = true;
+  S.used.add(S.sel);
+}
+function sauceStroke(x, y){
+  if (!S.lastP){ paintSauce(x,y,true); S.lastP=[x,y]; return; }
+  const [lx,ly] = S.lastP, dist = Math.hypot(x-lx, y-ly);
+  const steps = Math.max(1, Math.ceil(dist/2));
+  for(let i=1;i<=steps;i++){
+    const t=i/steps;
+    paintSauce(lx+(x-lx)*t, ly+(y-ly)*t, false);
+    S.charge = Math.max(0, S.charge - (dist/steps)*0.0058);  /* paint runs out */
+  }
+  S.lastP=[x,y];
+}
+function wipeSauceAt(x,y){
+  const [cxp,cyp]=toCell(x,y), rad=9;
+  sauceX.save(); sauceX.globalCompositeOperation='destination-out';
+  sauceX.beginPath(); sauceX.arc(cxp,cyp,rad,0,7); sauceX.fill(); sauceX.restore();
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §7  THE COUNTER — baked once
+   ─────────────────────────────────────────────────────────────────────────── */
+const counterCv = canvasOf(W, SH.top), cX = counterCv.getContext('2d');
+(function bakeCounter(){
+  const g = cX, r = rnd(99);
+  const put=(x,y,w,h,c)=>{ g.fillStyle=c; g.fillRect(x,y,w,h); };
+  /* Wall and counter are dithered gradients rather than flat fills. Flat fill
+     is what made the whole scene read as modern pixel art; interleaving two
+     palette tones is what makes it read as 1993. */
+  const img = g.createImageData(W, SH.top), d = img.data;
+  const C = {wHi:hx(P.wallHi), w:hx(P.wall), wLo:hx(P.wallLo), ink:hx(P.ink),
+             wd:hx(P.wood), wdHi:hx(P.woodHi), wdLo:hx(P.woodLo), glow:hx(P.glow)};
+  /* one lamp over the counter, plus the oven throwing heat from the right */
+  const lampAt = (x,y) => clamp(1.22 - Math.hypot((x-PZ.cx)*0.86, (y-PZ.cy+18))/250, 0, 1);
+  const ovenAt = (x,y) => clamp(0.85 - Math.hypot((x-628)*0.7, (y-210))/260, 0, 1);
+  for(let y=0;y<SH.top;y++) for(let x=0;x<W;x++){
+    let col;
+    const L = Math.min(1, lampAt(x,y) + ovenAt(x,y)*0.75);
+    if (y < 148){
+      col = ramp(x, y, L*0.85 + 0.08, C.wLo, C.w, C.wHi);
+      if (ovenAt(x,y) > 0.22 && dith(x,y,(ovenAt(x,y)-0.22)*1.4)) col = C.glow;
+    } else if (y < 152){
+      col = C.ink;
+    } else {
+      col = ramp(x, y, L, C.wdLo, C.wd, C.wdHi);
+    }
+    const i=(y*W+x)*4; d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255;
+  }
+  g.putImageData(img,0,0);
+  for(let k=0;k<5;k++) put(0,152+k*30,W,2,P.woodLo);          /* plank seams */
+  for(let i=0;i<520;i++){                                      /* grain */
+    const x=r()*W, y=152+r()*(SH.top-158), l=6+r()*26;
+    g.fillStyle = r()<0.5 ? P.woodHi : P.woodLo; g.globalAlpha=0.28+r()*0.3;
+    g.fillRect(x,y,l,1); }
+  g.globalAlpha=1;
+  put(0,152,W,3,P.woodHi);
+  /* flour dust */
+  for(let i=0;i<260;i++){ const x=r()*W, y=158+r()*(SH.top-166);
+    const d=Math.hypot(x-PZ.cx,y-PZ.cy);
+    g.globalAlpha = Math.max(0.05, 0.5 - Math.abs(d-PZ.R-24)/70);
+    g.fillStyle = r()<0.3 ? P.flourLo : P.flour;
+    const sz = r()<0.75?1:2; g.fillRect(x,y,sz,sz); }
+  g.globalAlpha=1;
+})();
+
+/* ── the shelf behind the bowls ──
+   Muted, low-contrast, dithered. The bright white version read as a tile wall
+   first and a backdrop second, which pulled the eye straight off the food.
+   Same tiles, turned down until they recede. */
+const shelfCv = canvasOf(W, H-SH.top);
+(function bakeShelf(){
+  const g = shelfCv.getContext('2d'), h = H-SH.top;
+  const img = g.createImageData(W,h), d = img.data;
+  const C = {t:hx(P.tile), lo:hx(P.tileLo), gap:hx(P.tileGap), ed:hx(P.tileEdge)};
+  const TW=46, TH=23, TOP=7;
+  for(let y=0;y<h;y++) for(let x=0;x<W;x++){
+    let col = C.gap;
+    if (y >= TOP){
+      const row = Math.floor((y-TOP)/TH), off = (row%2) ? TW/2 : 0;
+      const lx = ((x + off) % TW + TW) % TW, ly = (y-TOP) % TH;
+      if (lx >= 1 && ly >= 1){
+        /* lit from the counter above, falling off downwards */
+        const L = clamp(0.9 - (y/h)*0.55 - (ly/TH)*0.25, 0, 1);
+        col = ramp(x, y, L, C.gap, C.lo, C.t);
+        if (ly >= TH-2 || lx >= TW-2) col = C.ed;          /* soft grout */
+      }
+    }
+    const i=(y*W+x)*4; d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255;
+  }
+  g.putImageData(img,0,0);
+  g.fillStyle=P.ink;      g.fillRect(0,0,W,3);
+  g.fillStyle='#8A6A42';  g.fillRect(0,3,W,4);              /* counter lip */
+  g.fillStyle='#C29A62';  g.fillRect(0,3,W,1);
+})();
+
+/* ── the dough base, baked once ── */
+const baseCv = canvasOf(PZ.R*2+4, PZ.R*2+4);
+(function bakeBase(){
+  const g=baseCv.getContext('2d'), c=PZ.R+2, r=rnd(42);
+  const wob=[]; for(let i=0;i<24;i++) wob.push(0.985+r()*0.03);
+  const rad=a=>{ const f=(a/6.283)*24, i0=Math.floor(f)%24, i1=(i0+1)%24, t=f-Math.floor(f);
+    return PZ.R*(wob[i0]*(1-t)+wob[i1]*t); };
+  const img=g.createImageData(baseCv.width,baseCv.height), d=img.data;
+  const C={dough:hx(P.dough),d2:hx(P.dough2),d3:hx(P.dough3),crust:hx(P.crust),ink:hx(P.ink)};
+  for(let y=0;y<baseCv.height;y++) for(let x=0;x<baseCv.width;x++){
+    const dx=x-c, dy=y-c, dist=Math.hypot(dx,dy);
+    let a=Math.atan2(dy,dx); if(a<0)a+=6.283;
+    const R=rad(a); if(dist>R) continue;
+    let col;
+    if(dist>R-2)            col=C.ink;
+    else if(dist>PZ.dough)  col = (dx+dy>0) ? C.d3 : C.d2;     /* raised rim */
+    else if(dist>PZ.dough-4)col = C.crust;
+    else                    col = ((x*5+y*3)%29>26) ? C.d2 : C.dough;
+    const i=(y*baseCv.width+x)*4;
+    d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255; }
+  g.putImageData(img,0,0);
+})();
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §8  BOWLS — five groups, three on the shelf at a time, arrows for the rest.
+       Showing all sixteen at once meant sixteen tiny bowls. Three at a time
+       means each one is big enough to see what is actually in it.
+   ─────────────────────────────────────────────────────────────────────────── */
+const BOWL_W = 104, BOWL_H = 70, PER_PAGE = 3;
+function bakeBowl(ing){
+  const cv = canvasOf(BOWL_W, BOWL_H), g = cv.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  const cx = BOWL_W/2, rimY = 30, rx = 46, ry = 12.5;
+
+  /* interior and body */
+  const back = Pix(BOWL_W, BOWL_H);
+  back.ellipse(cx, rimY, rx, ry, P.bowlRim);
+  for(let y=rimY; y<rimY+31; y++){
+    const t=(y-rimY)/31, hw = rx*(1-t*0.44);
+    for(let x=Math.round(cx-hw); x<=cx+hw; x++)
+      back.px(x, y, Math.abs(x-cx) > hw-4 ? P.bowlLo : (x < cx-8 ? P.bowlHi : P.bowl));
+  }
+  back.ellipse(cx, rimY+30, rx*0.58, 5, P.bowlLo);
+  back.outline();
+  g.drawImage(back.bake(), 0, 0);
+
+  /* contents */
+  if (ing.mode === 'paint'){
+    const pool = Pix(BOWL_W, BOWL_H);
+    pool.ellipse(cx, rimY, rx-7, ry-2.5, (x,y,d)=> d>0.84 ? ing.col2 : ing.col);
+    pool.ellipse(cx-13, rimY-2.5, 11, 3.4, (x,y,d)=> d>0.8?null:P.flour);
+    g.drawImage(pool.bake(), 0, 0);
+  } else if (ing.mode === 'scatter'){
+    const heap = Pix(BOWL_W, BOWL_H), r = rnd(ing.id.length*37+11), b = ing.bits;
+    heap.ellipse(cx, rimY, rx-7, ry-2.5, P.bowlRim);
+    for(let i=0;i<150;i++){
+      const a=r()*6.283, dd=Math.sqrt(r())*(rx-10);
+      const x=cx+Math.cos(a)*dd, y=rimY-2+Math.sin(a)*dd*0.3;
+      const c=b.cols[(r()*b.cols.length)|0];
+      if (b.shred){ const L=3+((r()*4)|0), hz=r()<0.5;
+        for(let k=0;k<L;k++) heap.px(x+(hz?k:0), y+(hz?0:k), c); }
+      else heap.box(x, y, b.sz>=4?2:1, b.sz>=4?2:1, c);
+    }
+    g.drawImage(heap.bake(), 0, 0);
+  } else {
+    /* a bowl with one lonely mushroom in it looks empty - heap three */
+    const im = ing.img, w = im.width, h = im.height;
+    [[-19,6],[17,2],[-1,-7]].forEach(([ox,oy]) =>
+      g.drawImage(im, Math.round(cx+ox-w/2), Math.round(rimY+oy-h*0.55)));
+  }
+
+  /* near rim over the contents, so they sit inside the dish */
+  const front = Pix(BOWL_W, BOWL_H);
+  for(let x=Math.round(cx-rx); x<=cx+rx; x++){
+    const u=(x-cx)/rx; if(Math.abs(u)>1) continue;
+    const y = rimY + Math.sqrt(1-u*u)*ry;
+    front.px(x,y,P.bowlHi); front.px(x,y-1,P.bowl);
+    front.px(x,y+1,P.bowl); front.px(x,y+2,P.bowlLo); front.px(x,y+3,P.bowlLo); }
+  front.outline();
+  g.drawImage(front.bake(), 0, 0);
+  return cv;
+}
+ING.forEach(i => i.bowl = bakeBowl(i));
+
+const catItems = k => ING.filter(i => i.cat === k);
+const pageCount = k => Math.ceil(catItems(k).length / PER_PAGE);
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §9  DRAW
+   ─────────────────────────────────────────────────────────────────────────── */
+let HIT=[], MX=-99, MY=-99, DOWN=false, CUR='default';
+const hit=(x,y,w,h,fn)=>HIT.push({x,y,w,h,fn});
+const inBox=(x,y,w,h)=>MX>=x&&MX<x+w&&MY>=y&&MY<y+h;
+function txt(s,x,y,c,px,al){
+  X.font=(px||10)+'px Silkscreen, ui-monospace, monospace';
+  X.textAlign=al||'left'; X.textBaseline='top'; X.fillStyle=c; X.fillText(s,Math.round(x),Math.round(y));
+}
+function rect(x,y,w,h,c){ X.fillStyle=c; X.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+function chip(x,y,w,h,label,on,accent){
+  const hv = inBox(x,y,w,h);
+  rect(x+2,y+2,w,h,'#00000033');
+  rect(x,y,w,h,P.ink);
+  rect(x+1,y+1,w-2,h-2, on ? (accent||P.gold) : hv ? P.uiHi : P.ui);
+  rect(x+1,y+1,w-2,1, on ? '#FFFFFF66' : '#FFFFFF22');
+  txt(label, x+w/2, y+(h-10)/2+1, on ? P.ink : P.uiText, 10, 'center');
+  if(hv) CUR='pointer';
+  return hv;
+}
+function drawPizza(px, py){
+  X.drawImage(baseCv, Math.round(px-PZ.R-2), Math.round(py-PZ.R-2));
+  if (sauceUsed){
+    X.save();
+    X.beginPath(); X.arc(px, py, PZ.dough-1, 0, 7); X.clip();
+    X.drawImage(sauceCv, 0,0,SAUCE_N,SAUCE_N, px-PZ.R, py-PZ.R, PZ.R*2, PZ.R*2);
+    X.restore();
+  }
+  /* grated cheese under the toppings, seasoning over them */
+  S.bits.forEach(b => { if(b.l==='under') rect(px+b.x, py+b.y, b.w, b.h, b.c); });
+  S.tops.forEach(o => {
+    const im = BY[o.id].img, w = im.width, h = im.height;
+    if (o.flip){ X.save(); X.translate(Math.round(px+o.x), Math.round(py+o.y));
+      X.scale(-1,1); X.drawImage(im, -w/2|0, -h/2|0); X.restore(); }
+    else X.drawImage(im, Math.round(px+o.x-w/2), Math.round(py+o.y-h/2));
+  });
+  S.bits.forEach(b => { if(b.l!=='under') rect(px+b.x, py+b.y, b.w, b.h, b.c); });
+}
+function drawBuild(){
+  X.drawImage(counterCv, 0, 0);
+  X.drawImage(shelfCv, 0, SH.top);
+
+  drawPizza(PZ.cx, PZ.cy);
+
+  /* header */
+  txt("MARCO'S", 14, 10, P.flour, 16);
+  txt('TRATTORIA', 14, 28, P.gold, 16);
+  const ing = S.sel ? BY[S.sel] : null;
+  const hintTxt = S.scrape ? 'SCRAPE: CLICK TO REMOVE'
+    : !ing ? 'PICK SOMETHING FROM A BOWL'
+    : ing.mode==='paint'   ? ing.n+' - PRESS AND DRAG TO SPREAD'
+    : ing.mode==='scatter' ? ing.n+' - HOLD AND WAVE TO SCATTER'
+    : ing.n+' - CLICK THE PIZZA TO PLACE';
+  rect(168, 14, 282, 22, '#2A1A12');
+  rect(168, 14, 282, 1, '#8A5C33');
+  txt(hintTxt, 309, 20, '#F0D8B4', 10, 'center');
+
+  if (chip(462, 12, 80, 26, 'SCRAPE', S.scrape, P.red)) {}
+  hit(462,12,80,26, ()=>{ S.scrape=!S.scrape; if(S.scrape) S.sel=null; });
+  chip(550, 12, 76, 26, 'CLEAR', false);
+  hit(550,12,76,26, clearAll);
+
+  /* ── into the oven ── */
+  const anything = sauceUsed || S.tops.length || S.bits.length;
+  const bx = 452, by = 196, bw = 176, bh = 52;
+  const bhv = inBox(bx,by,bw,bh) && anything;
+  rect(bx+3, by+4, bw, bh, '#00000044');
+  rect(bx, by, bw, bh, P.ink);
+  rect(bx+2, by+2, bw-4, bh-4, !anything ? '#6E6256' : bhv ? '#E8622E' : '#C8431C');
+  rect(bx+2, by+2, bw-4, 2, '#FFFFFF44');
+  txt('BAKE IT', bx+bw/2, by+12, !anything ? '#B3A897' : P.flour, 16, 'center');
+  txt(anything ? 'INTO THE OVEN >' : 'BUILD SOMETHING FIRST', bx+bw/2, by+32,
+      !anything ? '#B3A897' : '#FFD9B0', 10, 'center');
+  hit(bx,by,bw,bh, ()=>{ if(!anything) return;
+    S.screen='oven'; S.ovenT=0; S.ovenStart=performance.now(); S.sel=null; S.scrape=false;
+    /* Render during the bake, not after it. The pizza cannot change while it is
+       in the oven, so the four seconds you already wait covers the work and the
+       reveal is instant however slow the machine is. */
+    S.baked = false;
+    setTimeout(() => { try { renderRealistic(); S.baked = true; } catch(e){ S.err = e; } }, 60);
+  });
+  if (bhv) CUR='pointer';
+
+  /* ── category tabs ── */
+  CATS.forEach((c,i) => {
+    const tx = 6 + i*126, ty = 276, tw = 122, th = 24;
+    const on = S.cat===c.k, hv = inBox(tx,ty,tw,th);
+    rect(tx+2, ty+2, tw, th, '#00000022');
+    rect(tx, ty, tw, th, P.ink);
+    rect(tx+1, ty+1, tw-2, th-2, on ? P.flour : hv ? P.greenHi : P.green);
+    rect(tx+1, ty+1, tw-2, 1, on ? '#FFFFFF' : '#FFFFFF33');
+    txt(c.label, tx+tw/2, ty+8, on ? P.greenLo : P.flour, 10, 'center');
+    hit(tx,ty,tw,th, ()=>{ S.cat=c.k; S.page=0; });
+    if(hv) CUR='pointer';
+  });
+
+  /* ── the three bowls on the shelf ── */
+  const items = catItems(S.cat), pages = pageCount(S.cat);
+  S.page = Math.max(0, Math.min(S.page, pages-1));
+  const shown = items.slice(S.page*PER_PAGE, S.page*PER_PAGE+PER_PAGE);
+  const CX0 = 52, SLOTW = (W-104)/PER_PAGE;
+  shown.forEach((ing2,i) => {
+    const bx = Math.round(CX0 + SLOTW*i + SLOTW/2 - BOWL_W/2), by = 310;
+    const on = S.sel===ing2.id, hv = inBox(bx-6, by-6, BOWL_W+12, BOWL_H+24);
+    if (on) rect(bx-6, by-6, BOWL_W+12, BOWL_H+24, P.gold);
+    else if (hv) rect(bx-6, by-6, BOWL_W+12, BOWL_H+24, '#FFFFFF22');
+    X.drawImage(ing2.bowl, bx, by - (hv&&!on ? 2 : 0));
+    txt(ing2.n, bx+BOWL_W/2, by+BOWL_H+2, on ? P.greenLo : P.flour, 10, 'center');
+    hit(bx-6, by-6, BOWL_W+12, BOWL_H+24, ()=>{ S.sel=ing2.id; S.scrape=false; });
+    if(hv) CUR='pointer';
+  });
+
+  /* ── more, if there is more ── */
+  if (pages > 1){
+    const arrow = (ax, dir) => {
+      const hv = inBox(ax, 320, 40, 52);
+      rect(ax+2, 322, 40, 52, '#00000033');
+      rect(ax, 320, 40, 52, P.ink);
+      rect(ax+1, 321, 38, 50, hv ? P.greenHi : P.green);
+      rect(ax+1, 321, 38, 1, '#FFFFFF33');
+      for(let k=0;k<9;k++){                      /* a clean pixel triangle */
+        const h = 18 - k*2, x = ax + (dir<0 ? 26-k*2 : 12+k*2);
+        rect(x, 346-h/2, 2, h, P.flour);
+      }
+      hit(ax, 320, 40, 52, ()=>{ S.page = (S.page + dir + pages) % pages; });
+      if(hv) CUR='pointer';
+    };
+    arrow(4, -1); arrow(W-44, 1);
+    for(let k=0;k<pages;k++){
+      const dx = Math.round(W/2 - (pages*14)/2 + k*14);
+      rect(dx, 302, 10, 5, P.ink);
+      rect(dx+1, 303, 8, 3, k===S.page ? P.gold : '#6A746B');
+    }
+  }
+
+  /* what you are holding, at the cursor */
+  const overPizza = S.screen==='build' && Math.hypot(MX-PZ.cx, MY-PZ.cy) <= PZ.R;
+  if (overPizza && !S.scrape && ing){
+    CUR='none';
+    if (ing.mode==='paint'){
+      X.globalAlpha=0.75; X.fillStyle=ing.col;
+      X.beginPath(); X.arc(MX,MY,11,0,7); X.fill(); X.globalAlpha=1;
+      X.strokeStyle=P.ink; X.lineWidth=2; X.beginPath(); X.arc(MX,MY,12,0,7); X.stroke();
+    } else if (ing.mode==='scatter'){
+      X.strokeStyle='#FFFFFF99'; X.lineWidth=2;
+      X.beginPath(); X.arc(MX,MY,ing.bits.spread,0,7); X.stroke();
+      X.globalAlpha=0.9;
+      X.drawImage(ing.bowl, Math.round(MX-BOWL_W/2), Math.round(MY-ing.bits.spread-BOWL_H+8));
+      X.globalAlpha=1;
+    } else {
+      X.globalAlpha=0.85; X.drawImage(ing.img, MX-ing.img.width/2|0, MY-ing.img.height/2|0); X.globalAlpha=1;
+    }
+  } else if (overPizza && S.scrape){
+    CUR='none';
+    X.strokeStyle=P.red; X.lineWidth=2; X.beginPath(); X.arc(MX,MY,14,0,7); X.stroke();
+    rect(MX-8,MY-1,16,2,P.red); rect(MX-1,MY-8,2,16,P.red);
+  }
+}
+
+function drawReveal(dt){
+  X.clearRect(0,0,W,H);
+  const fade = Math.min(1, S.revealT/0.6);
+  X.globalAlpha = fade;
+  txt("MARCO'S", 14, 10, P.flour, 16);
+  txt('TRATTORIA', 14, 28, P.gold, 16);
+  const cap = 'FRESH OUT OF THE OVEN';
+  const cw = 250;
+  rect(W/2-cw/2+2, 36, cw, 22, '#00000055');
+  rect(W/2-cw/2, 34, cw, 22, '#00000088');
+  txt(cap, W/2, 40, P.gold, 12, 'center');
+
+  const bw2 = 178, gap = 10, by2 = 354;
+  const bx2 = W/2 - bw2 - gap/2, bx3 = W/2 + gap/2;
+  const mkBtn = (x, label, fill, fillHi, fn) => {
+    const hv = inBox(x, by2, bw2, 34);
+    rect(x+3, by2+3, bw2, 34, '#00000055');
+    rect(x, by2, bw2, 34, P.ink);
+    rect(x+2, by2+2, bw2-4, 30, hv ? fillHi : fill);
+    rect(x+2, by2+2, bw2-4, 2, '#FFFFFF44');
+    txt(label, x+bw2/2, by2+10, P.flour, 12, 'center');
+    hit(x, by2, bw2, 34, fn);
+    if (hv) CUR='pointer';
+  };
+  mkBtn(bx2, 'MAKE ANOTHER', '#4A3A2C', '#63503E', ()=>{ clearAll(); S.screen='build'; });
+  mkBtn(bx3, 'SHARE IT', '#C8551A', '#E86C26', openShare);
+
+  txt('BUILD ' + BUILD + ' - CHEF MARCO AND THE SCORE COME NEXT', W/2, 390, '#8A7A6A', 10, 'center');
+  X.globalAlpha = 1;
+}
+
+function clearAll(){
+  S.tops=[]; S.bits=[]; sauceX.clearRect(0,0,SAUCE_N,SAUCE_N); sauceUsed=false; S.sel=null; S.scrape=false;
+  S.cat='sauce'; S.page=0; S.used=new Set();
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §9b  THE OVEN — an animation, nothing more. No timing, no skill, no failure.
+   ─────────────────────────────────────────────────────────────────────────── */
+/* Oven geometry, shared by the bakers and the per-frame draw. */
+const OV = {MX:320, MY:252, MR:66, FX0:150, FX1:490, FTOP:118, FBOT:326};
+
+/* Everything static about the oven is rendered once. The first version redrew
+   the dithered firelight wash every frame - 128,000 iterations and tens of
+   thousands of fillRect calls - which dropped the loop to about 3fps and made
+   a 4 second bake take over a minute. That is why the pizza never appeared. */
+const ovenRoomCv = canvasOf(W,H);      /* firelight on the room, flickers   */
+const ovenBodyCv = canvasOf(W,H);      /* brick facade                      */
+const ovenTrimCv = canvasOf(W,H);      /* voussoirs, hearth, chimney        */
+const ovenChamCv = canvasOf(W,H);      /* glow inside the mouth, flickers   */
+let ovenBaked = false;
+
+function bakeOven(){
+  const {MX,MY,MR,FX0,FX1,FTOP,FBOT} = OV;
+
+  /* ── room wash ── */
+  {
+    const g = ovenRoomCv.getContext('2d');
+    const img = g.createImageData(W,H), d = img.data;
+    const A = hx('#4A2A14'), B = hx('#2C190D');
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const L = clamp(1 - Math.hypot((x-MX)*0.8,(y-MY)*1.05)/340, 0, 1);
+      if (L<=0.05 || !dith(x,y,L*0.5)) continue;
+      const c = L>0.52 ? A : B, i=(y*W+x)*4;
+      d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=255;
+    }
+    g.putImageData(img,0,0);
+  }
+
+  /* ── facade ── */
+  {
+    const g = ovenBodyCv.getContext('2d');
+    const topAt = x => { const u=(x-(FX0+FX1)/2)/((FX1-FX0)/2);
+      return FTOP + (1-Math.sqrt(Math.max(0,1-u*u)))*54; };
+    g.save();
+    g.beginPath(); g.moveTo(FX0, FBOT);
+    for(let x=FX0;x<=FX1;x+=2) g.lineTo(x, topAt(x));
+    g.lineTo(FX1, FBOT); g.closePath(); g.clip();
+    g.fillStyle=P.ink; g.fillRect(FX0-6, FTOP-6, FX1-FX0+12, FBOT-FTOP+12);
+    for(let row=0, y=FTOP-6; y<FBOT; row++, y+=15){
+      const off = (row%2) ? 17 : 0;
+      for(let x=FX0-40+off; x<FX1+34; x+=34){
+        g.fillStyle = ((row+x)%3) ? P.brick : P.brickLo; g.fillRect(x+1, y+1, 32, 13);
+        g.fillStyle = '#00000033'; g.fillRect(x+1, y+1, 32, 2);
+        g.fillStyle = '#00000044'; g.fillRect(x+1, y+12, 32, 2);
+      }
+    }
+    g.restore();
+  }
+
+  /* ── chamber glow ── */
+  {
+    const g = ovenChamCv.getContext('2d');
+    g.save();
+    g.beginPath(); g.arc(MX, MY, MR, Math.PI, 0); g.rect(MX-MR, MY, MR*2, 46); g.clip();
+    g.fillStyle='#0A0503'; g.fillRect(MX-MR-4, MY-MR-4, MR*2+8, MR+58);
+    for(let y=MY-MR;y<MY+48;y++) for(let x=MX-MR;x<MX+MR;x+=2){
+      const L = clamp(1 - Math.hypot(x-(MX+34), y-(MY+4))/92, 0, 1);
+      if (L>0.06 && dith(x,y,L)){ g.fillStyle = L>0.6 ? P.glow : '#58230A'; g.fillRect(x,y,2,1); }
+    }
+    g.fillStyle='#3A2010'; g.fillRect(MX+22, MY+26, 44, 9);
+    g.fillStyle='#5E3418'; g.fillRect(MX+24, MY+27, 40, 3);
+    g.restore();
+  }
+
+  /* ── voussoirs, springers, hearth, chimney ── */
+  {
+    const g = ovenTrimCv.getContext('2d');
+    const SEG = 15;
+    for(let k=0;k<SEG;k++){
+      const a0 = Math.PI + (k/SEG)*Math.PI + 0.008, a1 = Math.PI + ((k+1)/SEG)*Math.PI - 0.008;
+      g.beginPath();
+      g.arc(MX, MY, MR+25, a0, a1); g.arc(MX, MY, MR+1, a1, a0, true); g.closePath();
+      g.fillStyle = (k%3) ? P.brick : P.brickLo; g.fill();
+      g.strokeStyle = P.ink; g.lineWidth = 1.5; g.stroke();
+    }
+    [-1,1].forEach(sgn => { const bx = MX + sgn*(MR+13) - 13;
+      g.fillStyle=P.ink;      g.fillRect(bx, MY-2, 26, 16);
+      g.fillStyle=P.brickLo;  g.fillRect(bx+1, MY-1, 24, 14); });
+    g.fillStyle=P.ink; g.fillRect(MX-MR-34, MY+44, (MR+34)*2, 18);
+    for(let x=MX-MR-32; x<MX+MR+32; x+=2){
+      g.fillStyle = dith(x, MY+46, 0.55) ? '#9E9384' : '#867B6E';
+      g.fillRect(x, MY+46, 2, 14); }
+    g.fillStyle='#C4BBAC'; g.fillRect(MX-MR-32, MY+46, (MR+32)*2, 2);
+    g.fillStyle=P.ink; g.fillRect(414, 56, 40, 66);
+    for(let y=58;y<120;y+=14) for(let x=416;x<452;x+=20){
+      g.fillStyle = ((x+y)%3)?P.brick:P.brickLo;
+      g.fillRect(x+(((y-58)/14)%2?10:0), y, 18, 12); }
+    g.fillStyle=P.ink;     g.fillRect(410, 48, 48, 12);
+    g.fillStyle=P.brickLo; g.fillRect(412, 50, 44, 8);
+  }
+  ovenBaked = true;
+}
+
+function drawOvenScene(t){
+  if (!ovenBaked) bakeOven();
+  const {MX,MY,MR} = OV;
+  const gl = 0.84 + Math.sin(t*9)*0.1 + Math.sin(t*3.3)*0.06;
+
+  rect(0,0,W,H,'#150D08');
+  X.globalAlpha = clamp(gl,0,1); X.drawImage(ovenRoomCv,0,0); X.globalAlpha = 1;
+  X.drawImage(ovenBodyCv,0,0);
+
+  /* ── inside the mouth: glow, fire, and the pizza on the floor ── */
+  X.save();
+  X.beginPath(); X.arc(MX, MY, MR, Math.PI, 0); X.rect(MX-MR, MY, MR*2, 46); X.clip();
+  X.globalAlpha = clamp(gl,0,1); X.drawImage(ovenChamCv,0,0); X.globalAlpha = 1;
+  for(let i=0;i<12;i++){
+    const fx = MX+26 + i*3.2, ph = t*9 + i*1.1;
+    const fh = 18 + Math.abs(Math.sin(ph))*32 + Math.abs(Math.cos(ph*0.6))*13;
+    rect(fx, MY+30-fh, 3, fh, i%3 ? P.flame : P.ember);
+    rect(fx, MY+30-fh*0.4, 3, fh*0.4, '#FFF0B8');
+  }
+  for(let i=0;i<12;i++){
+    const ex = MX+18 + ((i*67 + t*34) % 60), ey = MY+26 - ((t*58 + i*29) % 80);
+    X.globalAlpha = Math.max(0, 1-(MY+26-ey)/80);
+    rect(ex, ey, 2, 2, i%2 ? P.ember : P.flame);
+  }
+  X.globalAlpha = 1;
+  const IN = 1.2, REST = MX - 22;
+  const px = t < IN ? -140 + (t/IN)*(REST+140) : REST;
+  if (t < IN*1.4){ rect(px-200, MY+26, 200, 6, P.ink);
+                   rect(px-198, MY+27, 196, 4, '#7A5A38'); }
+  X.save();
+  X.translate(px, MY+8); X.scale(0.38,0.30); X.translate(-PZ.cx,-PZ.cy);
+  drawPizza(PZ.cx, PZ.cy);
+  X.restore();
+  X.restore();
+
+  X.drawImage(ovenTrimCv,0,0);
+
+  for(let i=0;i<5;i++){
+    const sy = 46 - ((t*22 + i*17) % 56);
+    X.globalAlpha = Math.max(0, 0.34 - (46-sy)/150);
+    rect(430 + Math.sin(sy*0.07)*11, sy, 13, 11, '#BFB2A4');
+  }
+  X.globalAlpha = 1;
+
+  txt("MARCO'S", 14, 10, P.flour, 16);
+  txt('TRATTORIA', 14, 28, P.gold, 16);
+  const dots = '.'.repeat(1 + ((t*2)|0) % 3);
+  txt('INTO THE OVEN' + dots, W/2, 338, P.gold, 16, 'center');
+  txt('WOOD FIRED. FOUR HUNDRED DEGREES.', W/2, 362, '#B08A66', 10, 'center');
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §9c  THE REVEAL — the same pizza, every topping in the exact place you put
+        it, re-rendered without the pixel grid. Drawn on its own canvas at 3x
+        with smoothing on, which is why it can look like food.
+   ─────────────────────────────────────────────────────────────────────────── */
+const RC = {cx:320, cy:198, R:152};
+
+function renderRealistic(o){
+  /* Draws the baked pizza. Defaults to the reveal canvas; pass a target and a
+     geometry to render it anywhere - which is how the square share image is
+     made from the exact same pizza. */
+  o = o || {};
+  const g  = o.g  || RX;
+  const sc = o.sc || RSC;
+  const cx = o.cx != null ? o.cx : RC.cx;
+  const cy = o.cy != null ? o.cy : RC.cy;
+  const R  = o.R  != null ? o.R  : RC.R;
+  const Wp = o.w  || W, Hp = o.h || H;
+  const k  = R / PZ.R;                    /* build-space -> render-space */
+  /* Full context reset, not just a clear. This function saves and clips; if it
+     ever throws part way through, the unmatched restore leaves the canvas
+     permanently clipped and every later render paints into a dead region -
+     which looks exactly like "the pizza never appeared". Reassigning width
+     resets transform, clip stack and pixels in one go. */
+  g.canvas.width = g.canvas.width;
+  g.setTransform(sc,0,0,sc,0,0);
+  g.imageSmoothingEnabled = true;
+
+  /* ── room ── */
+  const bg = g.createRadialGradient(cx,cy-30,40, cx,cy,460);
+  bg.addColorStop(0,'#6B4A31'); bg.addColorStop(0.55,'#412A1B'); bg.addColorStop(1,'#241610');
+  g.fillStyle = bg; g.fillRect(0,0,Wp,Hp);
+  /* soft contact shadow, no board - the board was reading as brown wings */
+  g.save(); g.globalAlpha=0.45; g.filter='blur(18px)'; g.fillStyle='#0B0603';
+  g.beginPath(); g.ellipse(cx+4, cy+R*0.34, R*1.02, R*0.48, 0, 0, 7); g.fill(); g.restore();
+
+  /* ── the crust silhouette: same wobble as the pixel base, so it is the
+        same pizza and not a different one ── */
+  const wr = rnd(42), wob = [];
+  for(let i=0;i<24;i++) wob.push(0.985 + wr()*0.03);
+  const radAt = a => { const f=((a%6.283+6.283)/6.283)*24, i0=Math.floor(f)%24,
+    i1=(i0+1)%24, t2=f-Math.floor(f); return R*(wob[i0]*(1-t2)+wob[i1]*t2); };
+  const pizzaPath = (shrink) => {
+    g.beginPath();
+    for(let i=0;i<=180;i++){ const a=i/180*6.283, rr=radAt(a)*(shrink||1);
+      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+      i ? g.lineTo(x,y) : g.moveTo(x,y); }
+    g.closePath();
+  };
+
+  /* drop shadow */
+  g.save(); g.globalAlpha=0.55; g.filter='blur(10px)';
+  g.fillStyle='#000'; pizzaPath(1.0); g.translate(3,9); g.fill(); g.restore();
+
+  /* ── baked crust ── */
+  const cg = g.createRadialGradient(cx-40,cy-46,R*0.2, cx,cy,R*1.04);
+  cg.addColorStop(0,'#F0C078'); cg.addColorStop(0.72,'#DCA155');
+  cg.addColorStop(0.9,'#C07E33'); cg.addColorStop(1,'#9B5B22');
+  g.save(); pizzaPath(1); g.clip();
+  g.fillStyle=cg; g.fillRect(0,0,Wp,Hp);
+
+  /* rim puff */
+  g.globalAlpha=0.5; g.lineWidth=R*0.10; g.strokeStyle='#F5D294';
+  pizzaPath(0.935); g.stroke(); g.globalAlpha=1;
+
+  /* Leopard spotting is a handful of near-black scorch blisters on the rim.
+     The old version was 95 pale fuzzy blotches spread across the sauce edge as
+     well, which is precisely how mould looks. Fewer, darker, harder edged, and
+     confined to the cornicione. */
+  const cr = rnd(777);
+  for(let i=0;i<34;i++){
+    const a=cr()*6.283, rr=radAt(a)*(0.905+cr()*0.088);
+    const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+    const big = cr()<0.22, sz=(big?4.2:2.0)+cr()*(big?4.0:1.8);
+    g.globalAlpha=0.74+cr()*0.26;
+    const sg=g.createRadialGradient(x,y,0,x,y,sz);
+    sg.addColorStop(0,'#140903'); sg.addColorStop(0.56,'#2A1406');
+    sg.addColorStop(1,'rgba(42,20,6,0)');
+    g.fillStyle=sg; g.beginPath(); g.arc(x,y,sz,0,7); g.fill();
+  }
+  /* faint flour dusting - heavy and pale it reads as bloom */
+  for(let i=0;i<26;i++){
+    const a=cr()*6.283, rr=radAt(a)*(0.90+cr()*0.09);
+    const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+    g.globalAlpha=0.07+cr()*0.08; g.fillStyle='#FFF3DC';
+    g.beginPath(); g.arc(x,y,0.9+cr()*1.6,0,7); g.fill();
+  }
+  g.globalAlpha=1;
+  g.restore();
+
+  /* ── sauce: the exact field you painted, softened and deepened ── */
+  if (sauceUsed){
+    g.save(); pizzaPath(0.845); g.clip();
+    g.filter = 'blur(2.2px)';
+    g.drawImage(sauceCv, cx-R, cy-R, R*2, R*2);
+    g.filter = 'none';
+    g.globalCompositeOperation = 'multiply';
+    g.globalAlpha = 0.35;
+    g.drawImage(sauceCv, cx-R, cy-R, R*2, R*2);
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    /* caramelised where the sauce meets the crust */
+    g.globalAlpha = 0.5; g.lineWidth = 9; g.strokeStyle = '#7E2A12';
+    g.filter='blur(4px)'; pizzaPath(0.84); g.stroke(); g.filter='none';
+    g.globalAlpha = 1;
+    g.restore();
+  }
+
+  /* ── cheese: melted into a sheet, browned where it caught ── */
+  const cheeseSpots = [];
+  S.bits.forEach(b => { if(b.l==='under') cheeseSpots.push([cx+b.x*k, cy+b.y*k, 9*k, BY[b.id]]); });
+  S.tops.forEach(o => { if(BY[o.id].cat==='cheese') cheeseSpots.push([cx+o.x*k, cy+o.y*k, 24*k, BY[o.id]]); });
+  if (cheeseSpots.length){
+    /* Every blob used to be a 54-segment path plus a stroke drawn with
+       filter:blur(5px) active - one filtered compositing pass per cheese bit,
+       and a shaken-on cheese easily means two thousand of them. Instead: plain
+       circles into a small offscreen, then one upscaled blit. The upscale IS
+       the blur, for free, and it is the same picture. */
+    const N = 192, sc2 = N / (R*2);
+    const cvC = cheeseBufCv || (cheeseBufCv = canvasOf(N, N));
+    const gc = cvC.getContext('2d');
+    gc.clearRect(0,0,N,N);
+    cheeseSpots.forEach(([x,y,rr,ing]) => {
+      gc.fillStyle = ing.id==='mozzarella' ? '#EEDFB8'
+                   : ing.id==='cheddar'    ? '#E0A038'
+                   : ing.id==='parmesan'   ? '#EADFC2' : '#E4D8BC';
+      gc.globalAlpha = 1;   /* solid coverage; the blit below sets the strength */
+      gc.beginPath();
+      gc.ellipse((x-(cx-R))*sc2, (y-(cy-R))*sc2, rr*sc2, rr*sc2*0.9, 0, 0, 7);
+      gc.fill();
+    });
+    gc.globalAlpha = 1;
+    g.save(); pizzaPath(0.855); g.clip();
+    g.imageSmoothingEnabled = true;
+    /* Cap the layer here rather than per blob. Per-blob alpha cannot work for
+       both a light dusting and a shaken-on pile: at 2500 overlapping bits any
+       usable value stacks to opaque and buries the sauce. */
+    g.globalAlpha = 0.62;
+    g.drawImage(cvC, 0,0,N,N, cx-R, cy-R, R*2, R*2);
+    g.globalAlpha = 1;
+    /* a warm wash over the whole cheese field, so it stops reading as paint */
+    g.globalAlpha = 0.16; g.fillStyle = '#E0A84E';
+    g.fillRect(cx-R, cy-R, R*2, R*2);
+    g.globalAlpha = 1;
+    /* browned bubbles */
+    const br = rnd(1234);
+    for(let i=0;i<Math.min(110, 30+cheeseSpots.length*2); i++){
+      const sp = cheeseSpots[(br()*cheeseSpots.length)|0];
+      const a = br()*6.283, dd = br()*sp[2]*0.9;
+      const x = sp[0]+Math.cos(a)*dd, y = sp[1]+Math.sin(a)*dd, sz = 2+br()*5.5;
+      g.globalAlpha = 0.22+br()*0.5;
+      const bgd = g.createRadialGradient(x,y,0,x,y,sz);
+      bgd.addColorStop(0,'#7E4412'); bgd.addColorStop(0.55,'#BE7C28'); bgd.addColorStop(1,'rgba(190,124,40,0)');
+      g.fillStyle = bgd; g.beginPath(); g.arc(x,y,sz,0,7); g.fill();
+    }
+    g.globalAlpha = 1; g.restore();
+  }
+
+  /* ── toppings, each in the exact place you put it ── */
+  const TOP = realisticToppings(g);
+  g.save(); pizzaPath(0.985); g.clip();
+  S.tops.forEach(o => {
+    if (BY[o.id].cat === 'cheese') return;                 /* already melted in */
+    const fn = TOP[o.id]; if(!fn) return;
+    const x = cx + o.x*k, y = cy + o.y*k;
+    g.save();
+    /* plain translucent ellipse, no filter - this ran once per topping and a
+       filtered draw each time is not worth a shadow nobody looks at */
+    g.globalAlpha = 0.3; g.fillStyle = '#3A1C08';
+    g.beginPath(); g.ellipse(x+2, y+4, 14*k, 10*k, 0, 0, 7); g.fill();
+    g.globalAlpha = 1;
+    g.translate(x, y); if (o.flip) g.scale(-1, 1);
+    fn(k);
+    g.restore();
+  });
+  g.restore();
+
+  /* ── seasoning over the top ── */
+  g.save(); pizzaPath(0.93); g.clip();
+  S.bits.forEach(b => {
+    if (b.l === 'under') return;
+    const x = cx+b.x*k, y = cy+b.y*k;
+    g.globalAlpha = 0.9; g.fillStyle = b.c;
+    g.beginPath(); g.ellipse(x, y, b.w*k*0.42, b.h*k*0.42, (x*7%3), 0, 7); g.fill();
+  });
+  g.globalAlpha = 1; g.restore();
+
+  /* ── oil sheen and grade ── */
+  g.save(); pizzaPath(0.94); g.clip();
+  const sr = rnd(55);
+  g.filter='blur(9px)';
+  for(let i=0;i<7;i++){
+    const a=sr()*6.283, dd=sr()*R*0.66, x=cx+Math.cos(a)*dd, y=cy+Math.sin(a)*dd;
+    g.globalAlpha = 0.022+sr()*0.03; g.fillStyle = '#FFF3D8';
+    g.beginPath(); g.ellipse(x, y, 14+sr()*24, 8+sr()*12, sr()*3, 0, 7); g.fill();
+  }
+  g.filter='none';
+  g.globalAlpha = 1; g.restore();
+
+  const vg = g.createRadialGradient(cx,cy,R*0.8, cx,cy,R*2.4);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.35)');
+  g.fillStyle = vg; g.fillRect(0,0,Wp,Hp);
+}
+
+/* ── how each topping looks once it has actually been in an oven ── */
+function realisticToppings(g){
+  const blob = (rx,ry,cols,seed,rot) => {
+    const r = rnd(seed); g.save(); if(rot) g.rotate(rot);
+    g.beginPath();
+    for(let i=0;i<=40;i++){ const a=i/40*6.283, w=0.82+r()*0.3;
+      const x=Math.cos(a)*rx*w, y=Math.sin(a)*ry*w; i?g.lineTo(x,y):g.moveTo(x,y); }
+    g.closePath();
+    const gd=g.createLinearGradient(-rx,-ry,rx,ry);
+    cols.forEach((c,i)=>gd.addColorStop(i/(cols.length-1), c));
+    g.fillStyle=gd; g.fill(); g.restore();
+  };
+  /* a faint sheen, not a plastic highlight - the old value read as vinyl */
+  const gloss = (rx,ry,a) => { g.globalAlpha=(a||0.4)*0.2;
+    g.filter='blur(2px)'; g.fillStyle='#FFF6E2'; g.beginPath();
+    g.ellipse(-rx*0.28,-ry*0.34,rx*0.38,ry*0.2,-0.5,0,7); g.fill();
+    g.filter='none'; g.globalAlpha=1; };
+
+  return {
+    pepperoni:(k)=>{ const R=15*k;
+      /* flat and matte: a cured disc, lightly cupped, darker at the rim */
+      const gd=g.createRadialGradient(0,0,R*0.1,0,0,R);
+      gd.addColorStop(0,'#A8321A'); gd.addColorStop(0.62,'#9C2C16'); gd.addColorStop(1,'#6E1A08');
+      g.fillStyle=gd; g.beginPath(); g.arc(0,0,R,0,7); g.fill();
+      g.lineWidth=R*0.2; g.strokeStyle='#511004'; g.globalAlpha=0.85;
+      g.beginPath(); g.arc(0,0,R*0.9,0,7); g.stroke(); g.globalAlpha=1;   /* curled rim */
+      g.globalAlpha=0.35; g.lineWidth=R*0.09; g.strokeStyle='#3A0B02';
+      g.beginPath(); g.arc(0,0,R*0.97,2.0,5.3); g.stroke(); g.globalAlpha=1;
+      const r=rnd(31);
+      for(let i=0;i<7;i++){ const a=r()*6.283, d=r()*R*0.7;
+        g.globalAlpha=0.5+r()*0.4; g.fillStyle='#5E1204';
+        g.beginPath(); g.arc(Math.cos(a)*d, Math.sin(a)*d, R*0.07+r()*R*0.08, 0, 7); g.fill(); }
+      g.globalAlpha=0.2; g.fillStyle='#C4551F';                           /* grease pool */
+      g.beginPath(); g.arc(0,0,R*0.46,0,7); g.fill(); g.globalAlpha=1; },
+
+    sausage:(k)=>{ blob(13*k,12*k,['#A9713F','#7B4A22','#4E2C10'],23);
+      const r=rnd(24); for(let i=0;i<7;i++){ const a=r()*6.283,d=r()*9*k;
+        g.globalAlpha=0.6; g.fillStyle=r()<0.4?'#E3CFA8':'#3A1F0A';
+        g.beginPath(); g.arc(Math.cos(a)*d,Math.sin(a)*d,1.2*k+r()*1.6*k,0,7); g.fill(); }
+      g.globalAlpha=1; gloss(12*k,11*k,0.22); },
+
+    ham:(k)=>{ blob(14*k,12*k,['#F0A0B0','#D97C90','#A85368'],29,0.3);
+      g.globalAlpha=0.5; g.strokeStyle='#8E4256'; g.lineWidth=1.4*k;
+      g.beginPath(); g.moveTo(-11*k,-2*k); g.bezierCurveTo(-4*k,-7*k,4*k,3*k,11*k,-3*k); g.stroke();
+      g.globalAlpha=1; gloss(13*k,11*k,0.26); },
+
+    mushroom:(k)=>{ g.save(); g.scale(k,k);
+      const gd=g.createLinearGradient(0,-12,0,12);
+      gd.addColorStop(0,'#C9A472'); gd.addColorStop(0.55,'#9E7647'); gd.addColorStop(1,'#6B4A26');
+      g.fillStyle=gd;
+      g.beginPath(); g.ellipse(0,-2,12,9,0,Math.PI,0); g.rect(-12,-2,24,5);
+      g.moveTo(-4,3); g.lineTo(-4,11); g.lineTo(4,11); g.lineTo(4,3); g.fill();
+      g.globalAlpha=0.55; g.strokeStyle='#4E3318'; g.lineWidth=1.1;
+      for(let x=-9;x<=9;x+=3){ g.beginPath(); g.moveTo(x,3); g.lineTo(x*0.8,6.5); g.stroke(); }
+      g.globalAlpha=1; g.restore(); gloss(11*k,8*k,0.2); },
+
+    bell:(k)=>{ g.save(); g.scale(k,k); g.rotate(0.2);
+      g.beginPath(); g.arc(0,0,14,-0.75,2.15); g.arc(0,0,7,2.15,-0.75,true); g.closePath();
+      const gd=g.createLinearGradient(-14,-14,14,14);
+      gd.addColorStop(0,'#6FC04A'); gd.addColorStop(0.5,'#3F8F26'); gd.addColorStop(1,'#245E14');
+      g.fillStyle=gd; g.fill();
+      g.globalAlpha=0.45; g.strokeStyle='#D6F0B8'; g.lineWidth=2;
+      g.beginPath(); g.arc(0,0,8.6,-0.5,1.8); g.stroke();
+      g.globalAlpha=1; g.restore(); gloss(12*k,10*k,0.3); },
+
+    onion:(k)=>{ g.save(); g.scale(k,k); g.globalAlpha=0.9;
+      for(let i=0;i<3;i++){ const rr=13-i*3.6;
+        g.beginPath(); g.arc(0,0,rr,0,7); g.lineWidth=1.7;
+        g.strokeStyle=i%2?'#E8D6EE':'#B98BC6'; g.stroke(); }
+      g.globalAlpha=0.35; g.fillStyle='#C9A8D4';
+      g.beginPath(); g.arc(0,0,13,0,7); g.fill();
+      g.globalAlpha=0.8; g.fillStyle='#6E4A2A';                    /* charred tips */
+      const r=rnd(41); for(let i=0;i<5;i++){ const a=r()*6.283;
+        g.beginPath(); g.arc(Math.cos(a)*12,Math.sin(a)*12,1.6,0,7); g.fill(); }
+      g.globalAlpha=1; g.restore(); },
+
+    olive:(k)=>{ g.save(); g.scale(k,k);
+      g.beginPath(); g.arc(0,0,9.5,0,7); g.arc(0,0,3.6,0,7,true);
+      const gd=g.createRadialGradient(-3,-3,1,0,0,9.5);
+      gd.addColorStop(0,'#4A4038'); gd.addColorStop(0.6,'#2A2220'); gd.addColorStop(1,'#14100E');
+      g.fillStyle=gd; g.fill('evenodd');
+      g.globalAlpha=0.5; g.strokeStyle='#6B5B46'; g.lineWidth=0.8;
+      g.beginPath(); g.arc(0,0,9.2,3.6,5.6); g.stroke(); g.globalAlpha=1;
+      g.restore(); },
+
+    pineapple:(k)=>{ g.save(); g.scale(k,k); g.rotate(-0.2);
+      g.beginPath(); g.arc(0,0,13,-0.55,1.75); g.arc(0,0,4.5,1.75,-0.55,true); g.closePath();
+      const gd=g.createLinearGradient(-13,-13,13,13);
+      gd.addColorStop(0,'#FFE9A0'); gd.addColorStop(0.45,'#F2C243'); gd.addColorStop(1,'#B8801A');
+      g.fillStyle=gd; g.fill();
+      g.globalAlpha=0.45; g.strokeStyle='#A8701A'; g.lineWidth=0.9;
+      for(let a=-0.42;a<1.7;a+=0.26){ g.beginPath();
+        g.moveTo(Math.cos(a)*5,Math.sin(a)*5); g.lineTo(Math.cos(a)*12.6,Math.sin(a)*12.6); g.stroke(); }
+      g.globalAlpha=0.6; g.fillStyle='#8A5A12';                    /* caramelised edge */
+      g.beginPath(); g.arc(0,0,13,-0.55,1.75); g.lineWidth=2.4;
+      g.strokeStyle='#8A5A12'; g.stroke();
+      g.globalAlpha=1; g.restore(); gloss(11*k,9*k,0.34); },
+  };
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §9d  SHARING
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* A square 1080 image, so it works as an Instagram post without being cropped.
+   Same renderer as the reveal, so it is the same pizza. */
+let shareCv = null, cheeseBufCv = null;
+function renderShareImage(px){
+  px = px || 1080;
+  const L = 540, sc = px / L;
+  const cv = shareCv || (shareCv = canvasOf(px, px));
+  const g = cv.getContext('2d');
+  renderRealistic({g, sc, cx:270, cy:288, R:200, w:L, h:L});
+  g.setTransform(sc,0,0,sc,0,0);
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  g.font = '30px Silkscreen, monospace';
+  g.fillStyle = '#14100C'; g.fillText("MARCO'S TRATTORIA", 271, 39);
+  g.fillStyle = '#FFC63C'; g.fillText("MARCO'S TRATTORIA", 270, 38);
+  g.font = '13px Silkscreen, monospace';
+  g.fillStyle = '#C8A07A'; g.fillText('WOOD FIRED. BUILT BY HAND.', 270, 74);
+  const names = builtNames();
+  g.font = '12px Silkscreen, monospace';
+  g.fillStyle = '#E8D8C0';
+  wrapAt(g, names.length ? names.join('   |   ').toUpperCase() : 'NOTHING BUT DOUGH', 470)
+    .slice(0,2).forEach((ln,i) => g.fillText(ln, 270, 486 + i*18));
+  return cv;
+}
+/* measure-and-wrap against an arbitrary context */
+function wrapAt(g, str, max){
+  const words = str.split(' '), out = []; let ln = '';
+  for (const w of words){
+    const t = ln ? ln + ' ' + w : w;
+    if (g.measureText(t).width > max && ln){ out.push(ln); ln = w; } else ln = t;
+  }
+  if (ln) out.push(ln);
+  return out;
+}
+
+/* what actually went on the pizza, in the order you would build it */
+function builtNames(){
+  const order = ['sauce','cheese','meat','top','season'];
+  return ING.filter(i => S.used.has(i.id))
+            .sort((a,b) => order.indexOf(a.cat) - order.indexOf(b.cat))
+            .map(i => i.n.toLowerCase());
+}
+const gameUrl = () => location.origin && location.origin !== 'null'
+  ? location.origin + location.pathname : 'marcos-trattoria';
+
+function defaultMessage(){
+  return "I just built a pizza at Marco's Trattoria \u{1F355}\n\n"
+       + "Check out the woodfired madness! Your turn - show me you can do better.\n\n"
+       + "Click here: " + gameUrl();
+}
+
+const shareEl   = document.getElementById('share');
+const shareImgEl= document.getElementById('shareImg');
+const shareMsgEl= document.getElementById('shareMsg');
+const shareNote = document.getElementById('shareNote');
+let shareBlob = null, shareUrl = null;
+
+/* The share link. Defaults to the game URL and is replaced by a per-pizza
+   page once the image finishes uploading - that page is what carries this
+   pizza as its og:image. */
+let pizzaLink = null;
+
+async function uploadPizza(blob){
+  try {
+    const r = await fetch('/api/pizza', {
+      method:'POST', headers:{'content-type':'image/jpeg'}, body: blob });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.url || null;
+  } catch(e){ return null; }
+}
+
+/* When embedded, the frame is sized to the game's own 8:5 shape so there is no
+   dead space. The share panel is taller than that, so ask the host for room
+   only while it is open. */
+function tellHost(state){
+  if (window.parent === window) return;
+  try { window.parent.postMessage({ marcos: state }, location.origin); } catch(e){}
+}
+
+function openShare(){
+  pizzaLink = null;
+  const cv = renderShareImage(1080);
+  cv.toBlob(b => {
+    shareBlob = b;
+    if (shareUrl) URL.revokeObjectURL(shareUrl);
+    shareUrl = URL.createObjectURL(b);
+    shareImgEl.src = shareUrl;
+  }, 'image/png');
+  /* a smaller JPEG for the link preview - crawlers do not need 1080 PNG */
+  cv.toBlob(async b => {
+    if (!b) return;
+    const link = await uploadPizza(b);
+    if (shareEl.hidden) return;
+    if (!link){
+      note('Could not upload the picture, so the link shows the generic cover. '
+         + 'Your message still works.');
+      return;
+    }
+    pizzaLink = link;
+    /* only swap the URL in, so an edited message survives */
+    shareMsgEl.value = shareMsgEl.value.replace(gameUrl(), link);
+    refreshShareLinks();
+    note('Link ready - your pizza will show as the preview image.');
+  }, 'image/jpeg', 0.82);
+  shareMsgEl.value = defaultMessage();
+  refreshShareLinks();
+  note(location.hostname === 'localhost' || location.protocol === 'file:'
+    ? 'Running locally, so no preview image is possible - X and WhatsApp cannot reach '
+      + 'localhost. Deploy first, then the pizza shows up in the post.'
+    : 'Preparing your link, so this exact pizza shows up in the post...');
+  shareEl.hidden = false;
+  tellHost('share');
+}
+function closeShare(){ shareEl.hidden = true; tellHost('game'); }
+
+function note(txt){ shareNote.textContent = txt; }
+
+shareEl.addEventListener('click', e => { if (e.target === shareEl) closeShare(); });
+document.getElementById('shareClose').addEventListener('click', closeShare);
+addEventListener('keydown', e => { if (e.key === 'Escape' && !shareEl.hidden) closeShare(); });
+
+/* encodeURIComponent deliberately leaves ! ' ( ) * raw. WhatsApp's handoff to
+   the desktop app truncates on the apostrophe in "Marco's", which is why only
+   the trailing URL arrived. RFC 3986 strict encoding fixes it. */
+const enc = s => encodeURIComponent(s)
+  .replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
+async function copyQuietly(msg){
+  try { await navigator.clipboard.writeText(msg); return true; } catch(e){ return false; }
+}
+
+/* The buttons are real links whose href tracks the message box. A link is never
+   eaten by a popup blocker and behaves normally inside an iframe, which
+   window.open did not. */
+const btnWa = document.getElementById('btnWa');
+const btnX  = document.getElementById('btnX');
+function refreshShareLinks(){
+  const m = shareMsgEl.value;
+  btnWa.href = 'https://wa.me/?text=' + enc(m);
+  btnX.href  = 'https://x.com/intent/post?text=' + enc(m);
+}
+shareMsgEl.addEventListener('input', refreshShareLinks);
+
+[btnWa, btnX].forEach(a => {
+  a.addEventListener('click', async e => {
+    const msg = shareMsgEl.value;
+    /* On a phone the OS share sheet is the only route that carries the picture
+       itself. Take it when it exists, and let the link do its job otherwise. */
+    const f = shareBlob && new File([shareBlob], 'pizza.png', {type:'image/png'});
+    if (f && navigator.canShare && navigator.canShare({files:[f]})){
+      e.preventDefault();
+      try { await navigator.share({text: msg, files:[f]}); }
+      catch(err){ if (err.name !== 'AbortError') window.open(a.href, '_blank', 'noopener'); }
+      return;
+    }
+    copyQuietly(msg);
+    note(pizzaLink
+      ? 'Opened with your message. Your pizza appears when the link unfurls.'
+      : 'Opened with your message. Also copied, in case it does not carry over.');
+  });
+});
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §10  INPUT
+   ─────────────────────────────────────────────────────────────────────────── */
+function local(e){ const r=CV.getBoundingClientRect();
+  return {x:(e.clientX-r.left)/S.scale, y:(e.clientY-r.top)/S.scale}; }
+
+function scatter(x,y){
+  const ing = BY[S.sel]; if(!ing || ing.mode!=='scatter') return;
+  const b = ing.bits;
+  for(let i=0;i<b.n;i++){
+    const a=Math.random()*6.283, dd=Math.sqrt(Math.random())*b.spread;
+    const bx=x+Math.cos(a)*dd-PZ.cx, by=y+Math.sin(a)*dd-PZ.cy;
+    if(Math.hypot(bx,by) > PZ.dough-2) continue;
+    if(S.bits.length>2600) return;
+    /* grated cheese lands in shreds, seasoning in specks */
+    const hz = Math.random()<0.5, L = b.shred ? b.sz+1+((Math.random()*3)|0) : b.sz;
+    S.used.add(ing.id);
+    S.bits.push({id:ing.id, l:ing.layer||'over',
+      x:Math.round(bx), y:Math.round(by),
+      w: b.shred ? (hz?L:2) : b.sz, h: b.shred ? (hz?2:L) : b.sz,
+      c:b.cols[(Math.random()*b.cols.length)|0]});
+  }
+}
+function place(x,y){
+  const ing = BY[S.sel]; if(!ing) return;
+  const dx=x-PZ.cx, dy=y-PZ.cy;
+  if(Math.hypot(dx,dy) > PZ.dough+6) return;
+  if(S.tops.length>=90) return;
+  S.tops.push({id:ing.id, x:Math.round(dx), y:Math.round(dy), flip:Math.random()<0.5});
+  S.used.add(ing.id);
+}
+function scrapeAt(x,y){
+  const dx=x-PZ.cx, dy=y-PZ.cy;
+  let best=-1, bd=22;
+  S.tops.forEach((o,i)=>{ const d=Math.hypot(o.x-dx,o.y-dy); if(d<bd){bd=d;best=i;} });
+  if(best>=0){ S.tops.splice(best,1); return; }
+  const before=S.bits.length;
+  S.bits=S.bits.filter(b=>Math.hypot(b.x-dx,b.y-dy)>20);
+  if(S.bits.length!==before) return;
+  wipeSauceAt(x,y);
+}
+
+CV.addEventListener('pointerdown', e=>{
+  e.preventDefault(); CV.setPointerCapture(e.pointerId);
+  const p=local(e); MX=p.x; MY=p.y; DOWN=true;
+  const onPizza = S.screen==='build' && Math.hypot(p.x-PZ.cx, p.y-PZ.cy) <= PZ.R;
+  if (onPizza){
+    if (S.scrape){ scrapeAt(p.x,p.y); return; }
+    const ing = S.sel ? BY[S.sel] : null;
+    if (!ing) return;
+    if (ing.mode==='paint'){ S.painting=true; S.lastP=null; sauceStroke(p.x,p.y); return; }
+    if (ing.mode==='scatter'){ scatter(p.x,p.y); return; }
+    place(p.x,p.y); return;
+  }
+  for(let i=HIT.length-1;i>=0;i--){ const h=HIT[i];
+    if(p.x>=h.x&&p.x<h.x+h.w&&p.y>=h.y&&p.y<h.y+h.h){ h.fn(); return; } }
+});
+CV.addEventListener('pointermove', e=>{
+  const p=local(e); MX=p.x; MY=p.y;
+  if(!DOWN || S.screen!=='build') return;
+  const onPizza = Math.hypot(p.x-PZ.cx, p.y-PZ.cy) <= PZ.R;
+  if(!onPizza) return;
+  if(S.scrape){ scrapeAt(p.x,p.y); return; }
+  const ing = S.sel ? BY[S.sel] : null; if(!ing) return;
+  if(ing.mode==='paint' && S.painting) sauceStroke(p.x,p.y);
+  else if(ing.mode==='scatter') scatter(p.x,p.y);
+});
+addEventListener('pointerup', ()=>{ DOWN=false; S.painting=false; S.lastP=null; S.charge=0; });
+CV.addEventListener('pointerleave', ()=>{ MX=MY=-99; });
+CV.addEventListener('contextmenu', e=>e.preventDefault());
+addEventListener('keydown', e=>{ if(e.key==='Escape'){ S.sel=null; S.scrape=false; } });
+
+/* ───────────────────────────────────────────────────────────────────────────
+   §11  LOOP
+   ─────────────────────────────────────────────────────────────────────────── */
+let last=performance.now();
+function frame(now){
+  const dt = Math.min(0.05,(now-last)/1000); last=now; S.t += dt;
+  HIT=[]; CUR='default';
+  if (S.screen === 'build'){
+    RCV.style.opacity = 0;
+    drawBuild();
+  } else if (S.screen === 'oven'){
+    RCV.style.opacity = 0;
+    /* Wall clock, not accumulated frame deltas. dt is capped at 50ms, so on a
+       throttled or backgrounded tab the old version advanced the bake at a
+       fraction of real time and it effectively never finished - which is why
+       the pizza never appeared. */
+    S.ovenT = (performance.now() - S.ovenStart) / 1000;
+    drawOvenScene(S.ovenT);
+    if (S.ovenT > 3.9){
+      /* Normally already rendered during the bake. Only render here if that
+         never ran, and never strand the player in the oven if it fails. */
+      if (!S.baked){ try { renderRealistic(); } catch(e){ S.err = e; } }
+      S.screen='reveal'; S.revealT=0;
+    }
+  } else {
+    S.revealT += dt;
+    RCV.style.opacity = Math.min(1, S.revealT/0.6);
+    drawReveal(dt);
+  }
+  CV.style.cursor = CUR;
+}
+
+/* One exception anywhere above used to kill the rAF chain for good - the
+   canvas froze and the page stopped responding to everything. Catch here, the
+   single point every frame routes through, and keep the loop alive. */
+function loop(now){
+  try { frame(now); }
+  catch(e){
+    if (!S.err) { S.err = e; console.error('frame error:', e); }
+  }
+  if (S.err) drawCrash();
+  requestAnimationFrame(loop);
+}
+function drawCrash(){
+  rect(0, H-40, W, 40, '#5A1A10');
+  rect(0, H-40, W, 2, '#FFC63C');
+  txt('SOMETHING BROKE: ' + String(S.err && S.err.message).slice(0,58), 10, H-32, '#FFD9B0', 10);
+  txt('YOUR PIZZA IS SAFE - PRESS R TO RELOAD', 10, H-18, '#E09A6A', 10);
+}
+addEventListener('keydown', e => { if (S.err && (e.key==='r'||e.key==='R')) location.reload(); });
+
+/* Ask for the font by name rather than waiting on fonts.ready: nothing has
+   painted with Silkscreen yet at this point, so ready can resolve before the
+   file is even requested and the first frames draw in the fallback. */
+const start = () => requestAnimationFrame(loop);
+if (document.fonts && document.fonts.load) document.fonts.load('16px Silkscreen').then(start, start);
+else start();
+</script>
+</body>
+</html>

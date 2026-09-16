@@ -30,7 +30,78 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			<p>
 				Start with <a href="/blog">the blog</a>, or read <a href="/about">more about me</a>.
 			</p>
+
+			<section class="game" aria-labelledby="game-heading">
+				<h2 id="game-heading">Marco's Trattoria</h2>
+				<p class="game-intro">
+					Spread the sauce and load it up. At Marco's everyone is welcome.
+				</p>
+				<div class="game-frame">
+					<iframe
+						src="/pizza.html"
+						title="Marco's Trattoria, a game where you build and bake a pizza"
+						loading="lazy"
+					></iframe>
+				</div>
+			</section>
+			<script is:inline>
+				// The frame hugs the game while playing and grows for the share panel.
+				(() => {
+					const frame = document.querySelector('.game-frame');
+					const iframe = frame && frame.querySelector('iframe');
+					if (!frame || !iframe) return;
+					addEventListener('message', (e) => {
+						if (e.origin !== location.origin) return;
+						if (e.source !== iframe.contentWindow) return;
+						if (!e.data || typeof e.data.marcos !== 'string') return;
+						frame.classList.toggle('sharing', e.data.marcos === 'share');
+					});
+				})();
+			</script>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	.game {
+		margin-top: 3rem;
+	}
+	.game h2 {
+		margin-bottom: 0.4rem;
+	}
+	.game-intro {
+		color: rgb(var(--gray));
+		margin-bottom: 1.2rem;
+	}
+	/* Exactly the game's own 8:5 shape, so it fills the frame with no dead space
+	   at any width. The share panel is taller than that, so the frame grows only
+	   while it is open and the game tells us when. */
+	.game-frame {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 8 / 5;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		overflow: hidden;
+		background: var(--bg);
+		transition: height 0.18s ease;
+	}
+	.game-frame.sharing {
+		aspect-ratio: auto;
+		height: 470px;
+	}
+	.game-frame iframe {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+		display: block;
+	}
+	@media (max-width: 720px) {
+		.game-frame.sharing {
+			height: 460px;
+		}
+	}
+</style>
