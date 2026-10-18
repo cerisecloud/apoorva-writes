@@ -82,24 +82,25 @@ They were folded in so nothing was lost:
 
 Every metric card, highlight bar, issue row, watchlist tile, L2 tile and side-panel card reads in the same order, so people know where to look:
 
-1. **Status first.** A tinted band or coloured edge with the status word (OFF TRACK, AT RISK, ON TRACK, OPPORTUNITY). Bad is louder than good: off-track items get the strongest tint.
+1. **Status first.** The status word (OFF TRACK, AT RISK, ON TRACK, OPPORTUNITY) in its own colour. Bad is louder than good: off-track and at-risk get a tinted chip, on-track is plain text. Summary rows also carry a coloured left edge.
 2. **Which metric.**
 3. **How far off and in which direction**, large and in the status colour: "▼ 0.4 pts behind plan". This matters more than the value itself.
-4. **The actual value**, smaller: "Now 4.6%, plan 4.9%".
+4. **The actual value**, smaller, with what it is judged against: "Now 4.6%, plan 4.9%". Never a bare "Now 4.6%".
 5. **The trend.**
-6. **What is behind it**, and the arrow to open it.
+6. **What is behind it**, and in the summary the next step, then the CTAs.
 
-The code for this lives in `gapOf` and `gapHtml` (the gap line), `cardHtml` (L1 cards), the `.kbar` markup (the CEO's EPS bar), `summaryView` (issue rows), `watchTile` (watchlist) and `l2Block` and `renderDrawer` (pyramid tiles and side panel).
+Surfaces are kept calm on purpose: soft borders, a white background and one whisper of shadow. Colour carries the message, not boxes.
+
+The code for this lives in `gapOf` and `gapHtml` (the gap line), `nowLine` (the value and its comparison), `cardHtml` (L1 cards), `summaryView` (summary rows), `watchTile` (watchlist) and `l2Block` and `renderDrawer` (pyramid tiles and side panel).
 
 ### Page, top to bottom
 
 | Area | What it shows |
 |---|---|
 | Header | Role, **Filters** (period, comparison, calendar or fiscal year, plus a Custom option that shows a disabled date range on purpose), Ask (press `/`), Demo, Watchlist |
-| Summary | Two headline sentences (each opens its metric), the CEO's EPS bar, Other issues (status, name, gap, one-sentence why), Next steps (action, due date, who set it up) |
-| My core metrics | The role's L1 cards |
-| Panel | Opens under the cards. Headline, Ask, its own filters, L2 tiles, then the analysis. Deeper levels swap in place with breadcrumbs. |
-| My watchlist | Saved views with the latest value and the change since saving |
+| Summary | Two headline sentences, each opening its metric, then up to six issue rows. One row carries the whole story: status, the metric and its gap, why it is happening, the next step with its due date and where it came from, and on the right the action's own button (Assign, Email, Book meeting), a menu and "See analysis". An issue with no action of its own shows what Pulse suggests and who owns it. The CEO's earnings line is the first row. |
+| Core metrics | The role's L1 cards, with the watchlist on the same shelf to their right. The link above the shelf scrolls between the two. |
+| Panel | Opens under the cards. The headline takes the left, and a fixed column on the right holds the tools, Ask and one Filters button. L2 tiles, then the analysis. Deeper levels swap in place with breadcrumbs. |
 | My actions | Open, Overdue and Done. Email and meeting buttons only prepare drafts. Nothing is ever sent. |
 
 ### Visual rules
@@ -109,6 +110,12 @@ The code for this lives in `gapOf` and `gapHtml` (the gap line), `cardHtml` (L1 
 - Colours follow good or bad for the business, not up or down. Higher cost is red.
 - Margins move in bps, growth and share in pts, money in `$` (USD at plan rates).
 - Form fields have a white background and `color-scheme: light`, so a browser in dark mode cannot turn them black.
+
+### What a card's chart says
+
+- With weekly history: the line, a dashed line for what it is judged against, the gap between them shaded in the status colour, the value the line starts from, and the period it covers.
+- With no history (the synthetic metrics in section 2): a bar from zero to today with a tick where the comparison sits, under the caption "Now against target". Do not fake a curve for these.
+- `trendOf` returns `null` when a metric has no history, which is what switches a card to the bar.
 
 ---
 
@@ -209,6 +216,7 @@ Inside an `mx()` entry, `f(filter, period)` returns `{ raw, craw }` (actual and 
 4. **Plain-language pass (Oct 2026):** every string rewritten against the writing checklist. Dense "→" chains replaced with one sentence per issue. Dead code removed.
 5. **Status-first anatomy (Oct 2026):** cards, the EPS bar, issue rows and watchlist tiles reordered so status shows first, then the metric, then the gap, then the value. Filters button labelled "Filters", with a disabled Custom range to show the idea without building it.
 6. **Metric pyramid (Oct 2026):** cards replaced by the pyramid's L1s per role. L2 tiles added to each panel and L3s added in a side panel, with every earlier analysis still reachable.
+7. **Density pass (Oct 2026):** the summary's two columns merged into one block, so an issue and its next step read as one thing and the core metrics sit above the fold. Tinted bands dropped for status chips. The watchlist moved onto the cards' shelf. Charts on metrics without history replaced by an honest bar. Panel header given a fixed column for its controls.
 
 ## 8. Known limits and next steps
 
