@@ -1,4 +1,4 @@
-/* Kestrel Consumer Group — synthetic data layer (all names and figures are fictional).
+/* Pulse — synthetic data for Northstar Consumer Goods (fictional) (all names and figures are fictional).
    Builds weekly data for FY2026 (calendar year): actuals through week 41, forecast weeks 42-52,
    plus target (budget / RGM plan) and last year. Exposes window.KD (browser) or globalThis.KD (node). */
 (function (root) {
@@ -41,12 +41,12 @@ const AFFINITY = { bolt: { CONV: 1.6 }, crunch: { CONV: 1.3 }, oats: { CONV: .5 
 const G_PLAN = { IN: .075, ID: .066, UK: .03, US: .034 };     // planned net sales growth vs LY
 const G_BRAND = { bolt: .0, orchard: .0, oats: .01, crunch: .0, glow: .02, silk: -.005 };
 const RETAILERS = [
-  { id: 'bb', c: 'IN', name: 'Bazaar Bharat', ch: 'MT', share: .45, otif: .92 }, { id: 'mm', c: 'IN', name: 'MegaMandi Hyper', ch: 'LR', share: .70, otif: .92 }, { id: 'zk', c: 'IN', name: 'Zipkart', ch: 'ECOM', share: .55, otif: .95 },
-  { id: 'pp', c: 'ID', name: 'Pasar Prima', ch: 'MT', share: .50, otif: .95 }, { id: 'hn', c: 'ID', name: 'Hyper Nusantara', ch: 'LR', share: .65, otif: .90 }, { id: 'tk', c: 'ID', name: 'Tokoku Online', ch: 'ECOM', share: .50, otif: .95 },
-  { id: 'hw', c: 'UK', name: 'Hartwell Grocers', ch: 'LR', share: .45, otif: .95 }, { id: 'pl', c: 'UK', name: 'Penny Lane Discount', ch: 'MT', share: .35, otif: .93 }, { id: 'cc', c: 'UK', name: 'Corner & Co', ch: 'CONV', share: .40, otif: .95 },
-  { id: 'ng', c: 'US', name: 'Northgate Mass', ch: 'LR', share: .40, otif: .97 }, { id: 'ff', c: 'US', name: 'Fieldfresh Grocery', ch: 'MT', share: .35, otif: .95 }, { id: 'wp', c: 'US', name: 'Wellpoint Pharmacy', ch: 'MT', share: .15, otif: .95 },
+  { id: 'bb', c: 'IN', name: 'CityMart', ch: 'MT', share: .45, otif: .92 }, { id: 'mm', c: 'IN', name: 'MegaStore', ch: 'LR', share: .70, otif: .92 }, { id: 'zk', c: 'IN', name: 'ShopNow', ch: 'ECOM', share: .55, otif: .95 },
+  { id: 'pp', c: 'ID', name: 'FreshMart', ch: 'MT', share: .50, otif: .95 }, { id: 'hn', c: 'ID', name: 'HyperValue', ch: 'LR', share: .65, otif: .90 }, { id: 'tk', c: 'ID', name: 'BuyOnline', ch: 'ECOM', share: .50, otif: .95 },
+  { id: 'hw', c: 'UK', name: 'GreenGrocer', ch: 'LR', share: .45, otif: .95 }, { id: 'pl', c: 'UK', name: 'ValuePlus', ch: 'MT', share: .35, otif: .93 }, { id: 'cc', c: 'UK', name: 'CornerShop', ch: 'CONV', share: .40, otif: .95 },
+  { id: 'ng', c: 'US', name: 'BigBox', ch: 'LR', share: .40, otif: .97 }, { id: 'ff', c: 'US', name: 'FreshFields', ch: 'MT', share: .35, otif: .95 }, { id: 'wp', c: 'US', name: 'CarePharmacy', ch: 'MT', share: .15, otif: .95 },
 ];
-const DISTRIBUTORS = { IN: ['Shree Distributors', 'Western Traders', 'Deccan Supply'], ID: ['Java Niaga', 'Surya Distribusi', 'Bandung Mitra'] };
+const DISTRIBUTORS = { IN: ['North Distributors', 'West Distributors', 'South Distributors'], ID: ['Java Distributors', 'East Java Distributors', 'Bandung Distributors'] };
 const COMPETITORS = { Coffee: ['Volt Coffee', 'Morning Roast'], Juice: ['FreshFarm Juice', 'SunSip'], 'Oats & cereal': ['Golden Grain', 'Harvest Bowl'], 'Chips & snacks': ['Krisp Co', 'Salt & Spud'], Skincare: ['Lumina Skin', 'PureDew'], Haircare: ['Shine Hair', 'Kera Care'] };
 // LY share structure per country x sub-category: [ours, competitor 1, competitor 2, retailer own brand]
 const SHARE_LY = {
@@ -86,7 +86,7 @@ function storyFx(b, c, ch, w) {
   if (b === 'crunch' && c === 'US' && (ch === 'LR' || ch === 'MT') && w >= 22) { fx.tr += .09; fx.vol *= 1.16; }
   if (b === 'oats') {
     fx.mat = w < 14 ? 1.01 : w < 18 ? 1 + .18 * (w - 13) / 4 : 1.18;
-    const delayed = (c === 'UK' && (ch === 'LR' || ch === 'MT')) || (c === 'US' && ch === 'LR');  // Hartwell, Penny Lane, Northgate Mass
+    const delayed = (c === 'UK' && (ch === 'LR' || ch === 'MT')) || (c === 'US' && ch === 'LR');  // Hartwell, Penny Lane, BigBox
     if (delayed && w >= 14 && w < 28) fx.lp = 1.02 / 1.06;
   }
   // large retailers resisted the planned 3% list-price increase on other brands: only ~1.5% landed
@@ -99,6 +99,7 @@ function storyFx(b, c, ch, w) {
 }
 
 /* ---------------- series generation ---------------- */
+const LE = { week: 39, label: 'Sep latest estimate', recovery: .4 };
 const FIELDS = ['vol', 'ord', 'cons', 'stock', 'gs', 'tr', 'ret', 'mat', 'pack', 'conv', 'inb', 'wh', 'fr', 'hd', 'rush', 'apTv', 'apDig', 'apOth', 'rsv', 'inc'];
 const mk = () => Object.fromEntries(FIELDS.map(f => [f, new Float64Array(NW + 1)]));
 const SERIES = [];
@@ -186,6 +187,9 @@ for (const s of SERIES) {
     A.inc[w] = (A.apTv[w] + A.apDig[w] + A.apOth[w]) * s.romi;
   }
   for (const X of [A, T, L]) for (let w = 1; w <= NW; w++) X.rsv[w] = X.cons[w] * (X.gs[w] / X.vol[w]) * 1.3;
+  // latest estimate (Sep LE, made at Wk 39): actuals to Wk 39, then a forecast that assumed 40% recovery towards plan
+  const E = mk(); for (const k of FIELDS) for (let w = 1; w <= NW; w++) E[k][w] = w <= LE.week ? A[k][w] : A[k][w] + LE.recovery * (T[k][w] - A[k][w]);
+  s.E = E;
 }
 
 /* ---------------- market (syndicated) data: country x sub-category ---------------- */
@@ -251,18 +255,128 @@ const SIGNALS = [
   { w: 34, c: 'UK', b: 'bolt', ch: 'CONV', type: 'Competitor', text: 'Volt Coffee cut shelf prices (−12%) in UK convenience and added distribution.' },
   { w: 35, c: 'ID', b: 'orchard', type: 'Supply', text: 'Port congestion at Tanjung Priok delayed juice-concentrate shipments; warehouse cover fell below 7 days.' },
   { w: 14, c: '*', b: 'oats', type: 'Input cost', text: 'Oat prices (+18%) vs budget from Wk 14; hedge cover only 40%.' },
-  { w: 28, c: 'UK', b: 'oats', type: 'Pricing', text: 'Hartwell Grocers and Penny Lane Discount (UK) and Northgate Mass (USA) accepted the Sunrise Oats price increase only from Wk 28.' },
+  { w: 28, c: 'UK', b: 'oats', type: 'Pricing', text: 'GreenGrocer and ValuePlus (UK) and BigBox (USA) accepted the Sunrise Oats price increase only from Wk 28.' },
   { w: 30, c: 'UK', b: 'silk', type: 'Category', text: 'UK haircare category (−7%) as shoppers trade down to retailer own brands.' },
-  { w: 18, c: 'IN', b: 'glow', ch: 'ECOM', type: 'Category', text: 'Skincare e-commerce in India growing fast; Zipkart sale days drive record traffic.' },
-  { w: 40, c: 'IN', type: 'Seasonality', text: 'Diwali falls in Wk 44: gifting peak for skincare and snacks expected (+25% vs base).' },
+  { w: 18, c: 'IN', b: 'glow', ch: 'ECOM', type: 'Category', text: 'Skincare e-commerce in India growing fast; ShopNow sale days drive record traffic.' },
+  { w: 44, c: 'IN', type: 'Seasonality', text: 'Diwali (Wk 44): gifting peak for skincare and snacks expected (+25% vs base). The forecast includes this spike.' },
   { w: 30, c: 'IN', ch: 'GT', type: 'Distribution', text: 'Quarter-end distributor incentive in India general trade pushed extra stock into distributors.' },
-  { w: 24, c: 'US', b: 'crunch', type: 'Promotion', text: 'Buy-2-get-1 and endcap promotions at Northgate Mass and Fieldfresh Grocery lifted trade spend to about 21% of gross sales.' },
+  { w: 24, c: 'US', b: 'crunch', type: 'Promotion', text: 'Buy-2-get-1 and endcap promotions at BigBox and FreshFields lifted trade spend to about 21% of gross sales.' },
 ];
+
+/* ---------------- additions for the role home pages ---------------- */
+// Sales heads (regional sales managers), each owning a share of their country's sales
+const SALES_HEADS = [
+  { id: 'in-n', c: 'IN', region: 'North & East India', name: 'Raj Patel', w: .38, perf: -.035 }, { id: 'in-w', c: 'IN', region: 'West India', name: 'Neha Singh', w: .34, perf: .02 }, { id: 'in-s', c: 'IN', region: 'South India', name: 'Arun Kumar', w: .28, perf: .01 },
+  { id: 'id-j', c: 'ID', region: 'Jakarta & West Java', name: 'Budi Santoso', w: .58, perf: -.06 }, { id: 'id-e', c: 'ID', region: 'East Java', name: 'Siti Rahma', w: .42, perf: -.03 },
+  { id: 'uk-s', c: 'UK', region: 'London & South', name: 'Bob Smith', w: .55, perf: -.02 }, { id: 'uk-n', c: 'UK', region: 'Midlands & North', name: 'James Hall', w: .45, perf: .015 },
+  { id: 'us-e', c: 'US', region: 'East', name: 'Rachel Green', w: .40, perf: .005 }, { id: 'us-c', c: 'US', region: 'Central', name: 'Mike Davis', w: .32, perf: -.015 }, { id: 'us-w', c: 'US', region: 'South & West', name: 'Ana Lopez', w: .28, perf: .02 },
+];
+// Distribution and outlet reach by sales head (synthetic)
+const REACH = {
+  'in-n': { wd: .61, wdLY: .63, outlets: 182000, target: 195000 }, 'in-w': { wd: .68, wdLY: .66, outlets: 156000, target: 152000 }, 'in-s': { wd: .64, wdLY: .63, outlets: 131000, target: 133000 },
+  'id-j': { wd: .58, wdLY: .62, outlets: 94000, target: 101000 }, 'id-e': { wd: .55, wdLY: .56, outlets: 71000, target: 74000 },
+  'uk-s': { wd: .86, wdLY: .87, outlets: 21500, target: 22000 }, 'uk-n': { wd: .84, wdLY: .83, outlets: 17800, target: 17500 },
+  'us-e': { wd: .79, wdLY: .78, outlets: 31200, target: 31000 }, 'us-c': { wd: .76, wdLY: .77, outlets: 24900, target: 25600 }, 'us-w': { wd: .74, wdLY: .72, outlets: 22100, target: 21500 },
+};
+const LISTINGS = [
+  { c: 'UK', ka: 'pl', b: 'oats', sku: 'Sunrise Instant Oats 10x40g', type: 'Delisted', w: 33 },
+  { c: 'US', ka: 'ff', b: 'glow', sku: 'Glow Vitamin C Serum 30ml', type: 'Listed', w: 30 },
+  { c: 'IN', ka: 'zk', b: 'glow', sku: 'Glow Sunscreen SPF50 50ml', type: 'Listed', w: 26 },
+  { c: 'ID', ka: 'pp', b: 'orchard', sku: 'Orchard Kids Juice Box 6x200ml', type: 'Delisted (out of stock)', w: 39 },
+];
+// Warehouses (distribution centres)
+const WAREHOUSES = [{ id: 'bhw', c: 'IN', name: 'Bhiwandi DC' }, { id: 'del', c: 'IN', name: 'Delhi DC' }, { id: 'jkt', c: 'ID', name: 'Jakarta DC' }, { id: 'mid', c: 'UK', name: 'Midlands DC' }, { id: 'dal', c: 'US', name: 'Dallas DC' }, { id: 'chi', c: 'US', name: 'Chicago DC' }];
+// Long-range plan (3-year): net sales index by year, plan and industry growth
+const LRP = { years: [2024, 2025, 2026, 2027], planCagr: .06, industryCagr: { Food: .052, Beverages: .061, 'Personal Care': .071 }, planCagrCat: { Food: .05, Beverages: .055, 'Personal Care': .08 }, g2025: { Food: .045, Beverages: .05, 'Personal Care': .07 } };
+// People (fictional) who own actions
+const PEOPLE = {
+  CEO: 'Sarah Miller · CEO', CFO: 'David Chen · CFO', RGM: 'Alice Brown · Head of Revenue Growth', CMO: 'Emma Wilson · CMO', CSO: 'Mike Johnson · Chief Sales Officer', COO: 'Tom Baker · COO', PROC: 'Grace Lee · Head of Procurement', QA: 'Omar Khan · Head of Quality',
+  UK_SALES: 'Bob Smith · UK Sales Director', US_SALES: 'Rachel Green · US Sales Director', IN_SALES: 'Raj Patel · India Sales Director', ID_SALES: 'Budi Santoso · Indonesia Sales Director',
+  UK_GM: 'Peter Walsh · UK General Manager', IN_GM: 'Ravi Kumar · India General Manager', ID_SUPPLY: 'Lisa Tan · Indonesia Supply Lead', BRAND_BOLT: 'Chloe Adams · Bolt Brew Brand Director', BRAND_GLOW: 'Priya Shah · Glow Skincare Brand Director',
+};
+const MEDIA_ROMI = { TV: .75, Digital: 1.35, Other: .9 };   // multipliers on brand ROMI by media
+const COMPLAINTS = (() => { const a = []; for (let w = 1; w <= CW; w++) a[w] = 3.2 + Math.sin(w / 4) * .25 + nz(.15); return a; })();
+
+// Household penetration (% of households buying in the last 52 weeks, consumer panel) and buyer switching
+const PENETRATION = {
+  'bolt|UK': [18.2, 16.9], 'bolt|US': [11.4, 11.6], 'bolt|IN': [6.1, 6.4], 'bolt|ID': [7.8, 8.0],
+  'orchard|UK': [14.0, 14.1], 'orchard|US': [9.6, 9.5], 'orchard|IN': [12.2, 12.6], 'orchard|ID': [24.5, 23.1],
+  'oats|UK': [27.3, 26.8], 'oats|US': [19.8, 19.6], 'oats|IN': [8.4, 8.9], 'oats|ID': [5.2, 5.4],
+  'crunch|UK': [22.1, 22.4], 'crunch|US': [31.0, 31.5], 'crunch|IN': [17.5, 18.4], 'crunch|ID': [15.2, 15.9],
+  'glow|UK': [9.8, 10.1], 'glow|US': [6.2, 6.4], 'glow|IN': [7.4, 9.1], 'glow|ID': [8.1, 8.7],
+  'silk|UK': [21.0, 21.4], 'silk|US': [8.9, 8.8], 'silk|IN': [19.6, 20.1], 'silk|ID': [16.8, 17.0],
+};
+const SWITCHING = [{ from: 'Bolt Brew Coffee', to: 'Volt Coffee', where: 'UK', buyers: 0.9, note: 'Mostly convenience shoppers since the Wk 34 price cut' }, { from: 'Orchard Juice', to: 'FreshFarm Juice', where: 'Indonesia', buyers: 0.6, note: 'Out-of-stocks at FreshMart and HyperValue' }, { from: 'Sunrise Oats', to: 'Retailer own brand', where: 'UK', buyers: 0.4, note: 'After the oats price increase landed' }];
+// Cash: share of net sales unless noted; working-capital extras in USD
+const CASH = { da: .0275, capexA: .032, capexT: .035, taxRate: .23, wcT: .006, india_receivables: 20e6, inventory_build: 15e6, conversionTarget: .9 };
+// EPS latest-estimate history (how the full-year forecast moved), and safety
+const LE_HISTORY = [['Jan', 3.15], ['Feb', 3.15], ['Mar', 3.16], ['Apr', 3.14], ['May', 3.12], ['Jun', 3.12], ['Jul', 3.10], ['Aug', 3.08], ['Sep', 3.06], ['Oct', 3.05]];
+const SAFETY = { ltifr: .42, target: .5, ly: .55,
+  history: [.58, .55, .52, .51, .49, .47, .46, .45, .44, .43, .42, .42],   // rolling 12-month injury rate, Nov–Oct
+  incidents: [{ site: 'Cikarang plant', type: 'Hand injury (lost time)', w: 37, status: 'Root cause done; guard fitted' }, { site: 'Bhiwandi DC', type: 'Forklift near miss', w: 39, status: 'Retraining under way' }, { site: 'Ohio plant', type: 'Slip (no lost time)', w: 40, status: 'Closed' }] };
+
+// ---------------- marketing: brand health, share of voice, buying frequency, launches ----------------
+// brand tracker (monthly, n≈1,000 per market): [last year, now] in % of category buyers; a move of 2+ pts is statistically significant
+const BRAND_HEALTH = (() => { const o = {}, base = { bolt: [62, 38, 21], orchard: [70, 41, 24], oats: [74, 45, 27], crunch: [81, 52, 30], glow: [48, 30, 17], silk: [66, 37, 20] };
+  const story = { 'bolt|UK': [-1, -4.2, -3.1], 'glow|IN': [5.8, 4.4, 3.0], 'orchard|ID': [0, -2.3, -1.4], 'silk|UK': [1.2, 2.1, 1.0], 'oats|UK': [0, -0.8, -2.2] };
+  for (const c of ['IN', 'ID', 'UK', 'US']) for (const b of Object.keys(base)) { const k = b + '|' + c, d = story[k] || [((b.length + c.charCodeAt(0)) % 5 - 2) * .3, ((b.length * 3 + c.charCodeAt(1)) % 5 - 2) * .4, ((b.length + c.charCodeAt(1)) % 3 - 1) * .5], adj = c === 'IN' || c === 'ID' ? -6 : 0;
+    o[k] = base[b].map((v, i) => [v + adj, +(v + adj + d[i]).toFixed(1)]); }
+  return o; })();
+// share of voice (our media weight ÷ category media weight) vs share of market, last 13 weeks
+const SOV = { 'bolt|UK': [12.4, 16.6], 'glow|IN': [21.0, 13.2], 'orchard|ID': [17.5, 21.0], 'oats|UK': [15.1, 18.9], 'crunch|US': [24.0, 19.5], 'silk|UK': [16.8, 15.1], 'oats|US': [14.0, 15.2], 'glow|US': [7.5, 6.8] };
+// purchase frequency (trips per buyer per year) [last year, now] and repeat rate (% of buyers who bought again within 12 weeks)
+const FREQUENCY = { 'bolt|UK': [6.1, 6.0, .41], 'oats|UK': [8.4, 7.8, .52], 'orchard|ID': [9.2, 8.6, .44], 'glow|IN': [3.1, 3.4, .39], 'crunch|US': [11.8, 12.3, .55], 'silk|UK': [5.2, 5.3, .47], 'crunch|IN': [9.5, 9.8, .50], 'oats|US': [7.9, 8.0, .51] };
+const LAUNCHES = [
+  { id: 'l1', name: 'Glow Sunscreen SPF50 50ml', b: 'glow', c: 'IN', w: 26, dist: .52, distPlan: .45, trial: 2.4, trialPlan: 1.8, repeat: .36, repeatPlan: .30, sales: 6.1e6, salesPlan: 4.9e6 },
+  { id: 'l2', name: 'Glow Vitamin C Serum 30ml', b: 'glow', c: 'US', w: 30, dist: .34, distPlan: .40, trial: 1.1, trialPlan: 1.0, repeat: .31, repeatPlan: .28, sales: 4.2e6, salesPlan: 3.8e6 },
+  { id: 'l3', name: 'Crunch Chilli Lime 150g', b: 'crunch', c: 'US', w: 12, dist: .72, distPlan: .70, trial: 3.9, trialPlan: 3.5, repeat: .27, repeatPlan: .26, sales: 9.8e6, salesPlan: 9.0e6 },
+  { id: 'l4', name: 'Bolt Brew Cold Coffee 4-pack', b: 'bolt', c: 'UK', w: 18, dist: .61, distPlan: .70, trial: 1.8, trialPlan: 2.4, repeat: .19, repeatPlan: .25, sales: 2.1e6, salesPlan: 3.4e6 },
+  { id: 'l5', name: 'Sunrise Honey Granola 400g', b: 'oats', c: 'IN', w: 22, dist: .28, distPlan: .35, trial: .9, trialPlan: 1.2, repeat: .22, repeatPlan: .24, sales: 1.4e6, salesPlan: 2.0e6 },
+];
+const INNOVATION = { share: .118, target: .15, ly: .126 };   // % of net sales from products launched in the last 3 years
+
+// ---------------- operations: plants, savings programme, suppliers, forecast bias, forward stock projection ----------------
+const PLANTS = [
+  { id: 'pune', name: 'Pune plant', c: 'IN', makes: 'Snacks, haircare', oee: .71, oeeT: .75, util: .86, util13: .94, convVsPlan: .021 },
+  { id: 'cik', name: 'Cikarang plant', c: 'ID', makes: 'Juice, coffee', oee: .64, oeeT: .72, util: .78, util13: .83, convVsPlan: .058 },
+  { id: 'leeds', name: 'Leeds plant', c: 'UK', makes: 'Oats, coffee', oee: .78, oeeT: .76, util: .74, util13: .79, convVsPlan: -.005 },
+  { id: 'ohio', name: 'Ohio plant', c: 'US', makes: 'Oats, snacks', oee: .74, oeeT: .75, util: .88, util13: .97, convVsPlan: .008 },
+];
+const SAVINGS = [   // productivity programme, $; FY target / plan to date / delivered to date
+  { lever: 'Procurement (materials)', fy: 18e6, plan: 14e6, done: 10.5e6, note: 'Oat contracts reset blocked by +18% market price' },
+  { lever: 'Manufacturing efficiency', fy: 12e6, plan: 9.5e6, done: 8.9e6, note: 'Cikarang line downtime' },
+  { lever: 'Logistics & freight', fy: 9e6, plan: 7e6, done: 6.4e6, note: 'Air-freight for Indonesia juice' },
+  { lever: 'Packaging redesign', fy: 6e6, plan: 4.5e6, done: 3.2e6, note: 'Lighter juice bottle slipped to Q1' },
+  { lever: 'Warehouse network', fy: 3e6, plan: 2e6, done: 0, note: 'New Midlands DC goes live in Nov' },
+];
+const SUPPLIERS = [
+  { name: 'Prairie Oats Co', input: 'Oats', otif: .89, risk: 'High', note: 'Single source for UK and USA; price (+18%) vs budget' },
+  { name: 'Java Fruit Processing', input: 'Fruit concentrate', otif: .81, risk: 'High', note: 'Port delays at Jakarta; recovery expected Wk 44' },
+  { name: 'Highland Coffee Traders', input: 'Coffee beans', otif: .94, risk: 'Medium', note: 'Price volatility; 70% hedged' },
+  { name: 'PackRight Films', input: 'Packaging film', otif: .95, risk: 'Low', note: '' },
+  { name: 'SurfaChem', input: 'Surfactants', otif: .97, risk: 'Low', note: '' },
+];
+const FORECAST_BIAS = { IN: .06, ID: .12, UK: .03, US: -.01 };   // + = forecast above actual demand; lag 1 month, SKU × country
+// projected days of cover for the next 13 weeks (supply planner), including recovery plans already confirmed
+function invProj(c, b, w) {
+  if (w <= CW) return invDays(c, b, w);
+  if (b === 'orchard' && c === 'ID') return w < 44 ? 4 : Math.min(24, 4 + (w - 43) * 5);
+  if (b === 'glow' && c === 'IN') return w <= 43 ? 9 - (w - 41) : Math.min(22, 7 + (w - 43) * 4);
+  if (b === 'oats' && c === 'US') return w >= 45 && w <= 49 ? 22 - (w - 44) * 3.2 + (w >= 48 ? (w - 47) * 2 : 0) : invDays(c, b, CW);
+  if (b === 'crunch' && c === 'IN') return Math.max(14, invDays(c, b, CW) - (w - CW) * .9);
+  return invDays(c, b, CW) + Math.sin(w) * .8;
+}
 
 /* ---------------- aggregation API ---------------- */
 const S = (f) => ({ ...f });
 function match(s, f) { return (!f.c || f.c.includes(s.c)) && (!f.b || f.b.includes(s.b)) && (!f.ch || f.ch.includes(s.ch)) && (!f.cat || f.cat.includes(s.cat)); }
+const AGG_CACHE = new Map();
 function agg(f, sc, w0, w1) {
+  const key = [f.c, f.b, f.ch, f.cat].map(x => x ? x.join(',') : '').join('|') + '|' + sc + '|' + w0 + '|' + w1, hit = AGG_CACHE.get(key);
+  if (hit) return { ...hit };
+  const o = aggRaw(f, sc, w0, w1); AGG_CACHE.set(key, o); return { ...o };
+}
+function aggRaw(f, sc, w0, w1) {
   const o = Object.fromEntries(FIELDS.map(k => [k, 0]));
   for (const s of SERIES) { if (!match(s, f)) continue; const X = s[sc]; for (let w = w0; w <= w1; w++) for (const k of FIELDS) o[k] += k === 'stock' ? (w === w1 ? X[k][w] : 0) : X[k][w]; }
   o.ns = o.gs - o.tr - o.ret; o.cogs = o.mat + o.pack + o.conv + o.inb; o.gm = o.ns - o.cogs;
@@ -282,7 +396,7 @@ function share(f, w0, w1) {
 function finance(f, sc, w0, w1) {   // company-level P&L lines below contribution margin
   const a = agg(f, sc, w0, w1), weeks = w1 - w0 + 1;
   const tFY = agg({}, 'T', 1, NW);
-  const overhead = tFY.ns * FIN.overheadRate * weeks / NW * (sc === 'A' ? FIN.overheadActualMult : sc === 'L' ? .97 : 1);
+  const overhead = tFY.ns * FIN.overheadRate * weeks / NW * (sc === 'A' || sc === 'E' ? FIN.overheadActualMult : sc === 'L' ? .97 : 1);
   const op = a.cm - overhead, interest = FIN.interestFY * weeks / NW, np = (op - interest) * (1 - FIN.taxRate);
   return { ...a, overhead, op, interest, np, eps: np / FIN.shares };
 }
@@ -293,6 +407,6 @@ function finance(f, sc, w0, w1) {   // company-level P&L lines below contributio
   FIN.overheadActualMult = (cmA.cm - FIN.interestFY - 3.05 * FIN.shares / (1 - FIN.taxRate)) / oh; }
 
 root.KD = { NW, CW, MKT_LAST, weekEnd, REGIONS, COUNTRIES, CHANNELS, BRANDS, CATS, RETAILERS, DISTRIBUTORS, COMPETITORS, SERIES, MKT, BMAP, CMAP, CHMAP,
-  PROMOS, CAMPAIGNS, SIGNALS, FIELDS, INV_TARGET_DAYS, invDays, NEAR_EXPIRY, QUALITY, COMMODITIES, PROCUREMENT, FORECAST_ACC, FIN, SHARE_PRICE, compPriceIdx,
+  PROMOS, CAMPAIGNS, SIGNALS, FIELDS, SALES_HEADS, REACH, LISTINGS, WAREHOUSES, LRP, PEOPLE, MEDIA_ROMI, COMPLAINTS, PENETRATION, SWITCHING, CASH, LE_HISTORY, SAFETY, INV_TARGET_DAYS, invDays, NEAR_EXPIRY, QUALITY, COMMODITIES, PROCUREMENT, FORECAST_ACC, FIN, SHARE_PRICE, compPriceIdx, LE, BRAND_HEALTH, SOV, FREQUENCY, LAUNCHES, INNOVATION, PLANTS, SAVINGS, SUPPLIERS, FORECAST_BIAS, invProj,
   agg, market, share, finance, match };
 })(typeof window !== 'undefined' ? window : globalThis);
