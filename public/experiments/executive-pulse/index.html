@@ -52,6 +52,14 @@ select,input,textarea{background-color:#fff;color:var(--ink);color-scheme:light}
 .seg button{border:0;background:none;padding:6px 10px;border-radius:6px;font-size:13px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
 .seg button:hover{background:var(--hover);color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.chip.filt b{font-weight:600;color:var(--ink)}.chip.filt .f-sep{width:1px;height:16px;background:var(--line-2)}.chip.filt #period-lab{color:var(--ink-2)}
+.seg button.cust-b{border-left:1px solid var(--line);border-radius:0 6px 6px 0;margin-left:2px}.seg button.cust-b.open{background:var(--hover);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.cust{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:var(--r-sm);background:#fafbfc;animation:pop var(--t2) var(--e-exp)}
+.cust-row{display:flex;align-items:center;gap:8px}.cust-row .to{font-size:12px;color:var(--muted)}
+.cust-f{flex:1;display:grid;gap:3px;min-width:150px}.cust-f span{font-size:11px;color:var(--muted);font-weight:500}
+.cust-f div{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:#fff;color:var(--muted);font-size:13px;cursor:not-allowed}
+.cust-cal{display:flex;align-items:center;justify-content:center;gap:10px;height:120px;border:1px dashed var(--line-2);border-radius:var(--r-sm);background:#fff;color:var(--ink-2);font-size:13px;text-align:center;padding:0 16px}
+.cust-cal svg{flex:none;color:var(--muted)}
 @keyframes pop{from{opacity:0;transform:translateY(-4px)}}
 
 /* summary */
@@ -127,6 +135,75 @@ h2.sec{margin:36px 0 14px;font-size:13px;font-weight:600;color:var(--muted);lett
 .c-ref{font-size:12.5px;color:var(--ink-2)}
 .prov{display:inline-block;margin-left:4px;font-size:11px;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 6px;line-height:18px}
 .c-ins{font-size:13px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:10px;margin-top:6px;align-self:end}
+/* card anatomy: status band, metric, gap, value, trend, insight */
+.card{padding:0 20px 16px;gap:4px;min-height:0;--tint:#f4f5f7;--sig:var(--ink-2)}
+.card.s-crit{--tint:var(--crit-bg);--sig:var(--crit);border-color:#efc9c4}
+.card.s-warn{--tint:var(--warn-bg);--sig:var(--warn);border-color:#efdcab}
+.card.s-good{--tint:#eef7f1;--sig:var(--good)}
+.card.s-opp{--tint:#f1edfc;--sig:var(--opp)}
+.card.on{border-color:var(--accent)}
+.c-head{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 8px;padding:9px 20px;background:var(--tint);border-radius:calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0}
+.c-sig{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--sig);text-transform:uppercase;letter-spacing:.05em}
+.c-sig::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.c-head .c-per{margin:0;background:rgba(255,255,255,.75)}
+.card .c-name{font-size:14px;color:var(--ink)}
+.c-gap{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:6px;font-size:14px;color:var(--ink-2);margin-top:2px}
+.c-gap i{font-style:normal;font-size:15px;color:var(--sig)}
+.c-gap b{font-family:var(--display);font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15;color:var(--sig)}
+.c-gap b.flat{font-family:var(--text);font-size:18px;letter-spacing:0;color:var(--ink)}
+.c-now{font-size:13px;color:var(--ink-2)}.c-now b{font-size:15px;font-weight:600;color:var(--ink)}
+.c-ins{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-go{font-style:normal;color:var(--muted);transition:color var(--t1),transform var(--t1)}.card:hover .c-go{color:var(--accent);transform:translateX(2px)}
+/* highlight bar: same order, laid out left to right */
+.kbar{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto 16px;align-items:center;column-gap:20px;width:100%;margin-top:16px;padding-right:16px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;--tint:#f4f5f7;--sig:var(--ink-2);transition:border-color var(--t1)}
+.kbar.s-crit{--tint:var(--crit-bg);--sig:var(--crit);border-color:#efc9c4}.kbar.s-warn{--tint:var(--warn-bg);--sig:var(--warn);border-color:#efdcab}.kbar.s-good{--tint:#eef7f1;--sig:var(--good)}
+.kbar:hover{border-color:var(--sig)}.kbar:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kb-sig{align-self:stretch;display:flex;align-items:center;gap:7px;padding:0 16px;background:var(--tint);color:var(--sig);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.kb-sig::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.kb-main{display:grid;gap:1px;padding:11px 0;min-width:0}
+.kb-name{font-size:12.5px;font-weight:500;color:var(--muted)}
+.kb-gap{font-size:15px;color:var(--ink-2)}.kb-ctx{font-size:12.5px;color:var(--muted)}.kb-gap i{font-style:normal;color:var(--sig);margin-right:4px}.kb-gap b{font-size:18px;font-weight:700;color:var(--sig);margin-right:4px}
+.kb-val{display:grid;justify-items:end;gap:1px;white-space:nowrap;font-size:13px;color:var(--ink-2)}.kb-val b{font-family:var(--display);font-size:22px;font-weight:600;color:var(--ink)}.kb-val small{font-size:12px;color:var(--muted)}
+.kb-viz svg{display:block}
+.kb-go{font-style:normal;color:var(--muted)}.kbar:hover .kb-go{color:var(--accent)}
+/* same anatomy for issue rows and watchlist tiles */
+.s-crit{--tint:var(--crit-bg);--sig:var(--crit)}.s-warn{--tint:var(--warn-bg);--sig:var(--warn)}.s-good{--tint:#eef7f1;--sig:var(--good)}.s-opp{--tint:#f1edfc;--sig:var(--opp)}
+.iss{grid-template-columns:minmax(0,1fr) 14px;padding:9px 10px 9px 12px;border-left:3px solid var(--sig,var(--line-2))}
+.iss.s-crit{background:#fdf6f5}.iss.s-crit:hover{background:var(--crit-bg)}
+.iss-s{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sig)}
+.iss-s .iss-l{margin:0;text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)}
+.iss-h{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;margin-top:1px}
+.iss-g{font-size:13px;color:var(--ink-2)}.iss-g i{font-style:normal;color:var(--sig);margin-right:3px}.iss-b .iss-g b{font-size:14px;font-weight:700;color:var(--sig);margin-right:2px}
+div.pin{display:block;padding:0;overflow:hidden}
+.pin.s-crit{border-color:#efc9c4}.pin.s-warn{border-color:#efdcab}
+.pin-head{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 14px;background:var(--tint,var(--hover))}.pin-head .icon-btn{margin-left:auto}
+.pin-was{font-size:11.5px;color:var(--ink-2);background:rgba(255,255,255,.8);border-radius:4px;padding:1px 6px}
+.pin-open{padding:10px 14px 12px;gap:3px}
+.pin-t{font-size:13.5px;font-weight:600;color:var(--ink);white-space:normal}
+.pin-g{font-size:13px;color:var(--ink-2)}.pin-g i{font-style:normal;color:var(--sig)}.pin-g b{font-family:var(--display);font-size:20px;font-weight:600;color:var(--sig);margin:0 3px}
+.pin-c{font-size:12px;color:var(--ink-2)}.pin-c>b{color:var(--ink);font-size:13px}
+/* L2 tiles in the panel and the side panel for L2 and L3 */
+.l2-row{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px}
+.l2{all:unset;box-sizing:border-box;cursor:pointer;display:grid;align-content:start;gap:3px;border:1px solid var(--line);border-radius:var(--r);padding:0 14px 12px;background:#fff;overflow:hidden;transition:border-color var(--t1),transform var(--t1)}
+.l2.s-crit{border-color:#efc9c4}.l2.s-warn{border-color:#efdcab}
+.l2:hover{border-color:var(--sig);transform:translateY(-1px)}.l2:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.l2 .c-head{margin:0 -14px 6px;padding:7px 14px;border-radius:0}
+.l2 .c-name{font-size:13.5px;font-weight:600}
+.l2 .c-gap b{font-size:22px}.l2 .c-gap b.flat{font-size:15px}
+.l2-k{font-size:11.5px;font-weight:600;color:var(--ink-2)}
+.l2-i{font-size:12px;color:var(--muted);line-height:1.4;margin-top:4px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);z-index:70;background:#fff;border-left:1px solid var(--line-2);box-shadow:-18px 0 48px rgba(22,25,29,.14);overflow:auto;transform:translateX(24px);opacity:0;transition:transform var(--t3) var(--e-exp),opacity var(--t2)}
+.drawer.in{transform:none;opacity:1}
+.dr-top{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px 12px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.dr-top .crumbs{font-size:12.5px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.dr-top .crumbs i{font-style:normal;color:var(--muted)}.dr-top .crumbs span{color:var(--ink);font-weight:600}
+.dr-body{padding:16px 20px 28px;display:grid;gap:12px}
+.dr-body h4{margin:8px 0 0;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.dr-card{cursor:default}.dr-card:hover{background:#fff}
+.dr-def{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}.dr-def b{color:var(--ink);font-weight:600}
+.dr-by{display:grid;border-top:1px solid var(--line)}
+.dr-row{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto 90px;gap:10px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);border-left:3px solid var(--sig,var(--line-2));font-size:13px}
+.dr-row:hover{background:var(--hover)}.dr-row b{font-weight:600}.dr-g{text-align:right;color:var(--sig);font-weight:600;font-size:12.5px}
+.dr-full{justify-self:start;margin-top:4px}
 .c-slot{position:absolute;right:22px;bottom:-22px;font-size:11px;color:var(--muted);opacity:0}
 .info{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);color:var(--muted);font-size:9.5px;font-weight:600;cursor:help}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}}
@@ -408,15 +485,15 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
   <div class="top-in">
     <div class="logo"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#16191d"/><path d="M5 14h3.2l2.1-5 3.4 10 2.4-6.2 1.3 1.2H21" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pulse</div>
     <button class="chip view" id="view-btn" aria-haspopup="dialog"><span id="view-name">CEO</span> <span aria-hidden="true">▾</span></button>
-    <div class="pop-wrap"><button class="chip" id="period-btn" aria-haspopup="true" aria-expanded="false"><span id="period-lab">YTD · vs target</span> <span class="k" aria-hidden="true">▾</span></button>
+    <div class="pop-wrap"><button class="chip filt" id="period-btn" aria-haspopup="true" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M4.5 8h7M6.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>Filters</b><span class="f-sep" aria-hidden="true"></span><span id="period-lab">YTD, vs plan</span> <span class="k" aria-hidden="true">▾</span></button>
       <div class="pop" id="period-pop" hidden>
-        <span class="plab">Period</span><div class="seg" id="f-period" role="group" aria-label="Period"></div>
-        <span class="plab">Compare to</span><div class="seg" id="f-comp" role="group" aria-label="Compare to"></div>
+        <span class="plab">Period</span><div class="seg" id="f-period" role="group" aria-label="Period"></div><div class="cust" id="cust-period" hidden></div>
+        <span class="plab">Compare to</span><div class="seg" id="f-comp" role="group" aria-label="Compare to"></div><div class="cust" id="cust-comp" hidden></div>
         <span class="plab">Year</span><div class="seg" id="f-year" role="group" aria-label="Calendar or fiscal year"></div>
         <p class="foot" id="period-desc"></p>
       </div></div>
-    <form class="ask-g" id="ask-global" autocomplete="off"><span class="ask-i" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><input id="ask-global-in" placeholder="Ask Pulse, e.g. “Gross margin for Sunrise Oats in India”" aria-label="Ask Pulse a question"><kbd>/</kbd></form>
-    <button class="chip demo-chip" data-demo title="Watch a 1-minute demo: a question becomes a custom view, gets emailed and is saved"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7-4.5z" fill="currentColor"/></svg>Demo</button>
+    <form class="ask-g" id="ask-global" autocomplete="off"><span class="ask-i" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><input id="ask-global-in" placeholder="Ask Pulse, e.g. Gross margin for Sunrise Oats in India" aria-label="Ask Pulse a question"><kbd>/</kbd></form>
+    <button class="chip demo-chip" data-demo title="Watch a short demo: ask a question, get a custom view, email it and save it"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7-4.5z" fill="currentColor"/></svg>Demo</button>
     <button class="chip" data-bm-all title="Your watchlist: every saved view with the latest number"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2.5h8v11l-4-2.6-4 2.6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Watchlist <span class="bm-n" id="bm-count"></span></button>
   </div>
 </header>
@@ -439,7 +516,7 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
   <div class="sec-row"><h2>My actions</h2><p id="act-sum"></p></div>
   <div id="acts"></div>
 
-  <footer class="page-foot"><span>Pulse · Northstar Consumer Goods is a fictional company; all figures are synthetic.</span><span>Data to week ending 11 Oct 2026 · USD at plan rates</span></footer>
+  <footer class="page-foot"><span>Pulse. Northstar Consumer Goods is a fictional company and all figures are synthetic.</span><span>Data to the week ending 11 October 2026. All amounts are in US dollars at plan rates.</span></footer>
 </main>
 <div class="loader" id="loader" hidden><div class="spinner" aria-hidden="true"></div><p id="loader-t">Loading…</p></div>
 
@@ -449,8 +526,9 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t" hidden>
   <div class="modal-in"><div class="modal-h"><h3 id="modal-t"></h3><button class="close" data-close aria-label="Close">×</button></div><div class="modal-b" id="modal-b"></div></div>
 </div>
+<aside class="drawer" id="drawer" aria-label="Metric details" hidden></aside>
 <div class="toast" id="toast" role="status" hidden></div>
 <div id="tip" hidden></div>
 <div class="coach" id="coach" role="dialog" aria-live="polite" aria-label="Ask demo" hidden></div>
-<script src="data/pulse-data.js?v=33"></script>
-<script src="app/pulse.js?v=33"></script>
+<script src="data/pulse-data.js?v=50"></script>
+<script src="app/pulse.js?v=50"></script>

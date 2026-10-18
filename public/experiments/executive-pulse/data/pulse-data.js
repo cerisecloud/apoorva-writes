@@ -1,4 +1,4 @@
-/* Pulse — synthetic data for Northstar Consumer Goods (fictional) (all names and figures are fictional).
+/* Pulse: synthetic data for Northstar Consumer Goods (fictional) (all names and figures are fictional).
    Builds weekly data for FY2026 (calendar year): actuals through week 41, forecast weeks 42-52,
    plus target (budget / RGM plan) and last year. Exposes window.KD (browser) or globalThis.KD (node). */
 (function (root) {
@@ -77,9 +77,9 @@ function season(b, c, w) {
 }
 
 /* ---------------- stories (actual-period multipliers) ---------------- */
-// ST1 Volt Coffee price cut UK convenience (wk34+) · ST2 Crunch USA deep promotions (wk22+) · ST3 oat inflation + delayed price increase
-// ST4 Indonesia port disruption, Orchard Juice (wk35-44) · ST5 UK haircare category decline · ST6 Glow India e-commerce breakout (wk18+)
-// ST7 India general-trade channel loading (wk30+) · ST12 EPS gap = sum of the above
+// ST1 Volt Coffee price cut UK convenience (wk34+); ST2 Crunch USA deep promotions (wk22+); ST3 oat inflation + delayed price increase
+// ST4 Indonesia port disruption, Orchard Juice (wk35-44); ST5 UK haircare category decline; ST6 Glow India e-commerce breakout (wk18+)
+// ST7 India general-trade channel loading (wk30+); ST12 EPS gap = sum of the above
 function storyFx(b, c, ch, w) {
   const fx = { vol: 1, tr: 0, lp: 1, mat: 1, fill: null, ship: 1, rush: 1, ap: 1 };
   if (b === 'bolt' && c === 'UK' && w >= 34) fx.vol *= ch === 'CONV' ? .78 : .93;
@@ -252,14 +252,14 @@ const SHARE_PRICE = (() => { const us = [], peer = []; let p = 52, q = 100; for 
 
 /* ---------------- external signals (qualitative; attached to the metrics they may explain) ---------------- */
 const SIGNALS = [
-  { w: 34, c: 'UK', b: 'bolt', ch: 'CONV', type: 'Competitor', text: 'Volt Coffee cut shelf prices (−12%) in UK convenience and added distribution.' },
-  { w: 35, c: 'ID', b: 'orchard', type: 'Supply', text: 'Port congestion at Tanjung Priok delayed juice-concentrate shipments; warehouse cover fell below 7 days.' },
-  { w: 14, c: '*', b: 'oats', type: 'Input cost', text: 'Oat prices (+18%) vs budget from Wk 14; hedge cover only 40%.' },
-  { w: 28, c: 'UK', b: 'oats', type: 'Pricing', text: 'GreenGrocer and ValuePlus (UK) and BigBox (USA) accepted the Sunrise Oats price increase only from Wk 28.' },
-  { w: 30, c: 'UK', b: 'silk', type: 'Category', text: 'UK haircare category (−7%) as shoppers trade down to retailer own brands.' },
-  { w: 18, c: 'IN', b: 'glow', ch: 'ECOM', type: 'Category', text: 'Skincare e-commerce in India growing fast; ShopNow sale days drive record traffic.' },
-  { w: 44, c: 'IN', type: 'Seasonality', text: 'Diwali (Wk 44): gifting peak for skincare and snacks expected (+25% vs base). The forecast includes this spike.' },
-  { w: 30, c: 'IN', ch: 'GT', type: 'Distribution', text: 'Quarter-end distributor incentive in India general trade pushed extra stock into distributors.' },
+  { w: 34, c: 'UK', b: 'bolt', ch: 'CONV', type: 'Competitor', text: 'Volt Coffee cut its shelf prices by 12% in UK convenience and added distribution.' },
+  { w: 35, c: 'ID', b: 'orchard', type: 'Supply', text: 'Port congestion at Tanjung Priok delayed juice concentrate shipments, and warehouse stock fell below 7 days.' },
+  { w: 14, c: '*', b: 'oats', type: 'Input cost', text: 'Oat prices have been 18% over budget since week 14, and only 40% is locked in.' },
+  { w: 28, c: 'UK', b: 'oats', type: 'Pricing', text: 'GreenGrocer and ValuePlus (UK) and BigBox (USA) only accepted the Sunrise Oats price increase from week 28.' },
+  { w: 30, c: 'UK', b: 'silk', type: 'Category', text: 'The UK haircare category is down 7% as shoppers trade down to retailer own brands.' },
+  { w: 18, c: 'IN', b: 'glow', ch: 'ECOM', type: 'Category', text: 'Skincare e-commerce in India is growing fast, and ShopNow sale days are bringing record traffic.' },
+  { w: 44, c: 'IN', type: 'Seasonality', text: 'Diwali falls in week 44. We expect a gifting peak for skincare and snacks, about 25% above normal, and the forecast includes it.' },
+  { w: 30, c: 'IN', ch: 'GT', type: 'Distribution', text: 'A quarter-end incentive for distributors in India general trade pushed extra stock into the channel.' },
   { w: 24, c: 'US', b: 'crunch', type: 'Promotion', text: 'Buy-2-get-1 and endcap promotions at BigBox and FreshFields lifted trade spend to about 21% of gross sales.' },
 ];
 
@@ -290,9 +290,9 @@ const WAREHOUSES = [{ id: 'bhw', c: 'IN', name: 'Bhiwandi DC' }, { id: 'del', c:
 const LRP = { years: [2024, 2025, 2026, 2027], planCagr: .06, industryCagr: { Food: .052, Beverages: .061, 'Personal Care': .071 }, planCagrCat: { Food: .05, Beverages: .055, 'Personal Care': .08 }, g2025: { Food: .045, Beverages: .05, 'Personal Care': .07 } };
 // People (fictional) who own actions
 const PEOPLE = {
-  CEO: 'Sarah Miller · CEO', CFO: 'David Chen · CFO', RGM: 'Alice Brown · Head of Revenue Growth', CMO: 'Emma Wilson · CMO', CSO: 'Mike Johnson · Chief Sales Officer', COO: 'Tom Baker · COO', PROC: 'Grace Lee · Head of Procurement', QA: 'Omar Khan · Head of Quality',
-  UK_SALES: 'Bob Smith · UK Sales Director', US_SALES: 'Rachel Green · US Sales Director', IN_SALES: 'Raj Patel · India Sales Director', ID_SALES: 'Budi Santoso · Indonesia Sales Director',
-  UK_GM: 'Peter Walsh · UK General Manager', IN_GM: 'Ravi Kumar · India General Manager', ID_SUPPLY: 'Lisa Tan · Indonesia Supply Lead', BRAND_BOLT: 'Chloe Adams · Bolt Brew Brand Director', BRAND_GLOW: 'Priya Shah · Glow Skincare Brand Director',
+  CEO: 'Sarah Miller, CEO', CFO: 'David Chen, CFO', RGM: 'Alice Brown, Head of Revenue Growth', CMO: 'Emma Wilson, CMO', CSO: 'Mike Johnson, Chief Sales Officer', COO: 'Tom Baker, COO', PROC: 'Grace Lee, Head of Procurement', QA: 'Omar Khan, Head of Quality',
+  UK_SALES: 'Bob Smith, UK Sales Director', US_SALES: 'Rachel Green, US Sales Director', IN_SALES: 'Raj Patel, India Sales Director', ID_SALES: 'Budi Santoso, Indonesia Sales Director',
+  UK_GM: 'Peter Walsh, UK General Manager', IN_GM: 'Ravi Kumar, India General Manager', ID_SUPPLY: 'Lisa Tan, Indonesia Supply Lead', BRAND_BOLT: 'Chloe Adams, Bolt Brew Brand Director', BRAND_GLOW: 'Priya Shah, Glow Skincare Brand Director',
 };
 const MEDIA_ROMI = { TV: .75, Digital: 1.35, Other: .9 };   // multipliers on brand ROMI by media
 const COMPLAINTS = (() => { const a = []; for (let w = 1; w <= CW; w++) a[w] = 3.2 + Math.sin(w / 4) * .25 + nz(.15); return a; })();
@@ -306,14 +306,14 @@ const PENETRATION = {
   'glow|UK': [9.8, 10.1], 'glow|US': [6.2, 6.4], 'glow|IN': [7.4, 9.1], 'glow|ID': [8.1, 8.7],
   'silk|UK': [21.0, 21.4], 'silk|US': [8.9, 8.8], 'silk|IN': [19.6, 20.1], 'silk|ID': [16.8, 17.0],
 };
-const SWITCHING = [{ from: 'Bolt Brew Coffee', to: 'Volt Coffee', where: 'UK', buyers: 0.9, note: 'Mostly convenience shoppers since the Wk 34 price cut' }, { from: 'Orchard Juice', to: 'FreshFarm Juice', where: 'Indonesia', buyers: 0.6, note: 'Out-of-stocks at FreshMart and HyperValue' }, { from: 'Sunrise Oats', to: 'Retailer own brand', where: 'UK', buyers: 0.4, note: 'After the oats price increase landed' }];
+const SWITCHING = [{ from: 'Bolt Brew Coffee', to: 'Volt Coffee', where: 'UK', buyers: 0.9, note: 'Mostly convenience shoppers since the price cut in week 34' }, { from: 'Orchard Juice', to: 'FreshFarm Juice', where: 'Indonesia', buyers: 0.6, note: 'Out-of-stocks at FreshMart and HyperValue' }, { from: 'Sunrise Oats', to: 'Retailer own brand', where: 'UK', buyers: 0.4, note: 'After the oats price increase landed' }];
 // Cash: share of net sales unless noted; working-capital extras in USD
 const CASH = { da: .0275, capexA: .032, capexT: .035, taxRate: .23, wcT: .006, india_receivables: 20e6, inventory_build: 15e6, conversionTarget: .9 };
 // EPS latest-estimate history (how the full-year forecast moved), and safety
 const LE_HISTORY = [['Jan', 3.15], ['Feb', 3.15], ['Mar', 3.16], ['Apr', 3.14], ['May', 3.12], ['Jun', 3.12], ['Jul', 3.10], ['Aug', 3.08], ['Sep', 3.06], ['Oct', 3.05]];
 const SAFETY = { ltifr: .42, target: .5, ly: .55,
-  history: [.58, .55, .52, .51, .49, .47, .46, .45, .44, .43, .42, .42],   // rolling 12-month injury rate, Nov–Oct
-  incidents: [{ site: 'Cikarang plant', type: 'Hand injury (lost time)', w: 37, status: 'Root cause done; guard fitted' }, { site: 'Bhiwandi DC', type: 'Forklift near miss', w: 39, status: 'Retraining under way' }, { site: 'Ohio plant', type: 'Slip (no lost time)', w: 40, status: 'Closed' }] };
+  history: [.58, .55, .52, .51, .49, .47, .46, .45, .44, .43, .42, .42],   // rolling 12-month injury rate, Nov to Oct
+  incidents: [{ site: 'Cikarang plant', type: 'Hand injury (lost time)', w: 37, status: 'Cause found, guard fitted' }, { site: 'Bhiwandi DC', type: 'Forklift near miss', w: 39, status: 'Retraining under way' }, { site: 'Ohio plant', type: 'Slip (no lost time)', w: 40, status: 'Closed' }] };
 
 // ---------------- marketing: brand health, share of voice, buying frequency, launches ----------------
 // brand tracker (monthly, n≈1,000 per market): [last year, now] in % of category buyers; a move of 2+ pts is statistically significant
@@ -343,16 +343,16 @@ const PLANTS = [
   { id: 'ohio', name: 'Ohio plant', c: 'US', makes: 'Oats, snacks', oee: .74, oeeT: .75, util: .88, util13: .97, convVsPlan: .008 },
 ];
 const SAVINGS = [   // productivity programme, $; FY target / plan to date / delivered to date
-  { lever: 'Procurement (materials)', fy: 18e6, plan: 14e6, done: 10.5e6, note: 'Oat contracts reset blocked by +18% market price' },
+  { lever: 'Procurement (materials)', fy: 18e6, plan: 14e6, done: 10.5e6, note: 'Oat contracts could not be reset because the market price is 18% up' },
   { lever: 'Manufacturing efficiency', fy: 12e6, plan: 9.5e6, done: 8.9e6, note: 'Cikarang line downtime' },
-  { lever: 'Logistics & freight', fy: 9e6, plan: 7e6, done: 6.4e6, note: 'Air-freight for Indonesia juice' },
+  { lever: 'Logistics & freight', fy: 9e6, plan: 7e6, done: 6.4e6, note: 'Air freight for Indonesia juice' },
   { lever: 'Packaging redesign', fy: 6e6, plan: 4.5e6, done: 3.2e6, note: 'Lighter juice bottle slipped to Q1' },
-  { lever: 'Warehouse network', fy: 3e6, plan: 2e6, done: 0, note: 'New Midlands DC goes live in Nov' },
+  { lever: 'Warehouse network', fy: 3e6, plan: 2e6, done: 0, note: 'The new Midlands distribution centre goes live in November' },
 ];
 const SUPPLIERS = [
-  { name: 'Prairie Oats Co', input: 'Oats', otif: .89, risk: 'High', note: 'Single source for UK and USA; price (+18%) vs budget' },
-  { name: 'Java Fruit Processing', input: 'Fruit concentrate', otif: .81, risk: 'High', note: 'Port delays at Jakarta; recovery expected Wk 44' },
-  { name: 'Highland Coffee Traders', input: 'Coffee beans', otif: .94, risk: 'Medium', note: 'Price volatility; 70% hedged' },
+  { name: 'Prairie Oats Co', input: 'Oats', otif: .89, risk: 'High', note: 'Our only source for the UK and USA, and its price is 18% over budget' },
+  { name: 'Java Fruit Processing', input: 'Fruit concentrate', otif: .81, risk: 'High', note: 'Port delays at Jakarta, recovery expected in week 44' },
+  { name: 'Highland Coffee Traders', input: 'Coffee beans', otif: .94, risk: 'Medium', note: 'Prices move a lot, 70% locked in' },
   { name: 'PackRight Films', input: 'Packaging film', otif: .95, risk: 'Low', note: '' },
   { name: 'SurfaChem', input: 'Surfactants', otif: .97, risk: 'Low', note: '' },
 ];

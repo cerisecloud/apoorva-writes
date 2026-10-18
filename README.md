@@ -116,9 +116,12 @@ dashboard for a fictional consumer goods company, served as static files at
 step and does not use the site's theme: three plain files, all data generated in
 the browser. The write-up lives in `src/pages/projects/executive-dashboard.astro`.
 
-Start with **[docs/executive-pulse-handover.md](docs/executive-pulse-handover.md)**:
-what it does, how the code is organised, design rules, how to add a metric or
-panel, and what was verified.
+Start with **[docs/executive-pulse/HANDOVER.md](docs/executive-pulse/HANDOVER.md)**:
+what it does, the metric pyramid it is built on, design and writing rules, how
+the code is organised, how to add a metric, and what was verified. The same
+folder holds the metric pyramid (`cpg-metric-pyramid.html`) and the writing
+checklist (`AI-Writing-Signals-Checklist.md`); `tools/ai-scan.sh` checks copy
+against that checklist.
 
 ## Deploying
 
