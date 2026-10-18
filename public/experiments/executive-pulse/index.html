@@ -152,7 +152,8 @@ h2.sec{margin:36px 0 14px;font-size:13px;font-weight:600;color:var(--muted);lett
 .c-gap b{font-family:var(--display);font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15;color:var(--sig)}
 .c-gap b.flat{font-family:var(--text);font-size:18px;letter-spacing:0;color:var(--ink)}
 .c-now{font-size:13px;color:var(--ink-2)}.c-now b{font-size:15px;font-weight:600;color:var(--ink)}
-.c-ins{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-ins{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;min-height:48px}
+.c-ins>span:first-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .c-go{font-style:normal;color:var(--muted);transition:color var(--t1),transform var(--t1)}.card:hover .c-go{color:var(--accent);transform:translateX(2px)}
 /* highlight bar: same order, laid out left to right */
 .kbar{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto 16px;align-items:center;column-gap:20px;width:100%;margin-top:16px;padding-right:16px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;--tint:#f4f5f7;--sig:var(--ink-2);transition:border-color var(--t1)}
@@ -282,7 +283,7 @@ ul.build{list-style:none;margin:6px 0;padding:0;display:grid;gap:12px}
 @media print{
   @page{size:A4 landscape;margin:12mm}
   body{min-width:0}
-  header,#coach,#summary,h2.sec,#cards,#pins,.sec-row,#acts,.page-foot,.band-tools,#pf-bar,.cc-h .icon-btn,#toast,#tip{display:none!important}
+  header,#coach,#summary,h2.sec,#cards,#pins,.shelf,.sec-row,#acts,.page-foot,.band-tools,#pf-bar,.cc-h .icon-btn,#toast,#tip{display:none!important}
   .wrap{width:auto}
   .band{border:0;padding:0;margin:0;box-shadow:none}
   #print-stamp{display:grid;gap:2px;font-size:11px;color:#444;border-bottom:1px solid #ccc;padding-bottom:8px;margin-bottom:12px}#print-stamp b{font-size:14px;color:#111}
@@ -479,13 +480,120 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
 #tip .tr{display:flex;justify-content:space-between;gap:16px}
 .page-foot{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ===== calmer surfaces: soft edges, status as a quiet chip ===== */
+:root{--line-soft:#ebedf1;--lift:0 1px 2px rgba(22,25,29,.04)}
+.card,.l2,.pin,.cc,.sum-card,.atable,.nform{border-color:var(--line-soft)}
+.card,.l2,.sum-card{box-shadow:var(--lift)}
+.card,.sum-card{border-radius:16px}
+.card.s-crit,.card.s-warn,.l2.s-crit,.l2.s-warn,.pin.s-crit,.pin.s-warn{border-color:var(--line-soft)}
+.card:hover,.l2:hover,.pin:hover{border-color:var(--line-2);background:#fff}
+.cards{gap:20px}
+.card{padding:0 22px 18px}
+/* the status band becomes a chip: loud for bad news, quiet for good */
+.c-head,.pin-head{background:none;border-radius:0}
+.c-head{margin:0;padding:16px 0 8px}
+.c-sig{font-size:11px;letter-spacing:.06em}
+.s-crit>.c-head>.c-sig,.s-crit>.pin-head>.c-sig,.dr-card.s-crit>.c-head>.c-sig{background:var(--crit-bg);padding:3px 10px;border-radius:999px}
+.s-warn>.c-head>.c-sig,.s-warn>.pin-head>.c-sig,.dr-card.s-warn>.c-head>.c-sig{background:var(--warn-bg);padding:3px 10px;border-radius:999px}
+.c-head .c-per{background:none;color:var(--muted);padding:0}
+/* the status chip and the text below it start on the same left edge */
+.pin-head{padding:13px 10px 0 16px}
+.pin-open{padding:7px 16px 14px;gap:3px}
+.pin-row{align-items:stretch}
+.pin-row .pin-empty{margin:0;align-self:stretch;align-items:flex-start;line-height:1.45;padding:16px;color:var(--muted);border-color:var(--line-soft)}
+.pin-row .pin-empty svg{flex:none;margin-top:2px}
+.pin-was{background:none;padding:0}
+.iss.s-crit{background:none}
+.band{border-color:#dbe4f8;box-shadow:0 6px 26px rgba(22,25,29,.05)}
+.cc{border-radius:12px}
+
+/* ===== panel header: headline on the left, Ask and filters on the right ===== */
+.band-h{display:grid;grid-template-columns:minmax(0,1fr) 356px;gap:14px 36px;align-items:start;padding:22px 28px 18px}
+.band-h h2{max-width:none}
+.band-h-r{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:min-content;gap:10px;min-width:0;min-height:126px;align-content:start}
+.ask-g{margin-bottom:0}
+.c-tr{position:relative}
+.c-tr-s{position:absolute;left:0;font-style:normal;font-size:10.5px;line-height:12px;color:var(--muted);background:rgba(255,255,255,.88);padding-right:4px;pointer-events:none;white-space:nowrap}
+.dash-k{border-top-color:#8a929c}
+.c-bar{position:relative;display:block;width:100%;height:10px;margin:12px 0;border-radius:5px;background:var(--track)}
+.c-bar-f{position:absolute;left:0;top:0;height:100%;border-radius:5px;display:block;animation:grow var(--t4) var(--e-exp) both}
+.c-bar-t{position:absolute;top:-4px;width:2px;height:18px;background:var(--ink);border-radius:1px;display:block}
+.tick-k{display:inline-block;width:2px;height:9px;background:var(--ink);vertical-align:-1px;margin-left:2px}
+.pf .fbar{flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:10px;min-width:0;height:32px}
+.pf .fbar .per{margin:0;white-space:nowrap;flex:none}
+.pf .pop-wrap{min-width:0}
+.pf .chip.filt{max-width:100%;overflow:hidden}
+.pf .chip.filt>span:not(.f-sep):not(.k){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf .chip.filt.set{border-color:var(--accent);color:var(--accent)}
+.pf .chip.filt.set b{color:var(--accent)}
+#pf-pop{right:0;left:auto;min-width:280px}
+#pf-pop .fsel{width:100%;justify-content:space-between}
+.band-tools{justify-content:flex-end}
+.pf{padding:0;min-width:0;gap:8px}
+.pf>*{min-width:0}
+.ask{max-width:none}
+.ask input{height:38px}
+.fbar{gap:6px}
+.band-b{padding-top:4px}
+
+/* ===== summary: one block, each row reads status, metric, gap, why, action ===== */
+.sum-card{display:block;padding:16px 24px 10px}
+.sum-top{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+.sum-meta{margin:0}
+.sum-h{margin:6px 0 0;font-size:20.5px;line-height:1.34;max-width:none}
+.sum-rows{margin-top:10px;border-top:1px solid var(--line-soft)}
+.sum-row{display:grid;grid-template-columns:minmax(0,1fr) 168px;gap:0 20px;align-items:center;border-bottom:1px solid var(--line-soft);transition:background var(--t1)}
+.sum-row:hover{background:var(--hover)}
+.sum-why{all:unset;box-sizing:border-box;cursor:pointer;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 14px;column-gap:10px;align-items:start;padding:9px 8px 10px 13px;border-left:3px solid var(--sig,var(--line-2))}
+.sum-why>span{grid-column:1;min-width:0}
+.sum-why:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sum-s{display:flex;align-items:baseline;gap:8px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sig,var(--muted))}
+.sum-l{font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.sum-hd{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;margin-top:2px}
+.sum-hd>b{font-size:14px;font-weight:600}
+.sum-g{font-size:13px;color:var(--ink-2)}.sum-g i{font-style:normal;color:var(--sig);margin-right:3px}.sum-g b{font-size:14px;font-weight:700;color:var(--sig);margin-right:2px}
+.sum-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-top:1px}
+.sum-go{grid-column:2;grid-row:1/span 3;align-self:center;color:var(--muted);font-style:normal;transition:transform var(--t1),color var(--t1)}
+.sum-why:hover .sum-go{transform:translateX(2px);color:var(--ink)}
+/* the next step belongs to the row above it, so it sits inside the same block */
+.sum-nx{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-top:3px}
+.sum-nx b{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:7px}
+.sum-nx.sug b{color:var(--opp)}
+.sum-nx.none{color:var(--muted)}
+.sum-nx small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.sum-cta{display:grid;align-content:center;padding-right:14px}
+.sum-cta-r{display:flex;align-items:center;gap:6px}
+.sum-cta-c{flex:1;min-width:0;display:grid;gap:5px;justify-items:center}
+.sum-cta-c .btn{width:100%;justify-content:center}
+.sum-cta-r .menu-wrap{flex:none}
+.sum-cta .btn{justify-content:center;width:100%}
+.sum-cta .link{font-size:12px}
+.sum-foot{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding-top:8px}
+/* the headline arrow only takes room once you hover the sentence */
+.say-go{display:inline-block;max-width:0;overflow:hidden;vertical-align:bottom;transition:max-width var(--t2) var(--e-pro),opacity var(--t1)}
+.say:hover .say-go,.say:focus-visible .say-go{max-width:1.3em}
+h2.sec{margin-top:18px}
+
+/* ===== the watchlist sits beside the core metrics, one side-scrolling shelf ===== */
+.shelf-h{margin:18px 0 12px;align-items:baseline}
+.shelf-h h2.sec{margin:0}
+.shelf{display:flex;align-items:stretch;gap:20px;overflow-x:auto;overscroll-behavior-x:contain;scroll-behavior:smooth;padding-bottom:10px}
+.shelf>.cards{flex:0 0 100%}
+.watch-group{flex:0 0 auto;display:flex;align-items:stretch;gap:20px}
+.watch-group .pin{width:290px;flex:none;align-self:stretch}
+.watch-group .pin-empty{width:300px;flex:none;margin:0;align-self:stretch;align-items:flex-start;padding:18px 16px}
+.watch-lab{flex:none;width:150px;display:grid;align-content:center;gap:4px;padding-left:20px;border-left:1px solid var(--line-soft)}
+.watch-lab b{font-family:var(--display);font-size:16px;font-weight:600}
+.watch-lab span{font-size:12.5px;color:var(--muted);line-height:1.4}
+.watch-lab .link{justify-self:start;font-size:12.5px}
 </style>
 
 <header class="top">
   <div class="top-in">
     <div class="logo"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#16191d"/><path d="M5 14h3.2l2.1-5 3.4 10 2.4-6.2 1.3 1.2H21" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pulse</div>
     <button class="chip view" id="view-btn" aria-haspopup="dialog"><span id="view-name">CEO</span> <span aria-hidden="true">▾</span></button>
-    <div class="pop-wrap"><button class="chip filt" id="period-btn" aria-haspopup="true" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M4.5 8h7M6.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>Filters</b><span class="f-sep" aria-hidden="true"></span><span id="period-lab">YTD, vs plan</span> <span class="k" aria-hidden="true">▾</span></button>
+    <div class="pop-wrap" id="per-wrap"><button class="chip filt" id="period-btn" aria-haspopup="true" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M4.5 8h7M6.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>Filters</b><span class="f-sep" aria-hidden="true"></span><span id="period-lab">YTD, vs plan</span> <span class="k" aria-hidden="true">▾</span></button>
       <div class="pop" id="period-pop" hidden>
         <span class="plab">Period</span><div class="seg" id="f-period" role="group" aria-label="Period"></div><div class="cust" id="cust-period" hidden></div>
         <span class="plab">Compare to</span><div class="seg" id="f-comp" role="group" aria-label="Compare to"></div><div class="cust" id="cust-comp" hidden></div>
@@ -501,17 +609,20 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
 <main class="wrap" id="home">
   <section class="summary" id="summary" aria-label="Summary"></section>
 
-  <h2 class="sec">My core metrics</h2>
-  <div class="cards" id="cards"></div>
+  <div class="sec-row shelf-h"><h2 class="sec">Core metrics</h2><button class="link" id="shelf-go" hidden></button></div>
+  <div class="shelf" id="shelf">
+    <div class="cards" id="cards"></div>
+    <div class="watch-group" id="pins" hidden></div>
+  </div>
 
   <section class="band" id="band" hidden aria-live="polite">
     <div id="print-stamp"></div>
-    <div class="band-h"><div><div class="crumbs" id="band-crumbs"></div><h2 id="band-title"></h2></div><div class="band-tools" id="band-tools"></div></div>
-    <div class="pf" id="pf-bar"></div>
+    <div class="band-h">
+      <div class="band-h-l"><div class="crumbs" id="band-crumbs"></div><h2 id="band-title"></h2></div>
+      <div class="band-h-r"><div class="band-tools" id="band-tools"></div><div class="pf" id="pf-bar"></div></div>
+    </div>
     <div class="band-b" id="band-body"></div>
   </section>
-
-  <div id="pins" hidden></div>
 
   <div class="sec-row"><h2>My actions</h2><p id="act-sum"></p></div>
   <div id="acts"></div>
@@ -530,5 +641,5 @@ dl.mf{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;margin:0;font-siz
 <div class="toast" id="toast" role="status" hidden></div>
 <div id="tip" hidden></div>
 <div class="coach" id="coach" role="dialog" aria-live="polite" aria-label="Ask demo" hidden></div>
-<script src="data/pulse-data.js?v=50"></script>
-<script src="app/pulse.js?v=50"></script>
+<script src="data/pulse-data.js?v=69"></script>
+<script src="app/pulse.js?v=69"></script>

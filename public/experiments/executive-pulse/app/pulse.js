@@ -964,7 +964,7 @@ const CARD_DEF = {
 Object.entries(CARD_DEF).forEach(([k, v]) => DEF[k] = v);
 DEF.FRESH = ['How up to date is this?', 'Sales and costs run to the week ending 11 October 2026. September is closed and matches the management accounts, and October is still open. Market share runs to 20 September. Consumer panel and brand tracker data are for September.', ''];
 DEF.CLOSE = ['Books and reconciliation', 'September is closed and matches the management accounts. October is still open, so its actuals can change until the close on working day 5.', ''];
-const CARD_SLOT = { OSG: 0, OSGB: 0, SSG: 0, SALES: 0, OTIF: 0, OM: 1, GM: 1, AP: 1, ROMI: 1, TRADE: 1, COGS: 1, SHARE: 2, EPS: 2, DIST: 2, QUAL: 2, SAFQ: 2, FCF: 3, PEN: 3, PENF: 3, CHINV: 3, INVD: 3, RISK: 3 };
+const CARD_SLOT = { FCFC: 3, DSO: 3, CCC: 3, BEQ: 2, TRIR: 2, AMS: 1, POR: 0, OSG: 0, OSGB: 0, SSG: 0, SALES: 0, OTIF: 0, OM: 1, GM: 1, AP: 1, ROMI: 1, TRADE: 1, COGS: 1, SHARE: 2, EPS: 2, DIST: 2, QUAL: 2, SAFQ: 2, FCF: 3, PEN: 3, PENF: 3, CHINV: 3, INVD: 3, RISK: 3 };
 const compLab = () => ({ T: 'Plan', E: 'Latest estimate', L: 'Last year', M: 'Last month' })[state.comp];
 const compProv = () => state.comp === 'E' ? 'FP&A, ' + K.LE.label : state.comp === 'T' ? 'FP&A plan' : 'ERP';
 
@@ -1013,7 +1013,7 @@ function card(id) {
       const el = monthWk().filter(w => w <= CW).length * 7, rem = Math.max(7, (monthWk().length * 7) - el), need = (tm - a) / rem, now = a / el;
       return { value: plain(a / t), raw: a / t, craw: 1, rk: 'pts', rg: 1, delta: dv(a / t - 1, 'pct', 1, 'vs sales target'), sev: a / t >= 1 ? 'good' : a / t >= .98 ? 'warn' : 'crit', per: 'MTD', ref: `We need to sell ${fmt$(need)} a day for the rest of October, and we sell ${fmt$(now)} a day now`, prov: 'Sales target (bonus basis)', insight: `${miss} of ${hs.length} sales heads will miss October`, heads: miss, say: a / t >= 1 ? `Sales are ${pct1(a / t - 1)} ahead of the October target.` : `Sales are ${pct1(1 - a / t)} behind the October target.` }; }
     case 'OM': { const m = D.opA.op / D.opA.ns, mc = D.opC.op / D.opC.ns, d = (m - mc) * 1e4;
-      return { value: plain(m), raw: m, craw: mc, rk: 'bps', rg: 1, delta: dv(d, 'bps', 1, cmp), sev: sevOf(d, 'bps'), per: P.label, ref: `${compLab()} ${plain(mc)}, profit ${fmt$(D.opA.op)}`, prov: compProv(), insight: 'Lower overheads are hiding weaker margins on the products', say: d < -10 ? `Operating margin is ${Math.round(Math.abs(d))} bps below ${compName()}.` : `Operating margin is on ${compName()}.` }; }
+      return { value: plain(m), raw: m, craw: mc, rk: 'bps', rg: 1, delta: dv(d, 'bps', 1, cmp), sev: sevOf(d, 'bps'), per: P.label, ref: `${compLab()} ${plain(mc)}, profit ${fmt$(D.opA.op)}`, prov: compProv(), insight: 'Lower overheads are hiding weaker product margins', say: d < -10 ? `Operating margin is ${Math.round(Math.abs(d))} bps below ${compName()}.` : `Operating margin is on ${compName()}.` }; }
     case 'GM': { const gm = x => (x.ns - x.cogs) / x.ns, d = (gm(A) - gm(C)) * 1e4;
       return { value: plain(gm(A)), raw: gm(A), craw: gm(C), rk: 'bps', rg: 1, delta: dv(d, 'bps', 1, cmp), sev: sevOf(d, 'bps'), per: P.label, ref: `${compLab()} ${plain(gm(C))}, trade spend ${pct1(A.tr / A.gs)} of gross sales`, prov: compProv(), insight: 'Oat costs are rising faster than prices', say: d < -10 ? `Gross margin is ${Math.round(Math.abs(d))} bps below ${compName()}.` : `Gross margin is on ${compName()}.` }; }
     case 'AP': { const v = vr(A.ap, C.ap), r = A.inc / A.ap, rp = T.inc / T.ap;
@@ -1055,16 +1055,16 @@ function card(id) {
 const WINDOWED = ['OSG', 'OSGB', 'SSG', 'OM', 'GM', 'AP', 'ROMI', 'TRADE', 'COGS', 'CHINV', 'OTIF', 'SALES'];
 function trendOf(id) {
   const f = filter(), n = 13;
-  if (WINDOWED.includes(id)) { const a = [], c = []; for (let s = n - 1; s >= 0; s--) { const x = asOf(s, () => card(id)); a.push(x.raw); c.push(x.craw); } return { a, c: c.every(v => v != null) ? c : null, step: 'week', lab: '13 weeks' }; }
+  if (WINDOWED.includes(id)) { const a = [], c = []; for (let s = n - 1; s >= 0; s--) { const x = asOf(s, () => card(id)); a.push(x.raw); c.push(x.craw); } return { a, c: c.every(v => v != null) ? c : null, step: 'week', lab: '13 weeks to 11 Oct' }; }
   if (id === 'SHARE') { const a = [], c = []; for (let w = K.MKT_LAST - n + 1; w <= K.MKT_LAST; w++) { const s = K.share(f, w - 3, w); a.push(s.now); c.push(s.ly); } return { a, c, step: 'week', lab: '13 weeks to 20 Sep' }; }
-  if (id === 'EPS') { const h = K.LE_HISTORY.map(x => x[1]); return { a: h, c: h.map(() => K.FIN.consensus.eps), step: 'month', lab: 'Outlook by month' }; }
-  if (id === 'FCF') { const a = [], c = []; for (let m = 0; m < 9; m++) { const ws = weeksIn(m); if (!ws.length) continue; const w = ws[ws.length - 1]; a.push(cash('A', 1, w).fcf); c.push(cash('T', 1, w).fcf); } return { a, c, step: 'month', lab: 'Year to date by month' }; }
-  if (id === 'SAFQ') { const h = K.SAFETY.history; return { a: h, c: h.map(() => K.SAFETY.target), step: 'month', lab: '12 months' }; }
-  if (id === 'RISK') { const a = []; for (let s = n - 1; s >= 0; s--) a.push(asOf(s, () => supplyRisk(f).length)); return { a, c: null, step: 'week', lab: '13 weeks' }; }
-  if (id === 'INVD') { const a = []; for (let s = n - 1; s >= 0; s--) a.push(asOf(s, () => card(id).raw)); return { a, c: a.map(() => K.INV_TARGET_DAYS), step: 'week', lab: '13 weeks' }; }
-  // 4-weekly panel and audit reads: from last year's level to today's, as reported
-  const x = card(id); if (x.craw == null) return null; const a = []; for (let i = 0; i < n; i++) { const t = i / (n - 1); a.push(x.craw + (x.raw - x.craw) * (t * t * .6 + t * .4) + (i && i < n - 1 ? Math.sin(i * 1.7) * Math.abs(x.raw - x.craw) * .08 : 0)); }
-  return { a, c: null, step: '4 weeks', lab: '4-weekly reads' };
+  if (id === 'EPS') { const h = K.LE_HISTORY.map(x => x[1]); return { a: h, c: h.map(() => K.FIN.consensus.eps), step: 'month', lab: 'Monthly outlook, Jan to Oct' }; }
+  if (id === 'FCF') { const a = [], c = []; for (let m = 0; m < 9; m++) { const ws = weeksIn(m); if (!ws.length) continue; const w = ws[ws.length - 1]; a.push(cash('A', 1, w).fcf); c.push(cash('T', 1, w).fcf); } return { a, c, step: 'month', lab: 'Year to date, Jan to Sep' }; }
+  if (id === 'SAFQ') { const h = K.SAFETY.history; return { a: h, c: h.map(() => K.SAFETY.target), step: 'month', lab: '12 months to Oct' }; }
+  if (id === 'RISK') { const a = []; for (let s = n - 1; s >= 0; s--) a.push(asOf(s, () => supplyRisk(f).length)); return { a, c: null, step: 'week', lab: '13 weeks to 11 Oct' }; }
+  if (id === 'INVD') { const a = []; for (let s = n - 1; s >= 0; s--) a.push(asOf(s, () => card(id).raw)); return { a, c: a.map(() => K.INV_TARGET_DAYS), step: 'week', lab: '13 weeks to 11 Oct' }; }
+  if (id === 'FCFC') { const a = [], c = []; for (let m = 0; m < 9; m++) { const ws = weeksIn(m); if (!ws.length) continue; const w = ws[ws.length - 1]; a.push(cash('A', 1, w).conv); c.push(.9); } return { a, c, step: 'month', lab: 'Year to date, Jan to Sep' }; }
+  // no history for this one: the card shows where it stands against its comparison instead of a made-up line
+  return null;
 }
 // change between two raw readings, in the card's own units; "no change" when it rounds to zero
 function changeText(id, rk, prev, cur) {
@@ -1082,8 +1082,22 @@ function trendSvg(t, sev) {
   if (!t || t.a.length < 2) return '<span class="c-trend empty"></span>';
   const W = 200, H = 34, all = t.a.concat(t.c || []).filter(isFinite); let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1e-12) { hi += 1; lo -= 1; } const pad = (hi - lo) * .12; lo -= pad; hi += pad;
   const X = i => 3 + i / (t.a.length - 1) * (W - 8), Y = v => 3 + (1 - (v - lo) / (hi - lo)) * (H - 6), p = arr => arr.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(''), last = t.a.length - 1;
-  return `<svg class="c-trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${t.c ? `<path d="${p(t.c)}" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" opacity=".8"/>` : ''}<path d="${p(t.a)}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${X(last)}" cy="${Y(t.a[last])}" r="2.6" fill="${sev === 'good' ? 'var(--ink)' : 'var(--neg)'}"/></svg>`;
+  const i0 = t.a.findIndex(v => isFinite(v)); t.y0 = i0 >= 0 ? Y(t.a[i0]) : null; t.v0 = i0 >= 0 ? t.a[i0] : null;
+  // the shaded gap between the line and its comparison is the distance the card headline names
+  const back = arr => arr.map((v, i) => [v, i]).reverse().map(([v, i]) => 'L' + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join('');
+  const band = t.c ? `<path d="${p(t.a)}${back(t.c)}Z" fill="var(--sig,var(--ink-2))" opacity=".15"/>` : '';
+  return `<svg class="c-trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${band}${t.c ? `<path d="${p(t.c)}" fill="none" stroke="#8a929c" stroke-width="1.2" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>` : ''}<path d="${p(t.a)}" fill="none" stroke="var(--ink)" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${X(last)}" cy="${Y(t.a[last])}" r="2.6" fill="${sev === 'good' ? 'var(--ink)' : 'var(--neg)'}"/></svg>`;
 }
+// no weekly history: a bar from zero to today, with a tick where the comparison sits
+function gapBar(id, x) {
+  if (x.raw == null || x.craw == null || !isFinite(x.raw) || !isFinite(x.craw)) return '<span class="c-trend empty"></span>';
+  const lo = Math.min(0, x.raw, x.craw), hi = Math.max(x.raw, x.craw) * 1.1 || 1, at = v => ((v - lo) / (hi - lo) * 100).toFixed(1);
+  const col = x.rg === 0 ? 'var(--ink-2)' : (x.raw - x.craw) * x.rg >= -1e-12 ? 'var(--good)' : 'var(--sig)';
+  return `<span class="c-bar" aria-hidden="true"><i class="c-bar-f" style="width:${at(x.raw)}%;background:${col}"></i><i class="c-bar-t" style="left:${at(x.craw)}%"></i></span>`;
+}
+// the value the line starts from, so the chart has a scale without an axis
+const TREND_UNITS = { pts: 1, bps: 1, x: 1, days: 1, $: 1, n2: 1, n0: 1, eps: 1 };
+const trendStart = (x, t) => t && t.v0 != null && TREND_UNITS[x.rk] ? (x.rk === 'eps' ? '$' + t.v0.toFixed(2) : fmtV(x.rk, t.v0)) : '';
 // Every card and highlight bar reads in the same order:
 // 1 status colour and word, 2 which metric, 3 how far off and in which direction, 4 the actual value, 5 the trend, 6 what is behind it
 const VS = { ASK: 'last year', SSG: 'the category', SALES: 'target', SHARE: 'last year', PENF: 'last year', PEN: 'last year', DIST: 'last year', EPS: 'analyst estimates', FCF: 'plan', SAFQ: 'target', QUAL: 'target', CHINV: 'normal', OTIF: 'the 95% target', INVD: 'target' };
@@ -1106,7 +1120,7 @@ function cardHtml(id, i) {
     <span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="c-per">${esc(x.per)}</span></span>
     <span class="c-name">${esc(CARD_DEF[id][0])}<span class="info" data-def="${id}" aria-hidden="true">i</span></span>
     ${gap}${now}
-    <span class="c-tr">${trendSvg(t, x.sev)}<span class="c-tr-l"><span class="c-tr-n">${t ? esc(t.lab) : ''}${t && t.c ? ` <i class="dash-k"></i>${id === 'SHARE' ? 'last year' : id === 'EPS' ? 'consensus' : id === 'SSG' ? 'category' : id === 'SAFQ' || id === 'OTIF' ? 'target' : id === 'CHINV' ? 'normal' : compLab().toLowerCase()}` : ''}</span>${since}</span></span>
+    <span class="c-tr">${t ? `${trendSvg(t, x.sev)}${trendStart(x, t) ? `<i class="c-tr-s" style="top:${Math.max(0, Math.round(t.y0) - 13)}px">from ${trendStart(x, t)}</i>` : ''}` : gapBar(id, x)}<span class="c-tr-l"><span class="c-tr-n">${t ? `${esc(t.lab)}${t.c ? ` <i class="dash-k"></i>${id === 'SHARE' ? 'last year' : id === 'EPS' ? 'consensus' : id === 'SSG' ? 'category' : VS[id] ? VS[id].replace(/^the /, '') : compLab().toLowerCase()}` : ''}` : `Now against ${esc(VS[id] || compName())} <i class="tick-k"></i>`}</span>${since}</span></span>
     <span class="c-ins"><span>${esc(x.insight)}</span><i class="c-go" aria-hidden="true">→</i></span><span class="c-slot">${SLOTS[CARD_SLOT[id]]}</span></button>`;
 }
 
@@ -1117,31 +1131,56 @@ function summaryView(ex) {
   const head = bad.length ? bad.slice(0, 2).map(c => `<button class="say" data-open="${c.id}"${c.id === 'TRADE' && /losing money/.test(c.say) ? ' data-then="F5"' : ''} title="Open ${esc(CARD_DEF[c.id][0])}">${emph(c.say)}<span class="say-go" aria-hidden="true"> →</span></button>`).join(' ') : 'Everything you own is on track.';
   const watch = [];
   // other issues: a plain sentence on what is wrong and why, with what it is worth on the right
-  const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
   const dot = t => /[.!?]$/.test(t) ? t : t + '.';
+  // the CEO's earnings line is the loudest signal, so it leads the list
+  if (state.role === 'CEO') {
+    const e = K.finance({}, 'A', 1, NW).eps, g = K.FIN.guidance.eps, con = K.FIN.consensus.eps, below = e < g[0];
+    watch.push({ t: 'Full-year earnings per share', l: below ? 'Below guidance' : 'Guidance', sev: below ? 'crit' : e < con ? 'warn' : 'good',
+      gap: below ? `<i>▼</i><b class="num">$${(g[0] - e).toFixed(2)}</b> below the bottom of guidance` : e > g[1] ? `<i>▲</i><b class="num">$${(e - g[1]).toFixed(2)}</b> above guidance` : 'Within guidance',
+      issue: `Our outlook is $${e.toFixed(2)}. Guidance is $${g[0].toFixed(2)} to $${g[1].toFixed(2)} and analysts expect $${con.toFixed(2)}.`,
+      aid: 'guidance', go: { card: 'EPS' } });
+  }
   if (state.role === 'CSO') { const sc = cs.find(c => c.id === 'SALES'); if (sc && sc.heads > 3) watch.push({ t: 'Sales heads', l: 'Behind target', sev: 'warn', issue: `${sc.heads} of 10 sales heads will miss October at the current pace.`, go: { card: 'SALES' } }); }
   const CARD_WHY = { EPS: 'Oat costs and promotions are hurting margin, and overhead savings only cover part of it', GM: 'Oat costs are rising faster than our prices', OSG: 'Bolt Brew UK and Orchard Juice Indonesia are behind, and Glow India is ahead', CHINV: 'We shipped 13% more than shoppers bought after a distributor incentive', RISK: 'The causes are the Indonesia port delays and Diwali demand in India' };
+  // the gap line already says how far off it is, so this line carries the reason instead
   bad.slice(2).forEach(c => { const gap = c.raw != null && c.craw != null ? changeText(c.id, c.rk, c.craw, c.raw) : '';
-    watch.push({ t: CARD_DEF[c.id][0], l: 'Core metric', sev: c.sev, gap: gapOf(c.id, c) ? gapHtml(gapOf(c.id, c)) : `<b class="num">${c.value}${c.valueUnit ? ' ' + c.valueUnit : ''}</b>`, issue: `${dot(c.say)}${CARD_WHY[c.id] ? ' ' + dot(CARD_WHY[c.id]) : ''}`, imp: gap ? ['Gap', gap, 'unf'] : null, go: { card: c.id } }); });
+    watch.push({ t: CARD_DEF[c.id][0], l: 'Core metric', sev: c.sev, gap: gapOf(c.id, c) ? gapHtml(gapOf(c.id, c)) : `<b class="num">${c.value}${c.valueUnit ? ' ' + c.valueUnit : ''}</b>`, issue: dot(CARD_WHY[c.id] || c.insight || c.say), imp: gap ? ['Gap', gap, 'unf'] : null, go: { card: c.id } }); });
   ex.filter(e => e.d.sev !== 'good').slice(0, 6 - Math.min(watch.length, 2)).forEach(e => { const d = e.d, imp = d.cls === 'loading' ? ['Close to expiry', fmt$(d.value), 'unf'] : d.cls === 'opportunity' ? ['Full-year upside', '+' + fmt$(Math.abs(d.fyNs)), 'fav'] : d.fyCm ? ['Full-year margin', s$(d.fyCm), d.fyCm < 0 ? 'unf' : 'fav'] : ['Full-year sales', s$(d.fyNs), d.fyNs < 0 ? 'unf' : 'fav'];
     const amt = imp[1].replace(/[()+−]/g, ''), neg = /−/.test(imp[1]);
     const gap = d.cls === 'loading' ? `<b class="num">${amt}</b> of stock close to expiry` : d.cls === 'opportunity' ? `<i>▲</i><b class="num">${amt}</b> upside for the full year` : `<i>${neg ? '▼' : '▲'}</i><b class="num">${amt}</b> full-year ${d.fyCm ? 'margin' : 'sales'} ${neg ? 'below' : 'above'} plan`;
-    watch.push({ t: e.title, l: d.label, sev: d.sev, gap, issue: `${dot(d.cause)}${d.dir === 'worse' ? ' It has been getting worse over the last 4 weeks.' : ''}`, imp, go: { card: cardFor(d.cls), f: e.f } }); });
-  const roleOf = p => { const r = (p || '').split(', ')[1]; return r ? 'the ' + r : first(p); };
-  // next steps = the top open actions from My actions, each with where it came from and why
+    watch.push({ t: e.title, l: d.label, sev: d.sev, gap, issue: `${dot(d.cause)}${d.dir === 'worse' ? ' It has been getting worse over the last 4 weeks.' : ''}`, imp, aid: e.id, rec: d.action, owner: d.owner, go: { card: cardFor(d.cls), f: e.f } }); });
+  // every row carries its own next step, so one line reads: what is wrong, why, and what to do
   const openActs = actionsList().filter(a => a.status !== 'Done');
-  const next = openActs.slice(0, 3).map(a => ({ id: a.id, sev: a.sev, t: `Ask ${roleOf(a.poc)} to ${(a.title.charAt(0).toLowerCase() + a.title.slice(1).split(/;|\.(?=\s|$)/)[0].replace(/ and extend.*$/, '')).replace(/\.$/, '')}.`,
-    why: a.why.split(/(?<=[.!?])\s/)[0],
-    src: `Due ${fmtD(a.due)}${a.overdue ? ' (overdue)' : ''}. ${/^new/.test(a.id) ? `You created it on ${fmtD(a.assigned)}.` : a.status === 'New' ? 'Suggested by Pulse, not assigned yet.' : `You assigned it on ${fmtD(a.assigned)}.`}` }));
-  const eps = state.role === 'CEO' ? (() => { const e = K.finance({}, 'A', 1, NW).eps, g = K.FIN.guidance.eps, cs = K.FIN.consensus.eps, below = e < g[0], sev = below ? 'crit' : e < cs ? 'warn' : 'good';
-    const gap = below ? `<i>▼</i><b>$${(g[0] - e).toFixed(2)}</b> below the bottom of guidance` : e > g[1] ? `<i>▲</i><b>$${(e - g[1]).toFixed(2)}</b> above guidance` : 'Within guidance';
-    return `<button class="kbar s-${sev}" data-open="EPS" title="Open earnings per share"><span class="kb-sig">${below ? 'Below guidance' : SEV[sev]}</span><span class="kb-main"><span class="kb-name">Full-year earnings per share</span><span class="kb-gap">${gap}</span><span class="kb-ctx">Guidance is $${g[0].toFixed(2)} to $${g[1].toFixed(2)} and analysts expect $${cs.toFixed(2)}</span></span><span class="kb-val"><b class="num">$${e.toFixed(2)}</b><small>our outlook</small></span><i class="kb-go" aria-hidden="true">→</i></button>`; })() : '';
-  return `<div class="sum-card"><div class="sum-main">
-      <p class="sum-meta"><span class="ai" data-def="AI">AI summary</span> Data to 11 Oct <span class="info" data-def="FRESH" tabindex="0" aria-label="Data freshness">i</span></p>
-      <h1 class="sum-h">${head}</h1>${eps}
-      <div class="sum-watch"><h4>Other issues</h4><div class="iss-list">${watch.slice(0, 6).map((w, i) => `<button class="iss s-${w.sev}" data-watch="${i}" ${i >= 3 ? 'hidden data-more' : ''} title="Open the analysis"><span class="iss-b"><span class="iss-s">${SEV[w.sev] || ''}${w.l && w.l !== SEV[w.sev] ? `<span class="iss-l">${esc(w.l)}</span>` : ''}</span><span class="iss-h"><b>${esc(w.t)}</b>${w.gap ? `<span class="iss-g">${w.gap}</span>` : ''}</span><span class="iss-t">${esc(w.issue || '')}</span></span><span class="iss-go" aria-hidden="true">→</span></button>`).join('') || '<span class="muted">Nothing else needs you.</span>'}</div>${watch.length > 3 ? `<button class="link iss-more" data-iss-more>Show ${Math.min(6, watch.length) - 3} more issues</button>` : ''}</div></div>
-    <div class="sum-next"><h4>Next steps <span class="h4-sub">(top ${Math.min(3, openActs.length)} of ${openActs.length} open actions)</span></h4><ul class="next">${next.map(n => `<li><button class="nx" data-goact="${esc(n.id)}" title="Show this action in My actions"><span class="nx-t">${esc(n.t)}</span><span class="nx-w"><b>Why:</b> ${esc(n.why)}</span><span class="nx-s">${esc(n.src)}</span></button></li>`).join('') || '<li class="muted">No open actions.</li>'}</ul>${openActs.length ? '<button class="link nx-all" data-goact="">See all actions ↓</button>' : ''}</div></div>`
-    + `<script type="application/json" id="watch-data">${JSON.stringify(watch).replace(/</g, '\\u003c')}</script>`;
+  const roleOf = p => { const r = (p || '').split(', ')[1]; return r ? 'the ' + r : first(p); };
+  const askLine = a => `Ask ${roleOf(a.poc)} to ${(a.title.charAt(0).toLowerCase() + a.title.slice(1).split(/;|\.(?=\s|$)/)[0].replace(/ and extend.*$/, '')).replace(/\.$/, '')}.`;
+  const srcLine = a => `Due ${fmtD(a.due)}${a.overdue ? ' (overdue)' : ''}. ${/^new/.test(a.id) ? `You created it on ${fmtD(a.assigned)}.` : a.status === 'New' ? 'Suggested by Pulse, not assigned yet.' : `You assigned it on ${fmtD(a.assigned)}.`}`;
+  const shown = watch.slice(0, 6), used = new Set();
+  const exOf = id => (window.__ex || []).find(x => x.id === id);
+  // a row with no action of its own borrows the open action that sits on the same metric
+  const actFor = w => {
+    // an issue keeps its own action, or none: borrowing is only for the core metric rows
+    let a = w.aid ? openActs.find(x => x.id === w.aid) : null;
+    if (!a && !w.aid && w.go && w.go.card) a = openActs.find(x => { const e = exOf(x.id); return e && !used.has(x.id) && cardFor(e.d.cls) === w.go.card; });
+    if (a) used.add(a.id);
+    return a || null;
+  };
+  // one block per issue, read top to bottom: how bad, what is off, why, what to do next
+  const rows = shown.map((w, i) => {
+    const a = actFor(w);
+    const nx = a ? `<span class="sum-nx"><b>Next step</b> ${esc(askLine(a))}<small>${esc(srcLine(a))}</small></span>`
+      : w.rec ? `<span class="sum-nx sug"><b>Suggested next step</b> ${esc(dot(w.rec))}<small>Owner: ${esc(w.owner || 'not set')}. Not one of your actions yet.</small></span>`
+      : `<span class="sum-nx none"><b>Next step</b> None set yet.</span>`;
+    const cta = a ? (actionCta(a) || `<button class="btn sm cta" data-goact="${esc(a.id)}">Open action</button>`) : `<button class="btn sm cta" data-rowact="${i}">Add action</button>`;
+    const more = `<span class="menu-wrap"><button class="icon-btn sm" ${a ? `data-menu="${esc(a.id)}"` : `data-rowmenu="${i}"`} aria-label="More for this issue" title="More">${ICON.more}</button></span>`;
+    return `<div class="sum-row s-${w.sev}"${i >= 3 ? ' hidden data-more' : ''}><button class="sum-why" data-watch="${i}" title="Open the analysis"><span class="sum-s">${SEV[w.sev] || ''}${w.l && w.l !== SEV[w.sev] ? `<span class="sum-l">${esc(w.l)}</span>` : ''}</span><span class="sum-hd"><b>${esc(w.t)}</b>${w.gap ? `<span class="sum-g">${w.gap}</span>` : ''}</span><span class="sum-t">${esc(w.issue || '')}</span>${nx}<i class="sum-go" aria-hidden="true">→</i></button><span class="sum-cta"><span class="sum-cta-r"><span class="sum-cta-c">${cta}<button class="link" data-watch="${i}">See analysis</button></span>${more}</span></span></div>`;
+  }).join('');
+  return `<div class="sum-card">
+      <div class="sum-top"><p class="sum-meta"><span class="ai" data-def="AI">AI summary</span> All figures run to 11 Oct <span class="info" data-def="FRESH" tabindex="0" aria-label="Data freshness">i</span></p>${openActs.length ? `<button class="link" data-goact="" title="Open My actions">${openActs.length} open action${openActs.length === 1 ? '' : 's'} ↓</button>` : ''}</div>
+      <h1 class="sum-h">${head}</h1>
+      <div class="sum-rows">${rows || '<p class="muted" style="padding:12px 0">Nothing else needs you.</p>'}</div>
+      ${shown.length > 3 ? `<div class="sum-foot"><button class="link" data-iss-more>Show ${shown.length - 3} more issues</button></div>` : ''}
+    </div>`
+    + `<script type="application/json" id="watch-data">${JSON.stringify(shown).replace(/</g, '\\u003c')}</script>`;
 }
 function cardFor(cls) { const r = state.role, m = { CEO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'OSG', supply: 'OSG', loading: 'FCF', cost: 'OM', buying: 'OM', volume: 'OSG' }, CFO: { cost: 'GM', buying: 'GM', loading: 'FCF', supply: 'OSG', market: 'OSG', competitor: 'OSG', opportunity: 'OSG', volume: 'OSG' }, CMO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'ROMI', buying: 'ROMI', cost: 'OSGB', supply: 'OSGB', loading: 'OSGB', volume: 'OSGB' }, CSO: { loading: 'CHINV', supply: 'SALES', competitor: 'SALES', buying: 'TRADE', cost: 'TRADE', market: 'SALES', opportunity: 'SALES', volume: 'SALES' }, COO: { supply: 'OTIF', cost: 'COGS', loading: 'INVD', buying: 'COGS', competitor: 'OTIF', market: 'OTIF', opportunity: 'INVD', volume: 'OTIF' } }; return (m[r] || {})[cls] || ROLE_CARDS[r][0]; }
 
@@ -1384,12 +1423,18 @@ function paintBand() {
   });
 }
 const srcFor = id => ({ SHARE: 'Market data, 4 weeks to 20 Sep', PEN: 'Consumer panel', ROMI: 'Marketing mix model, Q2', OTIF: 'Supply planner', INVD: 'Supply planner', CHINV: 'Distributor system', DIST: 'Retail execution', EPS: 'FP&A and investor relations', QUAL: 'Quality system' })[id] || 'ERP, actuals to week 41';
-function closePanel() { $('#band').hidden = true; OPEN = null; PF = {}; drill.stack = []; document.querySelectorAll('.card').forEach(c => { c.classList.remove('on'); c.setAttribute('aria-expanded', 'false'); }); hideTip(); }
+// after the panel has finished painting, bring it into view wherever you clicked from
+const showBand = () => setTimeout(() => { const el = $('#band'); if (!el.hidden) el.scrollIntoView({ block: 'start' }); }, 140);
+function closePanel() { $('#band').hidden = true; OPEN = null; PF = {}; PFOPEN = false; drill.stack = []; document.querySelectorAll('.card').forEach(c => { c.classList.remove('on'); c.setAttribute('aria-expanded', 'false'); }); hideTip(); }
+let PFOPEN = false;
 function filterBar() {
   const sel = (k, label, opts) => `<label class="fsel ${PF[k] ? 'set' : ''}"><span>${label}</span><select data-pf="${k}">${opts.map(([v, t]) => `<option value="${v}" ${(PF[k] || [''])[0] === v || (!PF[k] && !v) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  const set = Object.keys(PF).some(k => PF[k]);
+  // the three filters live behind one button, the same way the header does it
   return `<form class="ask" id="ask-panel" autocomplete="off"><span class="ask-i" aria-hidden="true">${ICON.search}</span><input id="ask-panel-in" placeholder="Ask about ${esc(CARD_DEF[OPEN][0].toLowerCase())}, e.g. Sunrise Oats in India, large retail" aria-label="Ask a question about this panel"></form>
-    <div class="fbar">${sel('c', 'Country', [['', 'All countries']].concat(K.COUNTRIES.map(c => [c.id, c.name])))}${sel('b', 'Brand', [['', 'All brands']].concat(K.BRANDS.map(b => [b.id, b.name])))}${sel('ch', 'Channel', [['', 'All channels']].concat(K.CHANNELS.map(c => [c.id, c.name])))}
-    <span class="per">${esc(win().label)}, ${esc(compShort())}</span>${Object.keys(PF).some(k => PF[k]) ? '<button class="link" data-pf-reset>Reset</button>' : ''}</div><p class="ask-out" id="ask-out" hidden></p>`;
+    <div class="fbar"><div class="pop-wrap" id="pf-wrap"><button class="chip filt ${set ? 'set' : ''}" id="pf-btn" aria-haspopup="true" aria-expanded="${PFOPEN}" title="Filter this panel"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M4.5 8h7M6.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>Filters</b><span class="f-sep" aria-hidden="true"></span><span>${esc(scopeOf(PF))}</span> <span class="k" aria-hidden="true">▾</span></button>
+      <div class="pop" id="pf-pop" ${PFOPEN ? '' : 'hidden'}><span class="plab">Country</span>${sel('c', '', [['', 'All countries']].concat(K.COUNTRIES.map(c => [c.id, c.name])))}<span class="plab">Brand</span>${sel('b', '', [['', 'All brands']].concat(K.BRANDS.map(b => [b.id, b.name])))}<span class="plab">Channel</span>${sel('ch', '', [['', 'All channels']].concat(K.CHANNELS.map(c => [c.id, c.name])))}<p class="foot">${esc(win().label)}, ${esc(compShort())}. Change the period in the header.</p>${set ? '<button class="link" data-pf-reset>Clear these filters</button>' : ''}</div></div>
+    <span class="per">${esc(win().label)}, ${esc(compShort())}</span></div><p class="ask-out" id="ask-out" hidden></p>`;
 }
 const ICON = {
   bm: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2.5h8v11l-4-2.6-4 2.6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
@@ -1516,7 +1561,14 @@ function watchTile(r, compact) {
 function renderPins() {
   const rows = BM.filter(b => b.v.role === state.role).map(watchRow).filter(Boolean).sort((a, b) => b.rank - a.rank), all = rows.length;   // each role's watchlist is its own
   $('#pins').hidden = false;
-  $('#pins').innerHTML = `<div class="sec-row"><h2 class="sec">My watchlist</h2>${all ? `<button class="link" data-bm-all>See all ${all}</button>` : ''}</div>${rows.length ? `<div class="pin-row">${rows.slice(0, 4).map(r => watchTile(r)).join('')}</div>` : `<p class="pin-empty">${ICON.bm} Bookmark any panel or chart and it shows up here with the latest number and what has changed since you saved it.</p>`}`;
+  // the watchlist rides on the same shelf as the cards, to the right of them
+  const lab = `<div class="watch-lab"><b>Watchlist</b><span>${all ? 'Views you saved, with what has changed' : 'Nothing saved yet'}</span>${all ? `<button class="link" data-bm-all>See all ${all}</button>` : ''}</div>`;
+  const slot = rows.length < 4 ? `<p class="pin-empty">${ICON.bm} Save any panel or chart here. Each one shows the latest number and what has changed since you saved it.</p>` : '';
+  $('#pins').innerHTML = lab + rows.slice(0, 4).map(r => watchTile(r)).join('') + slot;
+  const go = $('#shelf-go'), sh = $('#shelf');
+  if (go && sh) { go.hidden = false; go.textContent = all ? `Watchlist, ${all} saved →` : 'Watchlist →';
+    go.onclick = () => sh.scrollTo({ left: sh.scrollLeft > 20 ? 0 : sh.scrollWidth, behavior: 'smooth' });
+    sh.onscroll = () => { go.textContent = sh.scrollLeft > 20 ? '← Core metrics' : (all ? `Watchlist, ${all} saved →` : 'Watchlist →'); }; }
   const changed = rows.filter(r => r.flip || !/no change/.test(r.ch)).length;
   $('#bm-count').textContent = changed || ''; $('#bm-count').title = changed ? `${changed} changed since you saved them` : '';
 }
@@ -1549,12 +1601,14 @@ function actionsList() {
   return mine.concat(actions().filter(a => !mine.find(m => m.id === a.id))).slice(0, 20);
 }
 const STEPS = ['New', 'Assigned', 'In progress', 'Done'];
+// the one button an action offers next, used in My actions and in the summary rows
+const actionCta = a => a.status === 'New' ? `<button class="btn sm cta" data-assign="${esc(a.id)}">Assign</button>` : a.status === 'Assigned' ? `<button class="btn sm cta" data-mail="${esc(a.id)}">Email</button>` : a.status === 'In progress' ? `<button class="btn sm cta" data-meet="${esc(a.id)}">Book meeting</button>` : '';
 function actionsView() {
   const all = actionsList(), fl = state.actFilter || 'Open', pg = state.actPage || 0;
   const list = all.filter(a => fl === 'Open' ? a.status !== 'Done' : fl === 'Overdue' ? a.overdue : a.status === 'Done');
   const pages = Math.max(1, Math.ceil(list.length / 5)), p = Math.min(pg, pages - 1), shown = list.slice(p * 5, p * 5 + 5);
   const cnt = { Open: all.filter(a => a.status !== 'Done').length, Overdue: all.filter(a => a.overdue).length, Done: all.filter(a => a.status === 'Done').length };
-  const primary = a => a.status === 'New' ? `<button class="btn sm cta" data-assign="${esc(a.id)}">Assign</button>` : a.status === 'Assigned' ? `<button class="btn sm cta" data-mail="${esc(a.id)}">Email</button>` : a.status === 'In progress' ? `<button class="btn sm cta" data-meet="${esc(a.id)}">Book meeting</button>` : '';
+  const primary = actionCta;
   return `<div class="act-top"><div class="seg-tabs" role="tablist">${Object.entries(cnt).map(([k, n]) => `<button role="tab" aria-selected="${fl === k}" data-af="${k}" class="${k === 'Overdue' && n ? 'alert' : ''}">${k} <span>${n}</span></button>`).join('')}</div>
     <button class="btn cta" data-new-act ${all.length >= 20 ? 'disabled title="Up to 20 actions in this prototype"' : ''}>${ICON.plus} New action</button></div>
     <div id="new-form" hidden></div>
@@ -1585,6 +1639,18 @@ function menu(id, btn) {
   closeMenus(); const m = document.createElement('div'); m.className = 'menu'; m.setAttribute('role', 'menu');
   m.innerHTML = `<button role="menuitem" data-mail="${esc(id)}">Email draft</button><button role="menuitem" data-meet="${esc(id)}">Meeting invite</button><button role="menuitem" data-assign="${esc(id)}">Reassign</button><button role="menuitem" data-see="${esc(id)}">Open analysis</button><button role="menuitem" data-step="${esc(id)}|Done">Mark done</button>`;
   btn.parentElement.appendChild(m); m.querySelector('button').focus();
+}
+// an issue with no action of its own still has somewhere to go
+function rowMenu(i, btn) {
+  closeMenus(); const m = document.createElement('div'); m.className = 'menu'; m.setAttribute('role', 'menu');
+  m.innerHTML = `<button role="menuitem" data-rowact="${i}">Create an action</button><button role="menuitem" data-watch="${i}">Open the analysis</button><button role="menuitem" data-goact="">Open My actions</button>`;
+  btn.parentElement.appendChild(m); m.querySelector('button').focus();
+}
+// prefill the new-action form from a summary row
+function rowAction(i) {
+  const w = JSON.parse($('#watch-data').textContent)[i]; if (!w) return;
+  $('#acts').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  newActionForm({ title: w.rec ? w.rec.replace(/\.$/, '') : 'Follow up: ' + w.t, issue: w.t, why: w.issue, f: (w.go && w.go.f) || {} });
 }
 const closeMenus = () => document.querySelectorAll('.menu').forEach(m => m.remove());
 const findAct = id => actionsList().find(a => a.id === id);
@@ -1755,7 +1821,7 @@ const worstC = (f, map, rg) => countriesOf(f).filter(c => has({ ...f, c: [c] }))
 function mkCard(id) {
   const M = MX[id], P = win(), f = filter(), r = M.f(f, P) || {};
   const x = { rk: r.rk || M.rk, rg: r.rg != null ? r.rg : M.rg, ...r };
-  x.value = r.value || fmtV(x.rk, x.raw); x.per = r.per || (WIN_.includes(id) ? P.label : M.per || 'Latest');
+  x.value = r.value || fmtV(x.rk, x.raw); x.per = r.per || M.per || (WIN_.includes(id) ? P.label : 'Latest read');
   x.prov = r.prov || M.prov || 'ERP'; x.sev = r.sev || autoSev(x.rk, x.raw, x.craw, x.rg);
   const g = gapOf(id, x);
   x.ref = r.ref || (x.craw != null ? `${M.refL || 'Plan'} ${fmtV(x.rk, x.craw)}` : '');
@@ -1788,7 +1854,7 @@ mx('OSA', 'On-shelf availability', 'Whether being listed actually means being on
 
 /* ---------- brand and consumer ---------- */
 function bh(f, i) { let n = 0, a = 0, l = 0, worst = null; for (const [k, v] of Object.entries(K.BRAND_HEALTH)) { const [b, c] = k.split('|'); if ((f.b && !f.b.includes(b)) || (f.c && !f.c.includes(c)) || !has({ b: [b], c: [c] })) continue; const w = ytdNs({ b: [b], c: [c] }), ly = i == null ? (v[0][0] + v[1][0] + v[2][0]) / 3 : v[i][0], now = i == null ? (v[0][1] + v[1][1] + v[2][1]) / 3 : v[i][1]; n += w; a += now * w; l += ly * w; if (!worst || now - ly < worst.d) worst = { d: now - ly, label: K.BMAP[b].name + ' in ' + K.CMAP[c].name }; } return n ? { now: a / n / 100, ly: l / n / 100, worst } : null; }
-const bhCard = i => f => { const h = bh(f, i); return h ? { raw: h.now, craw: h.ly, insight: h.worst && h.worst.d < 0 ? `${h.worst.label} dropped the most (${h.worst.d.toFixed(1)} points)` : 'No brand lost ground' } : { raw: null, craw: null, value: 'n/a' }; };
+const bhCard = i => f => { const h = bh(f, i); return h ? { raw: h.now, craw: h.ly, insight: h.worst && h.worst.d < 0 ? `${h.worst.label} dropped the most, by ${Math.abs(h.worst.d).toFixed(1)} points` : 'No brand lost ground' } : { raw: null, craw: null, value: 'n/a' }; };
 const bhO = { rk: 'pts', rg: 1, by: 'cb', vs: 'last year', refL: 'Last year', per: 'Sep tracker', prov: 'Brand tracker' };
 mx('BEQ', 'Brand equity', 'How strong our brands are in shoppers\' minds: known, considered and preferred. It moves before penetration and share do.', 'Average of awareness, consideration and preference, % of category buyers', { ...bhO, f: bhCard(null) });
 mx('AWR', 'Unaided brand awareness', 'Whether people think of the brand when they think of the category.', 'Category buyers who name the brand unprompted ÷ all category buyers', { ...bhO, f: bhCard(0) });
@@ -1853,7 +1919,7 @@ const svc = { rk: 'pts', rg: 1, by: 'c', vs: 'target', refL: 'Target', per: '4 w
 const fillOf = f => agg(f, 'A', CW - 3, CW).fill;
 const fillByC = f => Object.fromEntries(countriesOf(f).map(c => [c, has({ ...f, c: [c] }) ? fillOf({ ...f, c: [c] }) : 1]));
 mx('POR', 'Perfect order rate', 'How often an order arrives on time, in full, undamaged and with the right paperwork, as the retailer sees it.', 'On time × in full × damage free × correct paperwork', { ...svc,
-  f: f => { const fb = fillByC(f), w = worstC(f, fb, 1); return { raw: wavgC(f, OTD_) * fillOf(f) * wavgC(f, DFD_) * wavgC(f, ODA_), craw: .91, insight: w ? `${K.CMAP[w].name} pulls it down most: fill rate there is ${pct1(fb[w])}` : '' }; } });
+  f: f => { const fb = fillByC(f), w = worstC(f, fb, 1); return { raw: wavgC(f, OTD_) * fillOf(f) * wavgC(f, DFD_) * wavgC(f, ODA_), craw: .91, insight: w ? `${K.CMAP[w].name} has the lowest fill rate, at ${pct1(fb[w])}` : '' }; } });
 mx('OTD', 'On-time delivery', 'How punctual our deliveries to customers are.', 'Deliveries in the agreed window ÷ all deliveries', { ...svc, f: f => ({ raw: wavgC(f, OTD_), craw: .96, insight: `${K.CMAP[worstC(f, OTD_, 1)].name} is latest, mostly from carriers` }) });
 mx('CFR', 'Case fill rate', 'Whether we ship what the customer ordered. Short shipments mean lost sales and fines.', 'Cases shipped ÷ cases ordered', { ...svc,
   f: f => { const fb = fillByC(f), w = worstC(f, fb, 1); return { raw: fillOf(f), craw: .97, insight: w ? `${K.CMAP[w].name} ships the least in full, at ${pct1(fb[w])}` : '' }; } });
@@ -1889,7 +1955,11 @@ const FULL = { OSG: () => band('C1'), OVG: () => openSSG(), PMX: () => openTile(
 /* ---------- L2 tiles inside the panel ---------- */
 function nodeKids(l1, l2) { for (const t of [TREE[state.role], TREE.CEO]) { const a = t.find(x => x[0] === l1); if (!a) continue; if (!l2) return a[1].map(x => x[0]); const b = a[1].find(x => x[0] === l2); if (b) return b[1]; } return []; }
 function findPath(tree, id) { for (const [l1, kids] of tree) { if (l1 === id) return [l1]; for (const [l2, l3s] of kids) { if (l2 === id) return [l1, l2]; if (l3s.includes(id)) return [l1, l2, id]; } } return null; }
-const nowLine = (id, x) => `<span class="c-now">Now <b class="num">${x.value}${x.valueUnit ? ' ' + x.valueUnit : ''}</b></span>`;
+// "Now 2.9%" on its own says nothing, so the comparison it is judged against comes with it
+const nowLine = (id, x) => { const ref = (x.ref || '').split(/, |\. /)[0];
+  const named = ref && ref.length <= 30 && /^(Plan|Target|Budget|Last year|Latest estimate|Last month|Guidance|Our growth|Share of market|Normal)\b/.test(ref);
+  const vs = named ? `, ${esc(lowFirst(ref))}` : x.craw != null && isFinite(x.craw) && TREND_UNITS[x.rk] ? `, ${esc(VS[id] || compName())} ${x.rk === 'eps' ? '$' + x.craw.toFixed(2) : fmtV(x.rk, x.craw)}` : '';
+  return `<span class="c-now">Now <b class="num">${x.value}${x.valueUnit ? ' ' + x.valueUnit : ''}</b>${vs}</span>`; };
 const gapLine = (id, x) => { const g = gapOf(id, x); return `<span class="c-gap">${g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b><span>${g.words}</span>` : g ? `<b class="flat">${g.words}</b>` : `<b class="num">${x.value}</b>`}</span>`; };
 function l2Block(l1) {
   const kids = nodeKids(l1); if (!kids.length) return null;
@@ -1917,7 +1987,7 @@ function renderDrawer() {
     <div class="dr-body">
       <div class="card dr-card s-${x.sev}"><span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="c-per">${esc(scope + x.per)}</span></span>
         <span class="c-name">${esc(CARD_DEF[id][0])}<span class="info" data-def="${id}" aria-hidden="true">i</span></span>${gapLine(id, x)}${nowLine(id, x)}
-        ${t ? `<span class="c-tr">${trendSvg(t, x.sev)}<span class="c-tr-l"><span class="c-tr-n">${esc(t.lab)}</span></span></span>` : ''}
+        <span class="c-tr">${t ? `${trendSvg(t, x.sev)}${trendStart(x, t) ? `<i class="c-tr-s" style="top:${Math.max(0, Math.round(t.y0) - 13)}px">from ${trendStart(x, t)}</i>` : ''}` : gapBar(id, x)}<span class="c-tr-l"><span class="c-tr-n">${t ? esc(t.lab) : `Now against ${esc(VS[id] || compName())} <i class="tick-k"></i>`}</span></span></span>
         <span class="c-ins"><span>${esc(x.insight)}</span></span></div>
       <p class="dr-def">${esc(CARD_DEF[id][1])}${LOGIC[id] ? ` <b>How it adds up:</b> ${esc(LOGIC[id])}` : ''}</p>
       ${kids.length ? `<h4>What drives it</h4><div class="iss-list">${kidRows}</div>` : ''}
@@ -2015,19 +2085,21 @@ function chooseRole(r) {
 document.addEventListener('click', e => {
   const t = e.target;
   if (!t.closest('.menu-wrap')) closeMenus();
-  if (!t.closest('.pop-wrap')) { $('#period-pop').hidden = true; $('#period-btn').setAttribute('aria-expanded', 'false'); }
+  if (!t.closest('#per-wrap')) { $('#period-pop').hidden = true; $('#period-btn').setAttribute('aria-expanded', 'false'); }
+  if (!t.closest('#pf-wrap')) { PFOPEN = false; const pp = $('#pf-pop'); if (pp) { pp.hidden = true; $('#pf-btn').setAttribute('aria-expanded', 'false'); } }
   const g = (s) => t.closest(s);
-  const ga = g('[data-goact]'); if (ga) { const id = ga.dataset.goact; state.actFilter = 'Open'; if (id) { const list = actionsList().filter(a => a.status !== 'Done'), i = list.findIndex(a => a.id === id); state.actPage = Math.max(0, Math.floor(i / 5)); state.openAct = id; } $('#acts').innerHTML = actionsView(); const row = id ? [...document.querySelectorAll('#acts .arow-wrap')].find(r => r.querySelector(`[data-exp="${CSS.escape(id)}"]`)) : $('#acts'); (row || $('#acts')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (row && id) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); } return; }
+  const ga = g('[data-goact]'); if (ga) { closeMenus(); const id = ga.dataset.goact; state.actFilter = 'Open'; if (id) { const list = actionsList().filter(a => a.status !== 'Done'), i = list.findIndex(a => a.id === id); state.actPage = Math.max(0, Math.floor(i / 5)); state.openAct = id; } $('#acts').innerHTML = actionsView(); const row = id ? [...document.querySelectorAll('#acts .arow-wrap')].find(r => r.querySelector(`[data-exp="${CSS.escape(id)}"]`)) : $('#acts'); (row || $('#acts')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (row && id) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); } return; }
   if (g('[data-demo]')) { demoStart(); return; }
-  const im = g('[data-iss-more]'); if (im) { const hid = document.querySelector('.iss[data-more][hidden]'); document.querySelectorAll('.iss[data-more]').forEach(x => x.hidden = !hid); im.textContent = hid ? 'Show fewer' : `Show ${document.querySelectorAll('.iss[data-more]').length} more issues`; return; }
+  const im = g('[data-iss-more]'); if (im) { const hid = document.querySelector('#summary [data-more][hidden]'); document.querySelectorAll('#summary [data-more]').forEach(x => x.hidden = !hid); im.textContent = hid ? 'Show fewer' : `Show ${document.querySelectorAll('#summary [data-more]').length} more issues`; return; }
   if (g('[data-demo-next]')) { demoNext(); return; }
   if (g('[data-demo-exit]')) { demoExit(); return; }
   if (g('#demo-send')) { if (demoAt === 3) demoNext(); else askSend(); return; }
   if (g('#period-btn')) { const p = $('#period-pop'); p.hidden = !p.hidden; $('#period-btn').setAttribute('aria-expanded', !p.hidden); return; }
+  if (g('#pf-btn')) { const p = $('#pf-pop'); PFOPEN = p.hidden; p.hidden = !PFOPEN; $('#pf-btn').setAttribute('aria-expanded', PFOPEN); return; }
   if (g('#view-btn')) { openPicker(); return; }
   const pk = g('[data-role]'); if (pk) { chooseRole(pk.dataset.role); return; }
   const op = g('[data-open]'); if (op && !g('#band')) { const id = op.dataset.open; if (OPEN === id && !$('#band').hidden && !op.dataset.then) closePanel(); else { if (OPEN !== id) PF = {}; openCard(id); if (op.dataset.then) goDeeper(() => openCFO(op.dataset.then)); } return; }
-  const w = g('[data-watch]'); if (w) { const ws = JSON.parse($('#watch-data').textContent)[+w.dataset.watch]; openCard(ws.go.card, ws.go.f || {}); return; }
+  const w = g('[data-watch]'); if (w) { closeMenus(); const ws = JSON.parse($('#watch-data').textContent)[+w.dataset.watch]; openCard(ws.go.card, ws.go.f || {}); showBand(); return; }
   if (g('#band-close')) { closePanel(); return; }
   const cr = g('[data-crumb]'); if (cr) { const n = +cr.dataset.crumb; if (n === 0) openCard(OPEN); else { drill.stack = drill.stack.slice(0, n + 1); paintBand(); } return; }
   if (g('[data-bookmark]')) { addBookmark(null); return; }
@@ -2047,11 +2119,13 @@ document.addEventListener('click', e => {
   if (g('[data-new-act]')) { newActionForm(); return; }
   if (g('[data-cancel-new]')) { $('#new-form').hidden = true; return; }
   const mn = g('[data-menu]'); if (mn) { menu(mn.dataset.menu, mn); return; }
+  const rm = g('[data-rowmenu]'); if (rm) { rowMenu(+rm.dataset.rowmenu, rm); return; }
+  const ra2 = g('[data-rowact]'); if (ra2) { closeMenus(); rowAction(+ra2.dataset.rowact); return; }
   const st = g('[data-step]'); if (st) { const [id, s] = st.dataset.step.split('|'); ACTS[id] = { ...(ACTS[id] || {}), status: s, ...(s === 'Assigned' ? { assigned: TODAY } : {}) }; saveNew(); closeMenus(); $('#acts').innerHTML = actionsView(); renderSummaryOnly(); toast(s === 'Done' ? 'Marked done' : 'Status: ' + s); return; }
   const m = g('[data-mail]'); if (m) { closeMenus(); mailModal(findAct(m.dataset.mail)); return; }
   const mt = g('[data-meet]'); if (mt) { closeMenus(); meetModal(findAct(mt.dataset.meet)); return; }
   const asg = g('[data-assign]'); if (asg) { closeMenus(); assignModal(findAct(asg.dataset.assign)); return; }
-  const see = g('[data-see]'); if (see) { closeMenus(); const a = findAct(see.dataset.see); openCard(cardFor((window.__ex.find(x => x.id === a.id) || { d: {} }).d.cls), a.f || {}); return; }
+  const see = g('[data-see]'); if (see) { closeMenus(); const a = findAct(see.dataset.see); openCard(cardFor((window.__ex.find(x => x.id === a.id) || { d: {} }).d.cls), a.f || {}); showBand(); return; }
   const cp = g('[data-copy]'); if (cp) { const txt = decodeURIComponent(cp.dataset.copy); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copied')).catch(() => toast('Select the text and copy it')); return; }
   if (g('[data-close]') || t.id === 'modal') { closeModal(); return; }
 });
