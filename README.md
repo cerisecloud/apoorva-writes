@@ -30,6 +30,8 @@ src/content/blog/     posts, as Markdown with frontmatter
 src/components/       Header, Footer, BaseHead, FormattedDate
 src/styles/global.css design tokens live here as CSS variables
 public/               served at the site root, unprocessed
+  experiments/        standalone prototypes (pizza game is public/pizza.html)
+docs/                 handover notes for the experiments (not served)
 ```
 
 ## Writing a post
@@ -105,6 +107,18 @@ entirely different set of jobs, change nothing here and reconfigure the poller.
 Adding a new source needs no work in this repo either: the feed carries a
 `source` field per row, and the page groups by it. Only the filter dropdown
 lists sources explicitly, in `src/pages/jobs.astro`.
+
+## The executive dashboard experiment
+
+`public/experiments/executive-pulse/` holds Pulse, a single-page executive
+dashboard for a fictional consumer goods company, served as static files at
+`/experiments/executive-pulse/` (same approach as the pizza game). It has no build
+step and does not use the site's theme: three plain files, all data generated in
+the browser. The write-up lives in `src/pages/projects/executive-dashboard.astro`.
+
+Start with **[docs/executive-pulse-handover.md](docs/executive-pulse-handover.md)**:
+what it does, how the code is organised, design rules, how to add a metric or
+panel, and what was verified.
 
 ## Deploying
 
