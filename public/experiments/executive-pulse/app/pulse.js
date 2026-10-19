@@ -2614,7 +2614,8 @@ function suggestedFor(id) {
 function actionsBlock(id) {
   const f = { ...PF };
   const make = () => {
-    const S = subtree(id), inScope = a => !f.c || !a.f || !a.f.c || a.f.c.some(c => f.c.includes(c));
+    // an action shows only where its own scope overlaps the panel's: country, brand (or category) and channel each have to match
+    const S = subtree(id), inScope = a => ['c', 'b', 'ch'].every(d => !f[d] || !!(a.f && a.f[d] && a.f[d].some(x => f[d].includes(x))));
     const list = actionsList().filter(a => a.status !== 'Done' && inScope(a) && ACT_NODES(a).some(n => S.has(n)));
     const sg = suggestedFor(id), words = t => new Set(t.toLowerCase().match(/[a-z]{5,}/g) || []), done = sg && list.some(a => { const A = words(a.title), B = [...words(sg.what)]; return B.filter(w => A.has(w)).length >= 2; });
     const row = a => `<div class="pa-row"><i class="dot ${a.status.replace(' ', '-').toLowerCase()}" aria-hidden="true"></i><span class="pa-t"><b>${esc(a.title.split(/;/)[0].replace(/\.$/, ''))}</b><small>${esc(a.issue || '')}</small></span><span class="pa-d num ${a.overdue ? 'od' : ''}">Due ${fmtD(a.due)}${a.overdue ? ', ' + odDays(a) : ''}</span><span class="pa-o">${esc(ownerRole(a.poc))}</span><span class="pa-s">${a.status}</span><span class="pa-b">${actionCta(a)}<button class="btn sm quiet" data-goact="${esc(a.id)}">Open</button></span></div>`;
