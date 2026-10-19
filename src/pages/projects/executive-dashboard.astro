@@ -4,86 +4,47 @@ import Layout from '../../layouts/BlogPost.astro';
 
 <Layout
 	title="Executive dashboard for a consumer goods company"
-	description="Pulse: one page that tells a consumer goods leadership team what is off, why, and what to do next."
+	description="An experiment in designing one page that tells a consumer goods leadership team what changed, why, and what to do next."
 	pubDate={new Date('October 17 2026')}
 	updatedDate={new Date('October 19 2026')}
 >
-	<p><em>Prototype. Desktop only for now. Northstar Consumer Goods is fictional and all data is synthetic. Every link below opens the dashboard at the exact place it describes.</em></p>
+	<h2>Problem statement</h2>
+	<p>Design an <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">executive dashboard</a> for a CPG company that enables leadership (C-suite) to understand business performance, diagnose underlying issues and decide what action to take.</p>
+	<p>The dashboard should be interactive and accommodate data cuts across <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">geography, channel, category, brands and more</a>. It must have internal data as well as data from external sources and should be a single page.</p>
 
-	<p>
-		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a> &nbsp;|&nbsp; <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener"><strong>See how the metrics fit together →</strong></a>
-	</p>
-
-	<h2>Problem</h2>
-	<p>
-		Design a single-page executive dashboard for a consumer goods (CPG) company that helps the C-suite understand
-		performance, diagnose what is behind it and decide what to do. It must be interactive, <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">cut by geography, channel, category and brand</a>,
-		and combine internal and external data.
-	</p>
-
-	<h2>Users and their jobs</h2>
-	<p>
-		Five roles: <a href="/experiments/executive-pulse/#CEO" target="_blank" rel="noopener">CEO</a>, <a href="/experiments/executive-pulse/#CFO" target="_blank" rel="noopener">CFO</a> (including revenue growth management), <a href="/experiments/executive-pulse/#CMO" target="_blank" rel="noopener">CMO</a> (including brand),
-		<a href="/experiments/executive-pulse/#CSO" target="_blank" rel="noopener">Chief Sales Officer</a> and <a href="/experiments/executive-pulse/#COO" target="_blank" rel="noopener">COO</a> (including manufacturing and procurement). Legal, tech and HR are out of scope.
-		Each has three jobs:
-	</p>
+	<h2>Approach</h2>
+	<p>First, we define our users: <a href="/experiments/executive-pulse/#CEO" target="_blank" rel="noopener">CEO</a>, <a href="/experiments/executive-pulse/#CFO" target="_blank" rel="noopener">CFO</a>, <a href="/experiments/executive-pulse/#CMO" target="_blank" rel="noopener">CMO</a>, <a href="/experiments/executive-pulse/#CSO" target="_blank" rel="noopener">CSO (sales)</a>, <a href="/experiments/executive-pulse/#COO" target="_blank" rel="noopener">COO</a>. For simplicity, CBO (Brand) and CMO are merged and COO also assumes manufacturing &amp; procurement responsibilities. I have excluded C-suite like legal, tech, HR. Next, let’s define the job-to-be-done (JTBD) for our users. There are 3 main jobs:</p>
 	<ol>
-		<li><strong>What is the data?</strong> The few numbers they run, against plan, latest estimate and last year.</li>
-		<li><strong>What does it mean?</strong> What is off, by how much, against what goal, and why.</li>
-		<li><strong>What do I do?</strong> The next action, who owns it, by when, and follow-up until it is closed.</li>
+		<li><strong>What is the data?</strong> Defining the key metrics that capture business performance and calculate their values. This has to be contextual to each user and their main responsibilities.</li>
+		<li><strong>What does it mean?</strong> Explain what the data says about the business’s performance. What’s doing good/bad and why?</li>
+		<li><strong>What action to take?</strong> Suggest the best action to take next, identify who needs to take the action and enable users to take it.</li>
 	</ol>
 
-	<h2>1. What is the data: a metric pyramid</h2>
-	<p>
-		An executive's time is short, so each role gets a fast, broad view and an easy way down into any detail. Each role
-		has <a href="/experiments/executive-pulse/#CEO/metrics" target="_blank" rel="noopener">four core metrics</a>, chosen from what CPG boards measure and pay executives on: growth, margin,
-		cash and share. Each metric breaks into the parts that add up to it, in its own unit, and then into the levers that
-		move it, each with one owner. Lenses such as category growth sit beside a metric, never inside its sum. Because every
-		breakdown reconciles, a CFO can walk <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0ZPIiwiY2FyZCI6IkdNIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbeyJmbiI6Im9wZW5Ob2RlIiwiYXJncyI6WyJDT0dTIl19XSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">gross margin from 52.2% plan to 51.2%</a> and see that cost per case takes
-		78 bps off. The full tree, with formulas, owners and sources, is in the <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener">metric pyramid</a>.
-	</p>
-	<p>
-		Data comes from three places: market and shopper data, internal actuals, and forward-looking plans and targets from
-		planning and revenue growth management tools. Named integrations in the dashboard are illustrative.
-	</p>
+	<h2>Solution</h2>
+	<p>Here’s how we will achieve each of the JTBDs.</p>
 
-	<h2>2. What does it mean: the reason, not just the number</h2>
-	<p>
-		Every card and <a href="/experiments/executive-pulse/#CEO/summary" target="_blank" rel="noopener">issue in the summary</a> reads in the order an executive thinks: what is off, by how
-		much, against what goal, the value now, and why. For example, <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7fSwicGVyaW9kIjoiWVREIiwiY29tcCI6IlQiLCJ5ZWFyIjoiQ0FMIiwicGF0aCI6W3siZm4iOiJvcGVuTm9kZSIsImFyZ3MiOlsiUE1YIl19XSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">organic sales growth is 0.4 pts behind plan</a>:
-		price/mix takes 0.7 pts off, because price increases landed at +2.9% against +3.3% planned and the oats increase is
-		stuck at UK and US retailers. <a href="/experiments/executive-pulse/#CFO-GM" target="_blank" rel="noopener">Any number opens a deep dive in place</a>, showing its parts, where it is
-		off and the actions on it. Hover over any metric name for what it is, how to read it, its owner and its formula.
-	</p>
-	<p>
-		An AI layer writes the summary and <a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">turns a plain-English question into a custom view</a> with its own
-		filters. In production this would be an agent. Here it is simulated with rules on synthetic data.
-	</p>
+	<h3>#1 What is the data</h3>
+	<p>While several metrics are available, CXO’s time is limited. Hence, the real goal is to enable a T-shaped consumption for them for day to day use- A fast <strong><a href="/experiments/executive-pulse/#CEO/metrics" target="_blank" rel="noopener">broad view of parts of the business they manage</a></strong> and an <a href="/experiments/executive-pulse/#CFO-GM" target="_blank" rel="noopener">easy deep-dive in any area of their choice</a>. To enable this, we define a <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener">hierarchical set of parameters</a> (L1 (4) &gt;&gt; L2 (4x3) &gt;&gt; L3 (4x3x2) that cover any and all changes in their individual function. Eg- For a CSO, <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7fSwicGVyaW9kIjoiWVREIiwiY29tcCI6IlQiLCJ5ZWFyIjoiQ0FMIiwicGF0aCI6W10sImNoYXJ0IjpudWxsfQ" target="_blank" rel="noopener">Sales growth (L1) &gt; [[ Sales volume + Price + Product Mix] (L2)] + ...</a> Lastly, for each of the metrics, we enable multiple views: <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">Against last year, against plan, target, etc.</a></p>
+	<p>All this data comes primarily from 3 sources, <a href="/experiments/executive-pulse/#CMO-SHARE" target="_blank" rel="noopener">external data from market tracking agencies</a>, internal past data and context from company data pipelines and internal forward-looking estimates/targets from <a href="/experiments/executive-pulse/#CFO-TRADE" target="_blank" rel="noopener">RGM/TPO tools</a>.</p>
 
-	<h2>3. What do I do: actions with owners</h2>
-	<p>
-		Each issue carries a suggested next step, the role that owns it and a due date. Users assign it from any level,
-		email the owner or book a meeting, and <a href="/experiments/executive-pulse/#COO/actions" target="_blank" rel="noopener">track it to done</a>, with overdue items flagged. For example,
-		<a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ09PIiwiY2FyZCI6IlBPUiIsInBmIjp7ImMiOlsiSUQiXX0sInBlcmlvZCI6IllURCIsImNvbXAiOiJUIiwieWVhciI6IkNBTCIsInBhdGgiOltdLCJjaGFydCI6bnVsbH0" target="_blank" rel="noopener">perfect order in Indonesia</a> is 11.5 pts behind target, and the open action is for the Indonesia Supply Lead to
-		rush the inbound shipments and get fill rate back to 95% within 3 weeks. Tools sit inside the flow where the decision is
-		made, so a Chief Sales Officer who is <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ1NPIiwiY2FyZCI6IlNBTEVTIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbXSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">$1.9M behind the October sales target</a> can re-check the promotion plan
-		from the same view.
-	</p>
+	<h3>#2 What does it mean?</h3>
+	<p>A good insight goes beyond telling what’s good or bad, and <strong><a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7fSwicGVyaW9kIjoiWVREIiwiY29tcCI6IlQiLCJ5ZWFyIjoiQ0FMIiwicGF0aCI6W3siZm4iOiJvcGVuTm9kZSIsImFyZ3MiOlsiUE1YIl19XSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">explains WHY</a></strong> it is so. Eg- Organic Sales Growth is down 5% in Indonesia. But the real insight is: Coconut oil price has increased by 15% in Indonesia, which leads to an increased price of our product, and thus, a decrease in sales and revenue.</p>
+	<p>An <a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">AI agent</a> will make this happen. Not just implemented AI in some sections. The agent will autonomously define the views, the metrics, etc. It will be told to balance stability with visibility.</p>
+	<p>Issues/Insights here are intentionally designed to be presented in the <a href="/experiments/executive-pulse/#CEO/summary" target="_blank" rel="noopener">logical way the user approaches the data</a>, which is - Metric that is off &gt;&gt; by how much this metric is off &gt;&gt; Current value v/s Goal value (annual target/monthly target etc) &gt;&gt; the underlying reason why this is off.</p>
 
-	<h2>What brings them back</h2>
+	<h3>#3 What action to take?</h3>
+	<p>The most crucial job of the dashboard is to enable the user to <a href="/experiments/executive-pulse/#COO/actions" target="_blank" rel="noopener">take action on the most burning issues</a> to fix them. This includes <strong>identifying the person responsible</strong> and being able to work with them until resolution. That’s why it is important to track the issue x action over time and also nudge the owner for action/updates. Eg- <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ09PIiwiY2FyZCI6IlBPUiIsInBmIjp7ImMiOlsiSUQiXX0sInBlcmlvZCI6IllURCIsImNvbXAiOiJUIiwieWVhciI6IkNBTCIsInBhdGgiOltdLCJjaGFydCI6bnVsbH0" target="_blank" rel="noopener">Email Indonesia Supply Lead to expedite inbound shipments for Orchard Juice, Indonesia to reach in 3 weeks.</a></p>
+	<p>To enable users most effectively the dashboard is integrated in very specific places with tools/products they use. Eg- <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ1NPIiwiY2FyZCI6IlNBTEVTIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbXSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">A CSO can recheck sales targets with new prices using the RGM product integrated into the flow.</a></p>
+
+	<h3>Usability enhancers</h3>
+	<p>Aside from viewing data and sending actions, users also need some enhanced actions to improve use.</p>
 	<ul>
-		<li><strong><a href="/experiments/executive-pulse/#CEO/watchlist" target="_blank" rel="noopener">Watchlist</a>:</strong> bookmark any view or chart and see what changed since you saved it, with an optional Teams alert when it crosses a value or range you set.</li>
-		<li><strong><a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">Ask</a>:</strong> type a question and get a custom view you can save or share.</li>
-		<li><strong>Shareable views:</strong> every view has its own link, so a number can be shared exactly as seen. Each link on this page is one.</li>
-		<li><strong>Roadmap:</strong> mobile view, product-level data, and sign-in with watchlists stored per user.</li>
+		<li><strong><a href="/experiments/executive-pulse/#CEO/watchlist" target="_blank" rel="noopener">Bookmarking</a></strong> Users can bookmark charts and analyses to revisit them or for regular tracking.</li>
+		<li><strong><a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">Deep custom analysis (Talk to your data)</a></strong> Occasionally, a user might require a very specific, deep analysis which is different from the dashboard. We have enabled users to build an analysis based on the context they specify complete with a value tree and contextual filters. Users can save or share these as needed.</li>
+		<li><strong><a href="/experiments/executive-pulse/#COO/actions" target="_blank" rel="noopener">Action follow-up</a></strong> One can also follow up on actions, especially those which are overdue.</li>
+		<li><a href="/experiments/executive-pulse/#CEO/watchlist" target="_blank" rel="noopener">Alerts</a> [roadmap] CXOs can set alerts on different charts to keep a watch on different metrics (roadmap).</li>
+		<li>Mobile view [roadmap] They can view key metrics and actions on a mobile screen when they are on the move.</li>
 	</ul>
 
-	<p>
-		<strong>Try it in a minute:</strong> <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">pick a role</a>, open the reddest card, follow the breakdown to the cause and
-		assign the fix. Or <a href="/experiments/executive-pulse/#demo" target="_blank" rel="noopener">run the guided demo</a>.
-	</p>
-
-	<p>
-		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a> &nbsp;|&nbsp; <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener"><strong>See how the metrics fit together →</strong></a>
-	</p>
+	<p>Based on these we <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">designed a dashboard</a> for these CXO users.</p>
 </Layout>
