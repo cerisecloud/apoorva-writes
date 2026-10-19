@@ -100,7 +100,11 @@ function storyFx(b, c, ch, w) {
 
 /* ---------------- series generation ---------------- */
 const LE = { week: 39, label: 'Sep latest estimate', recovery: .4 };
-const FIELDS = ['vol', 'ord', 'cons', 'stock', 'gs', 'tr', 'ret', 'mat', 'pack', 'conv', 'inb', 'wh', 'fr', 'hd', 'rush', 'apTv', 'apDig', 'apOth', 'rsv', 'inc'];
+// trade spend splits into promotions (trp) and contract terms: rebates, allowances and listing fees (trt)
+const TERMS_SHARE = { MT: .55, LR: .6, CONV: .7, ECOM: .5, GT: .8 };   // terms as a share of planned trade spend, by channel
+const TERMS_DRIFT = s => (s.c === 'US' || s.c === 'UK') && s.ch === 'LR' ? 1.05 : 1;   // large retailers took extra allowances to accept the price increase
+const CONV_VS_PLAN = { IN: .021, ID: .058, UK: -.005, US: .008 };   // conversion cost per case against plan, from plant efficiency (see PLANTS)
+const FIELDS = ['vol', 'ord', 'cons', 'stock', 'gs', 'tr', 'trp', 'trt', 'ret', 'mat', 'pack', 'conv', 'inb', 'wh', 'fr', 'hd', 'rush', 'apTv', 'apDig', 'apOth', 'rsv', 'inc'];
 const mk = () => Object.fromEntries(FIELDS.map(f => [f, new Float64Array(NW + 1)]));
 const SERIES = [];
 for (const c of COUNTRIES) for (const b of BRANDS) {
@@ -130,6 +134,7 @@ for (const s of SERIES) {
   const gmT = 1 - ucT0 / (lpBase * (1 - trT - retT));
   const put = (X, w, vol, lp, tr, ret, uc, matIdx, dc, rush, apTot, mediaDig) => {
     X.vol[w] = vol; X.gs[w] = vol * lp; X.tr[w] = vol * lp * tr; X.ret[w] = vol * lp * ret;
+    X.trt[w] = vol * lp * Math.min(tr, trT * TERMS_SHARE[s.ch] * (X === A ? TERMS_DRIFT(s) : 1)); X.trp[w] = X.tr[w] - X.trt[w];
     const rest = 1 - B.matShare;   // non-material cost split: packaging 45%, conversion 40%, inbound freight 15%
     const m = uc * B.matShare * matIdx, p = uc * rest * .45, cv = uc * rest * .40, ib = uc * rest * .15;
     X.mat[w] = vol * m; X.pack[w] = vol * p; X.conv[w] = vol * cv; X.inb[w] = vol * ib;
@@ -166,8 +171,8 @@ for (const s of SERIES) {
     const lpA = planLp(w) * fx.lp * (1 + nz(.003)), trA = Math.max(.01, trT + nz(.004) + fx.tr);
     const convAbs = Math.pow(T.vol[w] / shipped, .25);
     const apA = T.apTv[w] + T.apDig[w] + T.apOth[w];
-    put(A, w, shipped, lpA, trA, retT * (1 + nz(.1)), ucT0 * (1 + nz(.008)), fx.mat, dcT * (1 + nz(.03)), fx.rush, apA * fx.ap * (1 + nz(.08)), dig);
-    A.conv[w] *= convAbs;
+    put(A, w, shipped, lpA, trA, retT * (1 + nz(.1)) * (s.c === 'IN' && s.ch === 'GT' && w >= 36 ? 1.8 : 1), ucT0 * (1 + nz(.008)), fx.mat, dcT * (1 + nz(.03)), fx.rush, apA * fx.ap * (1 + nz(.08)), dig);
+    A.conv[w] *= convAbs * (1 + CONV_VS_PLAN[s.c]);
     A.inc[w] = (A.apTv[w] + A.apDig[w] + A.apOth[w]) * s.romi;
   }
   // forecast weeks 42-52
@@ -236,6 +241,8 @@ function invDays(c, b, w) {
   return d;
 }
 const NEAR_EXPIRY = { own: { IN: 1.2e6, ID: .6e6, UK: .9e6, US: 1.4e6 }, channel: { IN: 4.8e6, ID: 1.1e6, UK: 0, US: 0 } };
+// excess and slow-moving own stock ($), on top of near-expiry: India snacks and haircare built ahead of the push, UK instant oats after the delisting
+const EXCESS_OWN = { IN: 6.2e6, ID: 2.4e6, UK: 3.8e6, US: 3.1e6 }, EO_TARGET_DAYS = 2.5, DIO_TARGET = 35;
 const QUALITY = { cpmu: 3.1, cpmuTarget: 3.5, cpmuLY: 3.4, holds: 0, recalls: 0, openCases: 0 };
 const COMMODITIES = [
   { id: 'oats', name: 'Oats', vsBudget: .18, hedge: .40 }, { id: 'coffee', name: 'Coffee beans', vsBudget: .04, hedge: .70 },
@@ -245,7 +252,7 @@ const COMMODITIES = [
 ];
 const PROCUREMENT = { savingsTargetFY: 48e6, savingsYTD: 29e6, savingsPlanYTD: 37e6, supplierOtif: .93 };
 const FORECAST_ACC = { IN: .84, ID: .71, UK: .88, US: .87, target: .85 };
-const FIN = { overheadRate: .196, overheadActualMult: 1.012, interestFY: 60e6, taxRate: .25, shares: 105.4e6,
+const FIN = { overheadRate: .196, overheadActualMult: 1.012, interestFY: 60e6, interestFYA: 62e6, taxRate: .25, shares: 105.4e6, buyback: .004,   // interest runs above plan on India working capital; the buyback is slightly ahead
   guidance: { organic: [.04, .06], eps: [3.10, 3.20] }, consensus: { organic: .048, eps: 3.18, ns: 3.24e9 },
   dividendYield: .024, peerPE: 19.5 };
 const SHARE_PRICE = (() => { const us = [], peer = []; let p = 52, q = 100; for (let w = 1; w <= CW; w++) { p *= 1 + nz(.012) + (w >= 30 && w <= 33 ? -.012 : w >= 34 ? -.003 : .0006); q *= 1 + nz(.008) + .0005; us[w] = p; peer[w] = q; } return { us, peer, start: 52 }; })();
@@ -266,17 +273,17 @@ const SIGNALS = [
 /* ---------------- additions for the role home pages ---------------- */
 // Sales heads (regional sales managers), each owning a share of their country's sales
 const SALES_HEADS = [
-  { id: 'in-n', c: 'IN', region: 'North & East India', name: 'Raj Patel', w: .38, perf: -.035 }, { id: 'in-w', c: 'IN', region: 'West India', name: 'Neha Singh', w: .34, perf: .02 }, { id: 'in-s', c: 'IN', region: 'South India', name: 'Arun Kumar', w: .28, perf: .01 },
-  { id: 'id-j', c: 'ID', region: 'Jakarta & West Java', name: 'Budi Santoso', w: .58, perf: -.06 }, { id: 'id-e', c: 'ID', region: 'East Java', name: 'Siti Rahma', w: .42, perf: -.03 },
-  { id: 'uk-s', c: 'UK', region: 'London & South', name: 'Bob Smith', w: .55, perf: -.02 }, { id: 'uk-n', c: 'UK', region: 'Midlands & North', name: 'James Hall', w: .45, perf: .015 },
-  { id: 'us-e', c: 'US', region: 'East', name: 'Rachel Green', w: .40, perf: .005 }, { id: 'us-c', c: 'US', region: 'Central', name: 'Mike Davis', w: .32, perf: -.015 }, { id: 'us-w', c: 'US', region: 'South & West', name: 'Ana Lopez', w: .28, perf: .02 },
+  { id: 'in-n', c: 'IN', region: 'North & East India', name: 'North & East India Sales Head', w: .38, perf: -.035 }, { id: 'in-w', c: 'IN', region: 'West India', name: 'West India Sales Head', w: .34, perf: .02 }, { id: 'in-s', c: 'IN', region: 'South India', name: 'South India Sales Head', w: .28, perf: .01 },
+  { id: 'id-j', c: 'ID', region: 'Jakarta & West Java', name: 'Jakarta & West Java Sales Head', w: .58, perf: -.06 }, { id: 'id-e', c: 'ID', region: 'East Java', name: 'East Java Sales Head', w: .42, perf: -.03 },
+  { id: 'uk-s', c: 'UK', region: 'London & South', name: 'London & South Sales Head', w: .55, perf: -.02 }, { id: 'uk-n', c: 'UK', region: 'Midlands & North', name: 'Midlands & North Sales Head', w: .45, perf: .015 },
+  { id: 'us-e', c: 'US', region: 'East', name: 'US East Sales Head', w: .40, perf: .005 }, { id: 'us-c', c: 'US', region: 'Central', name: 'US Central Sales Head', w: .32, perf: -.015 }, { id: 'us-w', c: 'US', region: 'South & West', name: 'US South & West Sales Head', w: .28, perf: .02 },
 ];
 // Distribution and outlet reach by sales head (synthetic)
 const REACH = {
-  'in-n': { wd: .61, wdLY: .63, outlets: 182000, target: 195000 }, 'in-w': { wd: .68, wdLY: .66, outlets: 156000, target: 152000 }, 'in-s': { wd: .64, wdLY: .63, outlets: 131000, target: 133000 },
-  'id-j': { wd: .58, wdLY: .62, outlets: 94000, target: 101000 }, 'id-e': { wd: .55, wdLY: .56, outlets: 71000, target: 74000 },
-  'uk-s': { wd: .86, wdLY: .87, outlets: 21500, target: 22000 }, 'uk-n': { wd: .84, wdLY: .83, outlets: 17800, target: 17500 },
-  'us-e': { wd: .79, wdLY: .78, outlets: 31200, target: 31000 }, 'us-c': { wd: .76, wdLY: .77, outlets: 24900, target: 25600 }, 'us-w': { wd: .74, wdLY: .72, outlets: 22100, target: 21500 },
+  'in-n': { wd: .61, wdLY: .63, wdT: .645, outlets: 182000, target: 195000 }, 'in-w': { wd: .68, wdLY: .66, wdT: .67, outlets: 156000, target: 152000 }, 'in-s': { wd: .64, wdLY: .63, wdT: .64, outlets: 131000, target: 133000 },
+  'id-j': { wd: .58, wdLY: .62, wdT: .63, outlets: 94000, target: 101000 }, 'id-e': { wd: .55, wdLY: .56, wdT: .57, outlets: 71000, target: 74000 },
+  'uk-s': { wd: .86, wdLY: .87, wdT: .87, outlets: 21500, target: 22000 }, 'uk-n': { wd: .84, wdLY: .83, wdT: .84, outlets: 17800, target: 17500 },
+  'us-e': { wd: .79, wdLY: .78, wdT: .79, outlets: 31200, target: 31000 }, 'us-c': { wd: .76, wdLY: .77, wdT: .775, outlets: 24900, target: 25600 }, 'us-w': { wd: .74, wdLY: .72, wdT: .73, outlets: 22100, target: 21500 },
 };
 const LISTINGS = [
   { c: 'UK', ka: 'pl', b: 'oats', sku: 'Sunrise Instant Oats 10x40g', type: 'Delisted', w: 33 },
@@ -290,9 +297,9 @@ const WAREHOUSES = [{ id: 'bhw', c: 'IN', name: 'Bhiwandi DC' }, { id: 'del', c:
 const LRP = { years: [2024, 2025, 2026, 2027], planCagr: .06, industryCagr: { Food: .052, Beverages: .061, 'Personal Care': .071 }, planCagrCat: { Food: .05, Beverages: .055, 'Personal Care': .08 }, g2025: { Food: .045, Beverages: .05, 'Personal Care': .07 } };
 // People (fictional) who own actions
 const PEOPLE = {
-  CEO: 'Sarah Miller, CEO', CFO: 'David Chen, CFO', RGM: 'Alice Brown, Head of Revenue Growth', CMO: 'Emma Wilson, CMO', CSO: 'Mike Johnson, Chief Sales Officer', COO: 'Tom Baker, COO', PROC: 'Grace Lee, Head of Procurement', QA: 'Omar Khan, Head of Quality',
-  UK_SALES: 'Bob Smith, UK Sales Director', US_SALES: 'Rachel Green, US Sales Director', IN_SALES: 'Raj Patel, India Sales Director', ID_SALES: 'Budi Santoso, Indonesia Sales Director',
-  UK_GM: 'Peter Walsh, UK General Manager', IN_GM: 'Ravi Kumar, India General Manager', ID_SUPPLY: 'Lisa Tan, Indonesia Supply Lead', BRAND_BOLT: 'Chloe Adams, Bolt Brew Brand Director', BRAND_GLOW: 'Priya Shah, Glow Skincare Brand Director',
+  CEO: 'CEO', CFO: 'CFO', RGM: 'Head of Revenue Growth', CMO: 'CMO', CSO: 'Chief Sales Officer', COO: 'COO', PROC: 'Head of Procurement', QA: 'Head of Quality',
+  UK_SALES: 'UK Sales Director', US_SALES: 'US Sales Director', IN_SALES: 'India Sales Director', ID_SALES: 'Indonesia Sales Director',
+  UK_GM: 'UK General Manager', IN_GM: 'India General Manager', ID_SUPPLY: 'Indonesia Supply Lead', BRAND_BOLT: 'Bolt Brew Brand Director', BRAND_GLOW: 'Glow Skincare Brand Director',
 };
 const MEDIA_ROMI = { TV: .75, Digital: 1.35, Other: .9 };   // multipliers on brand ROMI by media
 const COMPLAINTS = (() => { const a = []; for (let w = 1; w <= CW; w++) a[w] = 3.2 + Math.sin(w / 4) * .25 + nz(.15); return a; })();
@@ -308,7 +315,8 @@ const PENETRATION = {
 };
 const SWITCHING = [{ from: 'Bolt Brew Coffee', to: 'Volt Coffee', where: 'UK', buyers: 0.9, note: 'Mostly convenience shoppers since the price cut in week 34' }, { from: 'Orchard Juice', to: 'FreshFarm Juice', where: 'Indonesia', buyers: 0.6, note: 'Out-of-stocks at FreshMart and HyperValue' }, { from: 'Sunrise Oats', to: 'Retailer own brand', where: 'UK', buyers: 0.4, note: 'After the oats price increase landed' }];
 // Cash: share of net sales unless noted; working-capital extras in USD
-const CASH = { da: .0275, capexA: .032, capexT: .035, taxRate: .23, wcT: .006, india_receivables: 20e6, inventory_build: 15e6, conversionTarget: .9 };
+const CASH = { da: .0275, capexA: .032, capexT: .035, taxRate: .23, wcT: .006,   // wcT is recalibrated below so the plan converts exactly 90% of earnings
+  india_receivables: 20e6, inventory_build: 15e6, conversionTarget: .9 };
 // EPS latest-estimate history (how the full-year forecast moved), and safety
 const LE_HISTORY = [['Jan', 3.15], ['Feb', 3.15], ['Mar', 3.16], ['Apr', 3.14], ['May', 3.12], ['Jun', 3.12], ['Jul', 3.10], ['Aug', 3.08], ['Sep', 3.06], ['Oct', 3.05]];
 const SAFETY = { ltifr: .42, target: .5, ly: .55,
@@ -394,19 +402,33 @@ function share(f, w0, w1) {
   return { now: a / mA, ly: l / mL, chg: a / mA - l / mL, ourGrowth: a / l - 1, mktGrowth: mA / mL - 1 };
 }
 function finance(f, sc, w0, w1) {   // company-level P&L lines below contribution margin
-  const a = agg(f, sc, w0, w1), weeks = w1 - w0 + 1;
+  const a = agg(f, sc, w0, w1), weeks = w1 - w0 + 1, act = sc === 'A' || sc === 'E';
   const tFY = agg({}, 'T', 1, NW);
-  const overhead = tFY.ns * FIN.overheadRate * weeks / NW * (sc === 'A' || sc === 'E' ? FIN.overheadActualMult : sc === 'L' ? .97 : 1);
-  const op = a.cm - overhead, interest = FIN.interestFY * weeks / NW, np = (op - interest) * (1 - FIN.taxRate);
-  return { ...a, overhead, op, interest, np, eps: np / FIN.shares };
+  const overhead = tFY.ns * FIN.overheadRate * weeks / NW * (act ? FIN.overheadActualMult : sc === 'L' ? .97 : 1);
+  const shares = act ? FIN.shares * (1 - FIN.buyback) : FIN.shares;
+  const op = a.cm - overhead, interest = (act ? FIN.interestFYA : FIN.interestFY) * weeks / NW, np = (op - interest) * (1 - FIN.taxRate);
+  return { ...a, overhead, op, interest, np, shares, eps: np / shares };
 }
 
 // calibrate share count so planned EPS = guidance midpoint, and overhead savings so the latest estimate lands at $3.05
 { const cmT = agg({}, 'T', 1, NW), cmA = agg({}, 'A', 1, NW), oh = cmT.ns * FIN.overheadRate;
   FIN.shares = (cmT.cm - oh - FIN.interestFY) * (1 - FIN.taxRate) / 3.15;
-  FIN.overheadActualMult = (cmA.cm - FIN.interestFY - 3.05 * FIN.shares / (1 - FIN.taxRate)) / oh; }
+  FIN.overheadActualMult = (cmA.cm - FIN.interestFYA - 3.05 * FIN.shares * (1 - FIN.buyback) / (1 - FIN.taxRate)) / oh; }
+// calibrate planned working capital so the plan turns exactly 90% of earnings into cash (January to September, books closed)
+{ const t = finance({}, 'T', 1, 39), tax = (t.op - t.interest) * CASH.taxRate;
+  CASH.wcT = (t.op + t.ns * CASH.da - tax - t.interest - t.ns * CASH.capexT - CASH.conversionTarget * t.np) / t.ns; }
+
+/* ---------------- metric pyramid additions (19 Oct 2026) ---------------- */
+// sales target: the number the sales team is paid on, set 2% above the annual plan
+const SALES_STRETCH = .02;
+// share of channel stock held by distributors (the rest sits with retailers), by channel
+const CH_DIST_SHARE = { GT: .75, CONV: .45, MT: 0, LR: 0, ECOM: 0 };
+// buyer flows behind household penetration: households (millions), the share of last year's buyers who lapse, and buyers lost to a named competitor
+const PEN_FLOW = { hh: { UK: 28.5, US: 131, IN: 305, ID: 72 }, lapse: .42, switched: { 'bolt|UK': .9, 'orchard|ID': .6, 'oats|UK': .4 } };
+// our shelf price against the main competitor, like-for-like pack (100 = parity): [plan, now]
+const PRICE_INDEX = { 'bolt|UK': [104, 117], 'oats|UK': [107, 111], 'oats|US': [106, 109], 'crunch|US': [101, 93], 'orchard|ID': [99, 100], 'glow|IN': [112, 110], 'silk|UK': [103, 106] };
 
 root.KD = { NW, CW, MKT_LAST, weekEnd, REGIONS, COUNTRIES, CHANNELS, BRANDS, CATS, RETAILERS, DISTRIBUTORS, COMPETITORS, SERIES, MKT, BMAP, CMAP, CHMAP,
   PROMOS, CAMPAIGNS, SIGNALS, FIELDS, SALES_HEADS, REACH, LISTINGS, WAREHOUSES, LRP, PEOPLE, MEDIA_ROMI, COMPLAINTS, PENETRATION, SWITCHING, CASH, LE_HISTORY, SAFETY, INV_TARGET_DAYS, invDays, NEAR_EXPIRY, QUALITY, COMMODITIES, PROCUREMENT, FORECAST_ACC, FIN, SHARE_PRICE, compPriceIdx, LE, BRAND_HEALTH, SOV, FREQUENCY, LAUNCHES, INNOVATION, PLANTS, SAVINGS, SUPPLIERS, FORECAST_BIAS, invProj,
-  agg, market, share, finance, match };
+  agg, market, share, finance, match, SALES_STRETCH, CH_DIST_SHARE, PEN_FLOW, PRICE_INDEX, EXCESS_OWN, EO_TARGET_DAYS, DIO_TARGET, CONV_VS_PLAN, TERMS_SHARE };
 })(typeof window !== 'undefined' ? window : globalThis);
