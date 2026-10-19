@@ -4,57 +4,86 @@ import Layout from '../../layouts/BlogPost.astro';
 
 <Layout
 	title="Executive dashboard for a consumer goods company"
-	description="An experiment in designing one page that tells a consumer goods leadership team what changed, why, and what to do next."
+	description="Pulse: one page that tells a consumer goods leadership team what is off, why, and what to do next."
 	pubDate={new Date('October 17 2026')}
+	updatedDate={new Date('October 19 2026')}
 >
-	<p><em>Prototype. All five views are built: CEO, CFO, CMO, Chief Sales Officer and COO. Desktop only for now; a mobile layout is on the roadmap.</em></p>
+	<p><em>Prototype. Desktop only for now. Northstar Consumer Goods is fictional and all data is synthetic. Every link below opens the dashboard at the exact place it describes.</em></p>
 
 	<p>
-		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a>
+		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a> &nbsp;|&nbsp; <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener"><strong>See how the metrics fit together →</strong></a>
 	</p>
 
-	<h2>What are we trying to do here?</h2>
+	<h2>Problem</h2>
 	<p>
-		Consumer goods companies sell many brands, across several countries and many kinds of shops: large
-		retailers, convenience stores, online and small traditional stores. Their leaders get dozens of
-		reports, each cut a different way. Most of their review time goes into reconciling numbers instead
-		of deciding what to do.
+		Design a single-page executive dashboard for a consumer goods (CPG) company that helps the C-suite understand
+		performance, diagnose what is behind it and decide what to do. It must be interactive, <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">cut by geography, channel, category and brand</a>,
+		and combine internal and external data.
 	</p>
+
+	<h2>Users and their jobs</h2>
 	<p>
-		This experiment asks a simple question: <strong>what would one page look like that a CEO, CFO, CMO,
-		Head of Sales or COO could open each week and immediately know where to act?</strong>
+		Five roles: <a href="/experiments/executive-pulse/#CEO" target="_blank" rel="noopener">CEO</a>, <a href="/experiments/executive-pulse/#CFO" target="_blank" rel="noopener">CFO</a> (including revenue growth management), <a href="/experiments/executive-pulse/#CMO" target="_blank" rel="noopener">CMO</a> (including brand),
+		<a href="/experiments/executive-pulse/#CSO" target="_blank" rel="noopener">Chief Sales Officer</a> and <a href="/experiments/executive-pulse/#COO" target="_blank" rel="noopener">COO</a> (including manufacturing and procurement). Legal, tech and HR are out of scope.
+		Each has three jobs:
 	</p>
-	<p>The page is built around the sequence leaders actually think in:</p>
 	<ol>
-		<li><strong>Health</strong>: are we on track against plan, last year and the market?</li>
-		<li><strong>Deviation</strong>: where are the biggest gaps, good and bad?</li>
-		<li><strong>Drivers</strong>: what is causing them: price, volume, promotions, costs, supply or competitors?</li>
-		<li><strong>Implications</strong>: is it us or the market, and what does it mean for the year?</li>
-		<li><strong>Action</strong>: what should we do next, and who owns it?</li>
+		<li><strong>What is the data?</strong> The few numbers they run, against plan, latest estimate and last year.</li>
+		<li><strong>What does it mean?</strong> What is off, by how much, against what goal, and why.</li>
+		<li><strong>What do I do?</strong> The next action, who owns it, by when, and follow-up until it is closed.</li>
 	</ol>
 
-	<h2>How it works</h2>
+	<h2>1. What is the data: a metric pyramid</h2>
+	<p>
+		An executive's time is short, so each role gets a fast, broad view and an easy way down into any detail. Each role
+		has <a href="/experiments/executive-pulse/#CEO/metrics" target="_blank" rel="noopener">four core metrics</a>, chosen from what CPG boards measure and pay executives on: growth, margin,
+		cash and share. Each metric breaks into the parts that add up to it, in its own unit, and then into the levers that
+		move it, each with one owner. Lenses such as category growth sit beside a metric, never inside its sum. Because every
+		breakdown reconciles, a CFO can walk <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0ZPIiwiY2FyZCI6IkdNIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbeyJmbiI6Im9wZW5Ob2RlIiwiYXJncyI6WyJDT0dTIl19XSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">gross margin from 52.2% plan to 51.2%</a> and see that cost per case takes
+		78 bps off. The full tree, with formulas, owners and sources, is in the <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener">metric pyramid</a>.
+	</p>
+	<p>
+		Data comes from three places: market and shopper data, internal actuals, and forward-looking plans and targets from
+		planning and revenue growth management tools. Named integrations in the dashboard are illustrative.
+	</p>
+
+	<h2>2. What does it mean: the reason, not just the number</h2>
+	<p>
+		Every card and <a href="/experiments/executive-pulse/#CEO/summary" target="_blank" rel="noopener">issue in the summary</a> reads in the order an executive thinks: what is off, by how
+		much, against what goal, the value now, and why. For example, <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7fSwicGVyaW9kIjoiWVREIiwiY29tcCI6IlQiLCJ5ZWFyIjoiQ0FMIiwicGF0aCI6W3siZm4iOiJvcGVuTm9kZSIsImFyZ3MiOlsiUE1YIl19XSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">organic sales growth is 0.4 pts behind plan</a>:
+		price/mix takes 0.7 pts off, because price increases landed at +2.9% against +3.3% planned and the oats increase is
+		stuck at UK and US retailers. <a href="/experiments/executive-pulse/#CFO-GM" target="_blank" rel="noopener">Any number opens a deep dive in place</a>, showing its parts, where it is
+		off and the actions on it. Hover over any metric name for what it is, how to read it, its owner and its formula.
+	</p>
+	<p>
+		An AI layer writes the summary and <a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">turns a plain-English question into a custom view</a> with its own
+		filters. In production this would be an agent. Here it is simulated with rules on synthetic data.
+	</p>
+
+	<h2>3. What do I do: actions with owners</h2>
+	<p>
+		Each issue carries a suggested next step, the role that owns it and a due date. Users assign it from any level,
+		email the owner or book a meeting, and <a href="/experiments/executive-pulse/#COO/actions" target="_blank" rel="noopener">track it to done</a>, with overdue items flagged. For example,
+		<a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ09PIiwiY2FyZCI6IlBPUiIsInBmIjp7ImMiOlsiSUQiXX0sInBlcmlvZCI6IllURCIsImNvbXAiOiJUIiwieWVhciI6IkNBTCIsInBhdGgiOltdLCJjaGFydCI6bnVsbH0" target="_blank" rel="noopener">perfect order in Indonesia</a> is 11.5 pts behind target, and the open action is for the Indonesia Supply Lead to
+		rush the inbound shipments and get fill rate back to 95% within 3 weeks. Tools sit inside the flow where the decision is
+		made, so a Chief Sales Officer who is <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ1NPIiwiY2FyZCI6IlNBTEVTIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbXSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">$1.9M behind the October sales target</a> can re-check the promotion plan
+		from the same view.
+	</p>
+
+	<h2>What brings them back</h2>
 	<ul>
-		<li>Every role shares the same headline numbers, so the CEO and CFO see the same thing in the same meeting.</li>
-		<li>Each role then gets its own view, ordered around the decisions that role makes.</li>
-		<li>The page leads with the few deviations that matter most, not every metric available.</li>
-		<li>Clicking any number opens only the detail behind that question, down to a brand, market, retailer or promotion.</li>
-		<li>Short summaries explain what changed and suggest a likely cause and next step. In this prototype they are generated by rules.</li>
-		<li>Every issue reads the same way: by how much, is that bad, and why. Next steps link straight to the action that owns them.</li>
-		<li>Ask a question in plain English and the dashboard opens the right metric with the right filters. The Demo button walks through one example end to end.</li>
-		<li>A personal watchlist for each role shows the latest number for each saved view and what changed since it was saved.</li>
-		<li>Pricing and promotion recommendations come with the reasoning behind them, as they would from a revenue growth management tool.</li>
+		<li><strong><a href="/experiments/executive-pulse/#CEO/watchlist" target="_blank" rel="noopener">Watchlist</a>:</strong> bookmark any view or chart and see what changed since you saved it, with an optional Teams alert when it crosses a value or range you set.</li>
+		<li><strong><a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">Ask</a>:</strong> type a question and get a custom view you can save or share.</li>
+		<li><strong>Shareable views:</strong> every view has its own link, so a number can be shared exactly as seen. Each link on this page is one.</li>
+		<li><strong>Roadmap:</strong> mobile view, product-level data, and sign-in with watchlists stored per user.</li>
 	</ul>
 
-	<h2>About the data</h2>
 	<p>
-		The company, its brands, retailers, competitors and every number are fictional. The data is
-		generated with a handful of business stories built in, such as a competitor price cut, growth bought
-		through deep discounts and a supply disruption, to test whether each leader can find their story
-		within a few clicks.
+		<strong>Try it in a minute:</strong> <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">pick a role</a>, open the reddest card, follow the breakdown to the cause and
+		assign the fix. Or <a href="/experiments/executive-pulse/#demo" target="_blank" rel="noopener">run the guided demo</a>.
 	</p>
 
 	<p>
-		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a>
+		<a href="/experiments/executive-pulse/" target="_blank" rel="noopener"><strong>Open the dashboard →</strong></a> &nbsp;|&nbsp; <a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener"><strong>See how the metrics fit together →</strong></a>
 	</p>
 </Layout>

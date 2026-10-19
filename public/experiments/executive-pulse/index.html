@@ -587,6 +587,375 @@ h2.sec{margin-top:18px}
 .watch-lab b{font-family:var(--display);font-size:16px;font-weight:600}
 .watch-lab span{font-size:12.5px;color:var(--muted);line-height:1.4}
 .watch-lab .link{justify-self:start;font-size:12.5px}
+
+/* ===== home v4: summary left, core metrics right, watchlist strip, actions in the first view ===== */
+#home.wrap,.top-in{width:min(1376px,calc(100% - 48px))}
+#home{padding-bottom:40px}
+.top-split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;margin-top:14px;align-items:stretch}
+#home .summary{padding:0;display:flex}
+#home .sum2{flex:1;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;padding:16px 20px 14px}
+.sum2 .sum-meta{margin:0;font-size:12.5px}
+.sum2 .sum-h{margin:0;font-size:21px;line-height:1.34;max-width:none}
+.sum2 .sum-more{margin:0;font-size:15px;line-height:1.55;color:var(--ink)}
+.sum2 .sum-more .say{font-weight:600}
+.sum2 .iss-amt{color:var(--crit);font-weight:600;white-space:nowrap}
+.sum2 .sum-foot2{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.sum2 .sum-foot2 .link{font-size:13px}
+.sum2 .od-n{color:var(--crit);font-weight:600}
+.metrics{display:flex;flex-direction:column;min-width:0}
+.home-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px}
+.home-h h2{margin:0;font-family:var(--text);font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink)}
+.home-h p,.home-sub{margin:0;font-size:12.5px;color:var(--muted)}
+#home .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:1}
+#home .cards .card:last-child:nth-child(odd){grid-column:1/-1}
+.sum2 .sum-h{text-wrap:pretty}
+#home .card{padding:0 16px 12px;gap:2px;min-height:0;grid-template-rows:auto auto auto auto auto 1fr}
+#home .c-head{padding:11px 0 4px}
+#home .c-name{font-size:14px}
+#home .c-gap b{font-size:27px}
+#home .c-now{font-size:13px}
+#home .c-tr{display:block;margin:6px 0 0}
+#home .c-trend{height:40px}
+#home .c-tr-l{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:3px;font-size:12px}
+#home .c-tr-n{font-size:12px}
+#home .c-tr-s{font-size:11.5px}
+#home .c-ins{min-height:0;padding-top:7px;margin-top:6px;font-size:12.5px;align-items:center}
+#home .c-ins>span:first-child{-webkit-line-clamp:1}
+#home .c-ins .prov{flex:none;margin-left:auto;font-size:11.5px}
+#home .c-per{font-size:12px}
+.strip{display:flex;align-items:stretch;gap:10px;margin-top:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;padding:8px 10px 8px 16px;min-height:58px}
+.strip .st-lab{display:flex;flex-direction:column;justify-content:center;flex:none;width:122px;font-size:12.5px;color:var(--muted);line-height:1.35}
+.strip .st-lab b{font-size:14px;color:var(--ink)}
+.strip .st-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:1;min-width:0}
+.st-tile{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:2px 10px;padding:6px 10px;border-radius:var(--r-sm);border:1px solid transparent;min-width:0}
+.st-tile:hover,.st-tile:focus-visible{background:var(--hover);border-color:var(--line)}
+.st-tile .st-dot{width:8px;height:8px;border-radius:50%;background:var(--sig,var(--line-2));grid-row:span 2}
+.st-tile .st-t{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.st-tile .st-v{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.st-tile .st-c{font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-tile .st-c .dv{font-weight:600}
+.st-tile .st-was{font-size:12px;color:var(--warn);text-align:right;white-space:nowrap}
+.strip .st-empty{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.strip .st-all{flex:none;align-self:center;font-size:13px}
+.acts-h{margin-top:22px}
+#home .arow{min-height:60px;padding:10px 18px}
+.demo-chip{border-color:var(--line-2);color:var(--ink-2);font-weight:500}
+.issues-modal .sum-row[hidden]{display:grid!important}
+.modal-in:has(.issues-modal){width:min(920px,92vw)}
+
+.sum-moves{border-top:1px solid var(--line);padding-top:10px}
+.sum-moves h4{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.sum-moves ul{margin:0;padding:0;list-style:none;display:grid;gap:2px}
+.sum-moves li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13.5px;padding:3px 0}
+.sum-moves .st-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--sig,var(--line-2));margin-right:8px;vertical-align:1px}
+.link-plain{all:unset;cursor:pointer;color:var(--ink)}.link-plain:hover,.link-plain:focus-visible{color:var(--accent);text-decoration:underline}
+.sum-moves li>span{font-size:13px;white-space:nowrap}.sum-moves li>span small{color:var(--muted)}
+.sum-due{margin:6px 0 0;font-size:13px;color:var(--ink-2)}
+#home .card{padding:0 16px 10px}
+#home .c-head{padding:9px 0 2px}
+#home .c-gap b{font-size:25px}
+#home .c-trend{height:34px}
+#home .c-ins{padding-top:6px;margin-top:4px}
+.strip{min-height:52px;padding:6px 10px 6px 16px}
+.acts-h{margin-top:18px}
+
+/* home v4, round 3: tighter vertical budget, one warning colour per job */
+.top-in{height:54px}
+.chip[data-bm-all]{display:none}
+.sum2 .sum-h{font-size:20px;line-height:1.32}
+.sum2 .say{text-decoration-thickness:1px;text-decoration-color:var(--line-2)}
+.sum2 .iss-amt{color:var(--ink)}
+.sum-due2{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
+.sum-due2 b{font-weight:600}
+.sum2 .sum-foot2{padding-top:10px}
+#home .c-tr-s{display:none}
+.a-why em{color:var(--ink-2);font-weight:500}
+.strip{min-height:0;padding:4px 10px 4px 16px;align-items:center}
+.strip .st-lab{flex-direction:row;align-items:baseline;gap:8px;width:auto;margin-right:8px;white-space:nowrap}
+.strip .st-row{grid-template-columns:repeat(4,minmax(0,1fr))}
+.st-tile{grid-template-columns:auto minmax(0,1fr) auto auto;padding:7px 10px;gap:0 10px}
+.st-tile .st-dot{grid-row:auto}
+.st-tile .st-c{font-size:12px}
+.st-tile .st-was{display:none}
+.acts-h{margin:16px 0 -40px;position:relative;z-index:1;pointer-events:none;justify-content:flex-start}
+.acts-h h2{pointer-events:auto}
+.acts-h #act-sum{display:none}
+#home .act-top{padding-left:118px;min-height:40px;margin-bottom:10px}
+#home .ahead{padding:8px 18px}
+#home .arow{min-height:56px;padding:9px 18px}
+
+.sum-due2 .link-plain{display:inline;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+.st-tile{grid-template-columns:auto minmax(72px,1.1fr) auto minmax(0,1fr)}
+.st-tile .st-t{min-width:0}
+.st-tile .st-c{min-width:0}
+.acts-h{height:40px;align-items:center}
+
+.sum-next2{border-top:1px solid var(--line);padding-top:10px}
+.sum-next2 h4{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.sum-next2 ul{margin:0;padding:0;list-style:none;display:grid;gap:5px}
+.sum-next2 li{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;font-size:13.5px;line-height:1.45;align-items:baseline}
+.sum-next2 .nd-when{font-size:12.5px;color:var(--ink-2);white-space:nowrap}.sum-next2 .nd-when.od{color:var(--crit);font-weight:600}
+.sum-next2 .link-plain{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.strip .st-row{grid-template-columns:repeat(4,minmax(0,1fr))}
+.st-tile{grid-template-columns:auto minmax(0,1.5fr) auto minmax(0,1fr)}
+
+.strip .st-row{display:flex;gap:6px;min-width:0}
+.strip .st-tile{flex:0 1 320px;min-width:0}
+
+/* home v4, final: summary narrower so it fills its height; no link rules in the headline; watchlist never truncates the change */
+.top-split{grid-template-columns:minmax(0,4.2fr) minmax(0,7.8fr)}
+.sum2 .say{text-decoration:none}
+.sum2 .say:hover,.sum2 .say:focus-visible{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:5px}
+.sum2 .sum-h{font-size:22px;line-height:1.3}
+.sum2 .sum-more{font-size:15.5px;line-height:1.6}
+.sum2 .sum-more .say{font-weight:600}
+.strip .st-lab span{display:none}
+.strip .st-tile{flex:0 0 auto;grid-template-columns:auto minmax(0,220px) auto auto}
+.strip .st-tile .st-t{max-width:220px}
+.strip .st-tile .st-c{overflow:visible}
+
+#home .c-tr{position:relative;margin-top:4px}
+#home .c-tr-l{position:absolute;right:0;top:-24px;margin:0}
+#home .c-tr-n{display:none}
+#home .c-trend{height:38px}
+/* ---------- cards v5: what is off, by how much, against what, now, why, possible reasons ---------- */
+.card.k5{display:flex;flex-direction:column;padding:0;gap:0;cursor:default;min-height:0}
+.card.k5:hover{background:#fff;border-color:var(--line-2)}
+.k-main{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 128px;grid-template-areas:"head head" "name name" "fig tr" "why why";column-gap:16px;padding:0 20px 12px;border-radius:15px 15px 0 0;transition:background var(--t1)}
+.k-main:hover{background:var(--hover)}
+.k-main:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.k-main .c-head{grid-area:head;padding:14px 0 6px}
+.k5.s-crit .c-head .c-sig{background:var(--crit-bg);padding:3px 10px;border-radius:999px}
+.k5.s-warn .c-head .c-sig{background:var(--warn-bg);padding:3px 10px;border-radius:999px}
+.k-main .c-name{grid-area:name;margin-bottom:2px}
+.k-fig{grid-area:fig;display:grid;gap:1px;align-content:start;min-width:0}
+.k-fig .c-gap b{font-size:28px}
+.k-tr{grid-area:tr;display:grid;gap:4px;align-content:end;justify-items:end;padding-bottom:2px}
+.k-tr .c-trend{width:128px;height:34px}
+.k-tr .c-bar{width:128px}
+.k-tr-l{font-size:11.5px;white-space:nowrap}.k-tr-l .dv{font-size:11.5px}.k-tr-l small{color:var(--muted)}
+.k-why{grid-area:why;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:8px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.k-why>span:first-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.k-why b{color:var(--ink);font-weight:600;margin-right:3px}
+.k-why .prov{flex:none;margin-top:1px}
+.k-rs{display:grid;border-top:1px solid var(--line-soft);padding:7px 12px 9px;margin-top:auto}
+.k-rh{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:0 8px 2px}
+.k-r{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:7px minmax(0,1fr) auto 12px;gap:9px;align-items:center;padding:4px 8px;border-radius:8px;font-size:13px;color:var(--ink);transition:background var(--t1)}
+.k-r:hover{background:var(--hover)}
+.k-r:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.k-r-d{width:7px;height:7px;border-radius:50%;background:var(--sig,var(--line-2))}
+.k-r-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.k-r-g{font-size:12.5px;color:var(--ink-2);white-space:nowrap}.k-r-g b{color:var(--sig);font-weight:700}
+.k-r-go{font-style:normal;color:var(--muted);transition:transform var(--t1),color var(--t1)}
+.k-r:hover .k-r-go{color:var(--accent);transform:translateX(2px)}
+.card.k5.on{box-shadow:inset 0 0 0 1px var(--accent)}
+/* the panel opens right under the cards, so the open card points into it */
+.top-split+.band{margin-top:18px}
+
+/* ---------- deep dive: one issue row everywhere, with its owner ---------- */
+.ir-list{display:grid;border-top:1px solid var(--line-soft)}
+.ir{display:grid;grid-template-columns:minmax(0,1fr) 200px;align-items:center;border-bottom:1px solid var(--line-soft);border-left:3px solid var(--sig,var(--line-2));transition:background var(--t1)}
+.ir:hover{background:var(--hover)}
+.ir-main{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:92px minmax(140px,1fr) minmax(170px,1fr) minmax(150px,.9fr) minmax(0,1.6fr) 14px;gap:14px;align-items:center;padding:10px 12px;min-width:0}
+.ir-main:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ir-s{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sig)}
+.ir-n{display:grid;font-weight:600;font-size:13.5px;color:var(--ink)}.ir-n small{font-weight:400;font-size:11.5px;color:var(--muted)}
+.ir-g{font-size:13px;color:var(--ink-2)}.ir-g i{font-style:normal;color:var(--sig);margin-right:3px}.ir-g b{color:var(--sig);font-weight:700;font-size:14.5px;margin-right:3px}
+.ir-now .c-now{font-size:12.5px}.ir-now .c-now b{font-size:13.5px}
+.ir-why{font-size:12.5px;color:var(--ink-2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ir-go{font-style:normal;color:var(--muted);transition:transform var(--t1)}.ir-main:hover .ir-go{color:var(--accent);transform:translateX(2px)}
+.ir-a{display:flex;justify-content:flex-end;padding:0 14px 0 4px}
+.ir-a.flash{animation:flashA 1.6s var(--e-exp)}
+@keyframes flashA{0%{background:var(--accent-soft)}100%{background:transparent}}
+.ir-own{all:unset;box-sizing:border-box;cursor:pointer;display:grid;text-align:right;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.3;padding:4px 6px;border-radius:6px}
+.ir-own small{font-weight:400;font-size:11.5px;color:var(--muted)}
+.ir-own:hover span{color:var(--accent);text-decoration:underline}
+.btn.sm.quiet{background:none;border-color:transparent;color:var(--muted);font-weight:500}
+.ir:hover .btn.quiet,.nh:hover .btn.quiet{color:var(--accent);border-color:#b7cbf3}
+.ir-h{margin:16px 0 6px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ir-h:first-child{margin-top:0}
+.ir-lens{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+.ir-lens>span{margin-right:2px}
+.lens{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line-soft);border-left:3px solid var(--sig,var(--line-2));border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--ink)}
+.lens b{font-weight:600;margin-left:4px}.lens:hover{border-color:var(--accent)}
+.lens:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* the metric itself at the top of every level below the card, in the card's order */
+.nh{display:grid;grid-template-columns:minmax(240px,1fr) 220px minmax(0,1.7fr) 200px;gap:24px;align-items:center;border-left:3px solid var(--sig);padding:4px 0 4px 16px}
+.nh-fig{display:grid;gap:3px;justify-items:start}
+.nh.s-crit .c-sig{background:var(--crit-bg);padding:3px 10px;border-radius:999px}.nh.s-warn .c-sig{background:var(--warn-bg);padding:3px 10px;border-radius:999px}
+.nh-tr{display:grid;gap:4px}.nh-tr .c-trend{height:44px}.nh-tr small{font-size:11.5px;color:var(--muted)}
+.nh-why{display:grid;gap:6px;font-size:13.5px;line-height:1.5;color:var(--ink-2)}.nh-why b{color:var(--ink);font-weight:600}.nh-why small{font-size:12px;color:var(--muted);line-height:1.45}
+.nh .ir-a{padding:0}
+.band-tools .band-assign{height:36px;padding:0 14px}
+/* assign dialog */
+.as-iss{border:1px solid var(--line-soft);border-left:3px solid var(--sig);border-radius:10px;padding:12px 14px;background:#fbfbfc}
+.as-k{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0;font-size:14.5px}.as-k>span:last-child{color:var(--muted);font-size:12.5px}
+.as-iss.s-crit .c-sig{background:var(--crit-bg);padding:3px 10px;border-radius:999px}.as-iss.s-warn .c-sig{background:var(--warn-bg);padding:3px 10px;border-radius:999px}
+.as-gap{margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;font-size:14px;color:var(--ink-2)}
+.as-gap i{font-style:normal;color:var(--sig)}.as-gap b{font-family:var(--display);font-size:22px;font-weight:600;color:var(--sig)}.as-gap span{margin-left:8px;font-size:13px}
+.as-why{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--ink-2)}.as-why b{color:var(--ink);margin-right:3px}
+.as-prev{margin:0;font-size:13px;color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:8px 12px}
+.as-2{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px}.as-2>div{display:grid;gap:6px}
+/* key figures: a solid tint chip in a darker blue, bold, so they read at a glance */
+mark.kf{background:#e3ebfc;color:#163f9e;font-weight:700;padding:0 4px;border-radius:4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.say:hover mark.kf,.say:focus-visible mark.kf{background:#d3e0fb}
+/* the card opens with the summary itself; where the figures come from sits at the bottom */
+.sum2 .sum-foot2+.sum-meta{margin:-4px 0 0;font-size:12px;color:var(--muted)}
+/* the demo card follows the step: placed next to its target by placeCoach() */
+.coach{right:auto;bottom:auto;left:calc(100vw - 388px);top:calc(100vh - 260px);width:360px;transition:left var(--t3) var(--e-exp),top var(--t3) var(--e-exp)}
+@media (prefers-reduced-motion:reduce){.coach{transition:none}}
+.st-tile.new{box-shadow:0 0 0 3px var(--accent-soft);border-radius:8px}
+
+/* ---------- metric pyramid: every level reads the same way ---------- */
+/* the walk: comparison, each part's effect, now; it always adds up */
+.walk{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:0 0 14px;padding:10px 12px;background:#fafbfc;border:1px solid var(--line-soft);border-radius:10px}
+.walk>i{font-style:normal;align-self:center;color:var(--muted);font-size:14px;padding:0 1px}
+.wk-end,.wk-p{display:grid;gap:1px;padding:5px 10px;border-radius:8px;min-width:0}
+.wk-end small,.wk-p small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.wk-end b{font-size:15px;font-weight:700;color:var(--ink)}
+.wk-end.now{background:var(--accent-soft)}
+.wk-p{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:1px;padding:5px 10px;border-radius:8px;border:1px solid var(--line-soft);background:#fff}
+.wk-p b{font-size:14px;font-weight:700}.wk-p.neg b{color:var(--crit)}.wk-p.pos b{color:var(--good)}
+.wk-p:hover{border-color:var(--accent)}.wk-p:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ir-h span{margin-left:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)}
+/* a part's row carries its effect on the parent right after its name */
+.ir.has-e .ir-main{grid-template-columns:92px minmax(140px,1fr) 104px minmax(160px,1fr) minmax(150px,.9fr) minmax(0,1.4fr) 14px}
+.ir-e{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.ir-e.neg{color:var(--crit)}.ir-e.pos{color:var(--good)}
+/* actions on this metric, inside the deep dive */
+.pa-sug{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;padding:10px 14px;margin:0 0 10px;border:1px solid #c9d8f6;background:var(--accent-soft);border-radius:10px}
+.pa-k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.pa-sug p{margin:0;display:grid;gap:2px;font-size:13.5px}.pa-sug small{font-size:12px;color:var(--ink-2)}
+.pa-list{display:grid;border-top:1px solid var(--line-soft)}
+.pa-row{display:grid;grid-template-columns:10px minmax(0,1.8fr) minmax(120px,.8fr) 130px 90px auto;gap:14px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line-soft);font-size:13px}
+.pa-t{display:grid;gap:1px}.pa-t b{font-weight:600}.pa-t small{color:var(--muted);font-size:12px}
+.pa-o{color:var(--ink-2)}.pa-d{color:var(--ink-2)}.pa-d.od{color:var(--crit);font-weight:600}.pa-s{color:var(--muted)}
+.pa-b{display:flex;gap:6px;justify-content:flex-end}
+.pa-row .dot{width:8px;height:8px;border-radius:50%;background:var(--line-2)}.pa-row .dot.assigned{background:var(--accent)}.pa-row .dot.in-progress{background:var(--warn)}.pa-row .dot.new{background:var(--muted)}
+.pa-new{margin:10px 0 0}
+.sh-own{font-size:12px;color:var(--muted);margin-right:4px}
+/* watchlist strip: tiles shrink to fit the row, so a long title or change never widens the page */
+.strip .st-row{overflow:hidden}
+.strip .st-tile{flex:0 1 auto;min-width:0}
+.strip .st-tile .st-c{overflow:hidden;text-overflow:ellipsis}
+/* illustrative integrations: Microsoft Teams options */
+.teams-opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;font-size:13px;color:var(--ink);cursor:pointer}
+.teams-opt input{width:auto;margin:2px 0 0;accent-color:var(--accent)}.teams-opt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.pin-teams{display:flex;align-items:center;gap:8px;margin:2px 0 0 14px;padding-bottom:4px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.pin-teams input{width:auto;margin:0;accent-color:var(--accent)}.pin-teams small{color:var(--muted);font-size:11.5px}
+.pin:has(.pin-teams){flex-wrap:wrap}.pin .pin-teams{flex-basis:100%}
+.st-tm{flex:none;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 6px;line-height:18px}
+/* the summary column has its own heading, like Core metrics; other issues are a short list */
+.sum-col{display:flex;flex-direction:column;min-width:0}
+.sum-col>#summary{flex:1}
+.sum2 .sum-iss h4{margin:0 0 4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.sum2 .sum-iss ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14.5px;line-height:1.5;color:var(--ink)}
+.sum2 .sum-iss .say b{font-weight:600}
+/* My actions: when, then by whom; the why line reads as part of the action, with high priority in red */
+.arow{grid-template-columns:minmax(0,1fr) 120px 200px 110px 130px 170px}
+.a-why{font-size:13px;color:var(--ink-2);margin-top:3px}
+.a-why em,#home .a-why em{color:var(--crit);font-weight:600}
+.arow>.num small{white-space:nowrap}
+.pa-row{grid-template-columns:10px minmax(0,1.8fr) 170px minmax(120px,.8fr) 90px auto}
+/* where a figure comes from: a small grey label, not a chip */
+.k-why .prov,#home .c-ins .prov{background:none;color:var(--muted);font-size:10px;line-height:14px;padding:0;margin-left:6px;font-weight:400}
+/* header filters: every filter in force is named, with its value in a chip */
+#period-lab{display:inline-flex;align-items:center;gap:10px}
+.fl{display:inline-flex;align-items:center;gap:5px}
+.fl-k{font-size:12px;color:var(--muted)}
+.fl-v{font-size:12.5px;font-weight:600;color:#163f9e;background:#e3ebfc;border-radius:5px;padding:1px 7px;line-height:20px}
+/* the two main sections read as headings: navy, bolder, with an accent bar */
+.top-split .home-h h2{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.005em;color:#163f9e}
+.top-split .home-h h2::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--accent)}
+/* each headline issue is its own line, with its own link into that issue */
+.sum2 .sum-h .say{display:block}
+.sum2 .sum-h .say+.say{margin-top:6px}
+/* header scope: four filters for the home page, and a chip that changes colour when one is set */
+.hf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.hf .fsel{width:100%}.hf .fsel select{width:100%}
+.hf .link{justify-self:start;font-size:12.5px;margin-top:2px}
+.fl-v.on{background:var(--accent);color:#fff}
+/* Teams alert rule on a saved view */
+.pin-alert{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 6px 14px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:8px;background:#fafbfc;font-size:12.5px}
+.pin-alert .al-l{color:var(--ink-2);font-weight:600}
+.pin-alert select,.pin-alert .al-n{height:28px;border:1px solid var(--line-2);border-radius:6px;padding:0 6px;font-size:12.5px;width:auto}
+.pin-alert .al-n{width:84px}
+.pin-alert .al-u{color:var(--muted)}
+.pin-alert .al-p{flex-basis:100%;margin:2px 0 0;color:var(--ink-2);line-height:1.45}
+.pin-alert .al-p b{font-weight:600;color:var(--ink)}.pin-alert .al-p b.al-hit{color:var(--crit)}
+/* metric definitions on hover: what it is, where it sits, formula, owner, how to read it */
+#tip.rich{max-width:380px;font-size:12.5px;line-height:1.45}
+#tip.rich p{margin:0 0 2px;color:var(--ink-2)}
+#tip.rich .tt-k{margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.cc-h h3[data-def]{cursor:help}
+.cc-h h3[data-def]{text-decoration:underline dotted var(--line-2);text-underline-offset:4px}
+/* a saved bookmark: filled, blue, and a short pop when it is first saved */
+[data-bookmark].saved,[data-bm-card].saved{color:var(--accent);background:var(--accent-soft);border-color:#c9d8f6}
+[data-bookmark].saved svg path,[data-bm-card].saved svg path{fill:currentColor}
+[data-bookmark].pop,[data-bm-card].pop{animation:bmPop .5s var(--e-exp)}
+@keyframes bmPop{0%{transform:scale(1)}35%{transform:scale(1.28)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){[data-bookmark].pop,[data-bm-card].pop{animation:none}}
+/* the summary is the list of issues: status, what, how far off, why; each line opens its analysis */
+.sum-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.si{border-left:3px solid var(--sig,var(--line-2));border-bottom:1px solid var(--line-soft)}
+.si:last-child{border-bottom:0}
+.si-b{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 14px;column-gap:8px;width:100%;padding:8px 6px 9px 12px;border-radius:0 6px 6px 0}
+.si-b:hover{background:var(--hover)}.si-b:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.si-h,.si-g,.si-w{grid-column:1}
+.si-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.si-h b{font-size:14.5px;font-weight:600;color:var(--ink)}
+.si-s{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sig)}
+.si-g{font-size:13.5px;color:var(--ink-2)}.si-g i{font-style:normal;color:var(--sig);margin-right:3px}.si-g b{color:var(--sig);font-weight:700}
+.si-w{font-size:13px;line-height:1.45;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.si-go{grid-column:2;grid-row:1/span 3;align-self:center;font-style:normal;color:var(--muted)}.si-b:hover .si-go{color:var(--accent)}
+.si-w{-webkit-line-clamp:1}
+.si-b{padding:6px 6px 7px 12px}
+/* the issue list scrolls after the first five, with a fade that says there is more */
+.sum-list.scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;-webkit-mask-image:linear-gradient(#000 85%,transparent);mask-image:linear-gradient(#000 85%,transparent)}
+.sum-list.scroll.at-end{-webkit-mask-image:none;mask-image:none}
+.sum2 .sum-more-n{align-self:flex-start;font-size:12.5px;margin-top:-4px}
+/* issue count beside the Summary heading */
+#sum-sub{font-size:13px;color:var(--ink-2)}#sum-sub b{color:var(--ink);font-weight:600}
+.top-split .home-h{align-items:center}
+/* the full watchlist, open in place */
+.pins-all{margin-top:10px;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;padding:14px 16px;animation:rise var(--t3) var(--e-exp)}
+.pins-all .pa-intro{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.pins-all .pa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+/* summary: the issue list fills the card, with room to breathe */
+.sum-list{position:relative}
+.si-b{padding:12px 10px 13px 16px;row-gap:3px}
+.si-h b{font-size:15px}
+.si-g{font-size:14px}
+.si-w{font-size:13.5px;-webkit-line-clamp:2;line-height:1.5}
+/* round 2: every issue fits the card; two lines each (what and status, then how far off and why); no fade */
+.sum-list.scroll{-webkit-mask-image:none;mask-image:none}
+.si-b{padding:10px 10px 10px 14px;row-gap:2px}
+.si-h b{font-size:14.5px}
+.si-gw{grid-column:1;display:flex;align-items:baseline;gap:8px;min-width:0;font-size:13px;color:var(--ink-2)}
+.si-gw .si-g{flex:none;font-size:13.5px}
+.si-gw .si-w{-webkit-line-clamp:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:13px}
+/* card why: full width, up to three lines; where the figure comes from moves to a quiet line underneath */
+#home .k-why{display:grid;gap:2px}
+#home .k-why>span:first-child{-webkit-line-clamp:3}
+#home .k-why .prov{margin:0;font-size:10.5px}
+.si-b{padding:8px 10px 8px 14px;row-gap:1px}
+#home .sum2{gap:10px}
+.sum2 .sum-foot2{padding-top:8px}
+/* round 3: the reason is never cut short; gap and reason run as one sentence over up to two lines, and the list scrolls past what fits */
+.si-gw{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.45}
+.si-gw .si-g{margin-right:6px}
+.si-gw .si-w{display:inline;white-space:normal;overflow:visible;text-overflow:clip;-webkit-line-clamp:unset}
+.si-b{padding:10px 10px 11px 14px}
+/* an on-track card that is a little behind shows the gap in ink, so green never sits on a down arrow */
+.c-gap.tol i,.c-gap.tol b{color:var(--ink)}
+/* rows take the card's spare height as padding (set by fitIssues) */
+.si-b{padding:calc(10px + var(--si-x,0px)) 10px calc(11px + var(--si-x,0px)) 14px}
+/* full watchlist: a title row with its own collapse control */
+.pins-all .pa-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 10px}.pins-all .pa-h b{font-size:14px;font-weight:600;color:var(--ink)}.pins-all .pa-x{font-size:13px}
+/* landing ring for links into a section */
+.jump{animation:jump 2.4s var(--e-exp);border-radius:var(--r-lg);scroll-margin-top:72px}
+@keyframes jump{0%,55%{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 55%,transparent)}100%{box-shadow:0 0 0 3px transparent}}
+@media (prefers-reduced-motion:reduce){.jump{animation:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 55%,transparent)}}
 </style>
 
 <header class="top">
@@ -607,13 +976,13 @@ h2.sec{margin-top:18px}
 </header>
 
 <main class="wrap" id="home">
-  <section class="summary" id="summary" aria-label="Summary"></section>
-
-  <div class="sec-row shelf-h"><h2 class="sec">Core metrics</h2><button class="link" id="shelf-go" hidden></button></div>
-  <div class="shelf" id="shelf">
-    <div class="cards" id="cards"></div>
-    <div class="watch-group" id="pins" hidden></div>
-  </div>
+  <section class="top-split" aria-label="Status and core metrics">
+    <section class="sum-col" aria-labelledby="sum-h"><div class="home-h"><h2 id="sum-h">Summary</h2><span class="home-sub" id="sum-sub" aria-live="polite"></span></div><section class="summary" id="summary"></section></section>
+    <section class="metrics" aria-labelledby="mx-h">
+      <div class="home-h"><h2 id="mx-h">Core metrics</h2><span class="home-sub" id="mx-sub"></span></div>
+      <div class="cards" id="cards"></div>
+    </section>
+  </section>
 
   <section class="band" id="band" hidden aria-live="polite">
     <div id="print-stamp"></div>
@@ -624,7 +993,9 @@ h2.sec{margin-top:18px}
     <div class="band-b" id="band-body"></div>
   </section>
 
-  <div class="sec-row"><h2>My actions</h2><p id="act-sum"></p></div>
+  <section class="strip" id="pins" hidden aria-label="Watchlist"></section>
+
+  <div class="home-h acts-h"><h2>My actions</h2><p id="act-sum"></p></div>
   <div id="acts"></div>
 
   <footer class="page-foot"><span>Pulse. Northstar Consumer Goods is a fictional company and all figures are synthetic.</span><span>Data to the week ending 11 October 2026. All amounts are in US dollars at plan rates.</span></footer>
@@ -632,14 +1003,14 @@ h2.sec{margin-top:18px}
 <div class="loader" id="loader" hidden><div class="spinner" aria-hidden="true"></div><p id="loader-t">Loading…</p></div>
 
 <div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="picker-h" hidden>
-  <div class="picker-in"><h2 id="picker-h">Who are you today?</h2><p>Pulse shows the four numbers you run, what is off track, and what to do about it.</p><div class="picks" id="picks"></div></div>
+  <div class="picker-in"><h2 id="picker-h">Login as</h2><p>Track all important work with Pulse.</p><div class="picks" id="picks"></div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t" hidden>
   <div class="modal-in"><div class="modal-h"><h3 id="modal-t"></h3><button class="close" data-close aria-label="Close">×</button></div><div class="modal-b" id="modal-b"></div></div>
 </div>
-<aside class="drawer" id="drawer" aria-label="Metric details" hidden></aside>
 <div class="toast" id="toast" role="status" hidden></div>
 <div id="tip" hidden></div>
 <div class="coach" id="coach" role="dialog" aria-live="polite" aria-label="Ask demo" hidden></div>
-<script src="data/pulse-data.js?v=69"></script>
-<script src="app/pulse.js?v=69"></script>
+<script src="data/pulse-data.js?v=119"></script>
+<script src="data/pyramid.js?v=119"></script>
+<script src="app/pulse.js?v=119"></script>

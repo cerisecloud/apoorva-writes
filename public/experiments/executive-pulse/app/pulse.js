@@ -6,7 +6,7 @@ let CW = K.CW;   // last week of actuals; shifted temporarily by asOf() to rebui
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 // highlight the figures that carry the message (amounts, rates, changes) in headline sentences
-const emph = t => esc(t).replace(/\([+−]?(?:[$£]\d[\d.,]*[MBK]?|\d[\d.,]*\s?(?:%|pts|bps|x|M|B|K|weeks|days|share points|points)(?![a-z]))\)|[+−]?(?:[$£]\d[\d.,]*[MBK]?|\d[\d.,]*\s?(?:%|pts|bps|x|M|B|K|weeks|days|share points|points)(?![a-z]))/g, m => `<mark class="kf">${m}</mark>`);
+const emph = t => esc(t).replace(/\([+−]?(?:[$£]\d\d*(?:[.,]\d+)*[MBK]?|\d\d*(?:[.,]\d+)*\s?(?:%|pts|bps|x|M|B|K|weeks|days|share points|points)(?![a-z]))\)|[+−]?(?:[$£]\d\d*(?:[.,]\d+)*[MBK]?|\d\d*(?:[.,]\d+)*\s?(?:%|pts|bps|x|M|B|K|weeks|days|share points|points)(?![a-z]))/g, m => `<mark class="kf">${m}</mark>`);
 
 /* ================= formatting ================= */
 const MINUS = '−';
@@ -572,7 +572,7 @@ function openCFO(id) {
     const ev = promosIn(f).filter(p => p.roi != null).sort((a, b) => a.roi - b.roi);
     const tbl = `<div class="tbl-wrap"><table class="t"><thead><tr><th>Promotion</th><th>Where</th><th class="r">Spend</th><th class="r">Lift vs plan</th><th class="r">ROI</th><th class="r">Call</th></tr></thead><tbody>${ev.map(p => { const v = verdict(p.roi), r = K.RETAILERS.find(x => x.id === p.ka); return `<tr class="click" tabindex="0" data-promo="${p.id}"><td><b>${esc(p.name)}</b><br><span class="muted">${esc(K.BMAP[p.b].name)}, weeks ${p.w0} to ${p.w1}</span></td><td>${esc(K.CMAP[p.c].name)}${r ? ', ' + esc(r.name) : ', ' + esc(K.CHMAP[p.ch].name)}</td><td class="r num">${fmt$(p.spend)}</td><td class="r num">${sPct(p.lift, 0)} <span class="muted">plan ${sPct(p.planLift, 0)}</span></td><td class="r num"><b>${p.roi.toFixed(2)}x</b></td><td class="r">${sevPill(v[0]).replace(SEV[v[0]], v[1])}</td></tr>`; }).join('')}</tbody></table></div><p class="foot">ROI is the extra gross margin divided by what the promotion cost, measured after the event against a modelled baseline. Repeat above 1.2x, optimise between 0.8x and 1.2x, stop below 0.8x.</p>`;
     openLevel({ crumb: 'Promotion ROI', title: 'Promotion results', insight: ev.length ? `${ev.filter(p => p.roi < .8).length} of ${ev.length} promotions lost money (below 0.8x). The two Crunch Chips USA events alone cost ${fmt$(ev.filter(p => p.b === 'crunch').reduce((x, p) => x + p.spend - p.incGM, 0))} more than they earned back.` : 'No promotions have been evaluated for this selection.',
-      blocks: [{ h: 'Promotions, lowest ROI first (click one for detail)', html: tbl }], after: () => $('#band-body').querySelectorAll('[data-promo]').forEach(r => { const go = () => openPromo(r.dataset.promo); r.onclick = go; r.onkeydown = e => { if (e.key === 'Enter') go(); }; }) }, true);
+      blocks: [{ h: 'Promotions, lowest ROI first (click one for detail)', sub: 'Post-event analysis by Asper.ai (illustrative)', html: tbl, src: 'Asper.ai post-event analysis (illustrative)' }], after: () => $('#band-body').querySelectorAll('[data-promo]').forEach(r => { const go = () => openPromo(r.dataset.promo); r.onclick = go; r.onkeydown = e => { if (e.key === 'Enter') go(); }; }) }, true);
   } else if (id === 'F6') {
     const fyA = K.finance({}, 'A', 1, NW), fyT = K.finance({}, 'T', 1, NW), sh = K.FIN.shares, k = (1 - K.FIN.taxRate) / sh;
     const eb = { kind: 'eps', start: fyT.eps, end: fyA.eps, items: [['Contribution margin', (fyA.cm - fyT.cm) * k, 'cm'], ['Overhead savings', -(fyA.overhead - fyT.overhead) * k, 'oh'], ['Interest, tax, shares', 0, 'it']] };
@@ -634,7 +634,7 @@ function headsData(f) {
     const fc = { ...ff, c: [c] }; if (!has(fc)) continue;
     const A = agg(fc, 'A', monthWk()[0], CW), T = agg(fc, 'T', monthWk()[0], CW), TM = agg(fc, 'T', monthWk()[0], monthWk()[total - 1]);
     const k = hs.map(h => h.w * (1 + h.perf)), sk = k.reduce((x, y) => x + y, 0), sw = hs.reduce((x, h) => x + h.w, 0);
-    hs.forEach((h, i) => { const a = A.ns * k[i] / sk, t = T.ns * h.w / sw, tm = TM.ns * h.w / sw, proj = a / elapsed * total; out.push({ ...h, a, t, tm, proj, att: a / t, pv: proj / tm, slice: fc }); });
+    hs.forEach((h, i) => { const st = 1 + K.SALES_STRETCH, a = A.ns * k[i] / sk, t = T.ns * h.w / sw * st, tm = TM.ns * h.w / sw * st, proj = a / elapsed * total; out.push({ ...h, a, t, tm, proj, att: a / t, pv: proj / tm, slice: fc }); });
   }
   return out;
 }
@@ -792,7 +792,7 @@ function band(id) {
       const rt = `<div class="tbl-wrap"><table class="t"><thead><tr><th>Product</th><th>Location</th><th class="r">Days of stock</th><th class="r">Time to restock</th></tr></thead><tbody>${rk.map(r => `<tr><td>${esc(r.sku)}</td><td>${esc(r.wh)}</td><td class="r num unf"><b>${r.days.toFixed(0)}</b></td><td class="r num">${r.lead} days</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Nothing at risk.</td></tr>'}</tbody></table></div>`;
       const st = `<div class="tbl-wrap"><table class="t"><thead><tr><th>Stores and distributors (Sales owns this stock)</th><th class="r">Weeks of stock</th><th class="r">Normal</th></tr></thead><tbody>${cs.slice(0, 5).map(r => `<tr><td>${esc(r.label)}</td><td class="r num">${r.cover.toFixed(1)}</td><td class="r num">${r.normal}</td></tr>`).join('')}</tbody></table></div>`;
       return L('Stock health', 'Stock health in warehouses and stores', `${rk.length} products at specific warehouses will run out before we can restock them. ${rk[0] ? rk[0].sku + ' at ' + rk[0].wh + ' has ' + rk[0].days.toFixed(0) + ' days of stock left and needs ' + rk[0].lead + ' days to restock.' : ''} Only 55% of the stock for the upcoming Orchard promotion at FreshMart is ready.`,
-        [{ h: 'Items at risk of stock-out', html: rt }, { h: 'Warehouse stock', html: wt }, { h: 'Store and distributor stock', html: st, foot: `Stock close to expiry: ours ${fmt$(Object.values(K.NEAR_EXPIRY.own).reduce((x, y) => x + y, 0))}, in the channel ${fmt$(Object.values(K.NEAR_EXPIRY.channel).reduce((x, y) => x + y, 0))}.` }]);
+        [{ h: 'Items at risk of stock-out', sub: 'From the 13-week supply plan in Anaplan (illustrative)', html: rt, src: 'Anaplan 13-week supply plan (illustrative)' }, { h: 'Warehouse stock', html: wt }, { h: 'Store and distributor stock', html: st, foot: `Stock close to expiry: ours ${fmt$(Object.values(K.NEAR_EXPIRY.own).reduce((x, y) => x + y, 0))}, in the channel ${fmt$(Object.values(K.NEAR_EXPIRY.channel).reduce((x, y) => x + y, 0))}.` }]);
     }
     case 'O2': {
       const P4 = { ...P, w0: CW - 3, w1: CW, wa: CW }, ac = accountsData(f, P4).sort((a, b) => (a.otif - K.RETAILERS.find(r => r.id === a.id).otif) - (b.otif - K.RETAILERS.find(r => r.id === b.id).otif));
@@ -860,10 +860,10 @@ function buildActions(ex, f, P) {
     const c = e.f.c && e.f.c.length === 1 ? e.f.c[0] : null, b = e.f.b && e.f.b.length === 1 ? e.f.b[0] : null;
     const pre = PRESET[e.id] || Object.entries(PRESET).find(([k]) => k.split('|')[0] === (b || '') && e.d.cls === 'cost')?.[1] || {};
     const urg = e.d.sev === 'crit' ? 'High' : e.d.sev === 'opp' ? 'Low' : 'Medium';
-    out.push({ id: e.id, title: e.d.action, issue: e.title, why: e.d.cause, chain: e.d.chain, poc: K.PEOPLE[POC_BY(e.d.cls, c, b)], urgency: urg, target: TARGET[e.d.cls] || '', value: e.d.value, sev: e.d.sev, f: e.f,
+    out.push({ id: e.id, cls: e.d.cls, title: e.d.action, issue: e.title, why: e.d.cause, chain: e.d.chain, poc: K.PEOPLE[POC_BY(e.d.cls, c, b)], urgency: urg, target: TARGET[e.d.cls] || '', value: e.d.value, sev: e.d.sev, f: e.f,
       assigned: pre.assigned || null, due: pre.due || TODAY + (urg === 'High' ? 7 : urg === 'Medium' ? 14 : 21) * DAY, status: pre.status || 'New' });
   }
-  if (!pv || pv.includes('heads')) headsData(f).filter(h => h.pv < .97).forEach(h => out.push({ id: 'head|' + h.id, title: `Agree a recovery plan with ${h.name} to close the October gap.`, issue: `${h.name}, ${h.region}`, why: `At the current pace, ${h.region} will finish October ${pcn(h.pv - 1)} below target.`, chain: [`${sPct(h.att - 1)} against target so far this month`, `heading for ${fmt$(h.proj)} against a target of ${fmt$(h.tm)}`], poc: h.name + ', Regional Sales Head', urgency: h.pv < .94 ? 'High' : 'Medium', target: 'Back on target by week 43', value: h.tm - h.proj, sev: h.pv < .94 ? 'crit' : 'warn', f: h.slice, assigned: null, due: TODAY + 5 * DAY, status: 'New' }));
+  if (!pv || pv.includes('heads')) headsData(f).filter(h => h.pv < .97).forEach(h => out.push({ id: 'head|' + h.id, title: `Agree a recovery plan with the ${h.name} to close the October gap.`, issue: `${h.region}, October sales`, why: `At the current pace, ${h.region} will finish October ${pcn(h.pv - 1)} below target.`, chain: [`${sPct(h.att - 1)} against target so far this month`, `heading for ${fmt$(h.proj)} against a target of ${fmt$(h.tm)}`], poc: h.name + ', Regional Sales Head', urgency: h.pv < .94 ? 'High' : 'Medium', target: 'Back on target by week 43', value: h.tm - h.proj, sev: h.pv < .94 ? 'crit' : 'warn', f: h.slice, assigned: null, due: TODAY + 5 * DAY, status: 'New' }));
   if (!pv || pv.includes('stockrisk')) { const rk = stockRisk(f).filter(r => r.c === 'IN'); if (rk.length) out.push({ id: 'risk|glow-in', title: `Secure Diwali stock for ${rk.length} Glow Skincare products in India, by air freight or by moving stock from elsewhere.`, issue: 'Glow Skincare stock in India', why: `There are only ${rk[0].days.toFixed(0)} days of stock, it takes ${rk[0].lead} days to restock, and the Diwali peak is coming.`, chain: [`${rk.length} items have less stock than the time it takes to restock`, 'Diwali demand up 25% in week 44'], poc: K.PEOPLE.COO, urgency: 'High', target: 'At least 20 days of stock by week 43', value: 0, sev: 'crit', f: { b: ['glow'], c: ['IN'] }, assigned: null, due: TODAY + 4 * DAY, status: 'New' }); }
   if (!pv || pv.includes('guidance')) { const e = K.finance({}, 'A', 1, NW).eps; if (e < K.FIN.guidance.eps[0]) out.push({ id: 'guidance', title: 'Prepare a guidance decision for the board: keep it with a recovery plan, or lower it.', issue: 'EPS outlook below guidance', why: `We expect EPS of $${e.toFixed(2)}. Guidance is $${K.FIN.guidance.eps[0].toFixed(2)} to $${K.FIN.guidance.eps[1].toFixed(2)} and analysts expect $${K.FIN.consensus.eps.toFixed(2)}.`, chain: ['margins are under pressure', 'overhead savings are not enough'], poc: K.PEOPLE.CFO, urgency: 'High', target: 'Board decision by 30 October', value: 0, sev: 'crit', f: {}, assigned: TODAY - 2 * DAY, due: Date.UTC(2026, 9, 30), status: 'In progress' }); }
   if (!pv || pv.includes('campaign')) K.CAMPAIGNS.filter(c => c.w1 >= CW && c.lift < c.planLift && (!f.c || f.c.includes(c.c))).forEach(c => out.push({ id: 'camp|' + c.id, title: `Decide on "${c.name}": move the rest of the TV budget to digital, or pause it.`, issue: `${K.BMAP[c.b].name} campaign in ${K.CMAP[c.c].name}`, why: `Sales lifted ${pcn(c.lift)} against a plan of ${pcn(c.planLift)}, and TV earns less than digital.`, chain: [`${fmt$(c.spend)} spent`, `lift of ${pcn(c.lift)} against ${pcn(c.planLift)} planned`], poc: K.PEOPLE.BRAND_BOLT, urgency: 'Medium', target: 'Decision by 23 October', value: c.spend * .3, sev: 'warn', f: { b: [c.b], c: [c.c] }, assigned: null, due: TODAY + 10 * DAY, status: 'New' }));
@@ -874,9 +874,10 @@ function buildActions(ex, f, P) {
   return __acts;
 }
 function emailDraft(a, follow) {
-  const me = K.PEOPLE[state.role] || K.PEOPLE.CEO, first = a.poc.split(', ')[0].split(' ')[0];
+  follow = follow || !!a.overdue;
+  const me = K.PEOPLE[state.role] || K.PEOPLE.CEO, first = 'team';
   const subj = `${follow ? 'Follow-up: ' : ''}${a.issue}: ${a.title.split('.')[0]}`;
-  const body = `Hi ${first},\n\n${follow ? 'Following up on this. ' : ''}${a.why}\n\nWhat the numbers show:\n${a.chain.map(x => '• ' + x.replace(/[▲▼]/g, '')).join('\n')}\n\nProposed action: ${a.title}\nTarget: ${a.target || 'none set'}\nDue: ${fmtD(a.due)}\n\nCould you tell me what is missing to fix this, and what you need from me? The full analysis is in Northstar Pulse, under ${a.issue}.\n\nThanks,\n${me.split(', ')[0]}`;
+  const body = `Hi ${first},\n\n${follow ? `Following up on this${a.overdue ? `: it was due on ${fmtD(a.due)}` : ''}. ` : ''}${a.why}\n\nWhat the numbers show:\n${a.chain.map(x => '• ' + x.replace(/[▲▼]/g, '')).join('\n')}\n\nProposed action: ${a.title}\nTarget: ${a.target || 'none set'}\nDue: ${fmtD(a.due)}\n\nCould you tell me what is missing to fix this, and what you need from me? The full analysis is in Northstar Pulse, under ${a.issue}.\n\nThanks,\n${me.split(', ')[0]}`;
   return { to: a.poc, subj, body };
 }
 function openModal(title, html, after) { $('#modal-t').textContent = title; $('#modal-b').innerHTML = html; $('#modal').hidden = false; $('#modal .close').focus(); if (after) after(); }
@@ -885,20 +886,24 @@ function copyBtn(txt) { return `<button class="btn primary" data-copy="${esc(enc
 function mailModal(a, follow) {
   const m = emailDraft(a, follow);
   openModal(follow ? 'Follow-up email' : 'Email draft', `<dl class="mf"><dt>To</dt><dd>${esc(m.to)}</dd><dt>Subject</dt><dd>${esc(m.subj)}</dd></dl><textarea id="mail-body" rows="13">${esc(m.body)}</textarea>
-    <div class="m-act">${copyBtn('Subject: ' + m.subj + '\n\n' + m.body)}<button class="btn" data-close>Close</button></div><p class="foot">This is a draft for you to send from your own email. Nothing is sent from the dashboard.</p>`,
+    <div class="m-act"><button class="btn primary" data-send="${esc(m.to)}">Send</button>${copyBtn('Subject: ' + m.subj + '\n\n' + m.body).replace('btn primary', 'btn')}<button class="btn" data-close>Close</button></div><p class="foot">In production Send goes from your email account. This prototype sends nothing.</p>`,
     () => { $('#mail-body').oninput = e => { const b = $('#modal-b [data-copy]'); b.dataset.copy = encodeURIComponent('Subject: ' + m.subj + '\n\n' + e.target.value); }; });
 }
 function meetModal(a) {
   const start = new Date(a.due - 2 * DAY + 10 * 3600e3), me = (K.PEOPLE[state.role] || K.PEOPLE.CEO);
-  const txt = `Meeting: ${a.issue}, review and next steps\nWhen: ${start.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}, 10:00, 30 minutes\nAttendees: ${me}; ${a.poc}\n\nAgenda\n1. What changed: ${a.why}\n2. The numbers: ${a.chain.join('; ').replace(/[▲▼]/g, '')}\n3. Proposed action: ${a.title}\n4. What is missing, owner and date (target: ${a.target || 'none set'})`;
-  openModal('Meeting invite', `<pre class="pre">${esc(txt)}</pre><div class="m-act">${copyBtn(txt)}<button class="btn" data-close>Close</button></div><p class="foot">This is a draft for your calendar. Nothing is booked from the dashboard.</p>`);
+  const txt = `Meeting: ${a.issue}, review and next steps\nWhen: ${start.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}, 10:00, 30 minutes\nWhere: Microsoft Teams meeting (the join link is added when it is booked)\nAttendees: ${me}; ${a.poc}\n\nAgenda\n1. What changed: ${a.why}\n2. The numbers: ${a.chain.join('; ').replace(/[▲▼]/g, '')}\n3. Proposed action: ${a.title}\n4. What is missing, owner and date (target: ${a.target || 'none set'})`;
+  openModal('Teams meeting invite', `<pre class="pre">${esc(txt)}</pre><div class="m-act">${copyBtn(txt)}<button class="btn" data-close>Close</button></div><p class="foot">A draft Microsoft Teams invite (illustrative). Nothing is booked from the dashboard.</p>`);
 }
 function assignModal(a) {
   const ppl = Object.values(K.PEOPLE).concat(K.SALES_HEADS.map(h => h.name + ', Regional Sales Head')).filter((v, i, s) => s.indexOf(v) === i);
   openModal('Assign action', `<p>${esc(a.title)}</p><label class="lab" for="as-who">Owner</label><select id="as-who">${ppl.map(p => `<option ${p === a.poc ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>
     <label class="lab" for="as-due">Due</label><input id="as-due" type="date" value="${new Date(a.due).toISOString().slice(0, 10)}">
     <div class="m-act"><button class="btn primary" id="as-ok">Assign and draft email</button><button class="btn" data-close>Cancel</button></div>`,
-    () => { $('#as-ok').onclick = () => { const s = ACTS[a.id] || {}; s.poc = $('#as-who').value; s.due = Date.parse($('#as-due').value) || a.due; s.status = 'Assigned'; s.assigned = TODAY; ACTS[a.id] = s; saveActs(); renderHome(); const na = actions().find(x => x.id === a.id); mailModal(na); }; });
+    () => { $('#as-ok').onclick = () => { const s = ACTS[a.id] || {}; s.poc = $('#as-who').value; s.due = Date.parse($('#as-due').value) || a.due; s.status = 'Assigned'; s.assigned = TODAY; ACTS[a.id] = s; saveActs();
+      // refresh the action lists and summary in place, so an open deep dive keeps its level
+      if (OPEN && !$('#band').hidden) { withF(HF, () => buildActions(window.__ex || [], { ...HF }, win())); $('#acts').innerHTML = actionsView(); renderSummaryOnly(); drill.stack.forEach(l => (l.blocks || []).forEach(b => { if (b.make) b.html = b.make(); })); const y = scrollY; paintBand(); scrollTo(0, y); }
+      else renderHome();
+      const na = actions().find(x => x.id === a.id); mailModal(na); }; });
 }
 function createActionFromBand() {
   const lv = drill.stack[drill.stack.length - 1]; if (!lv) return;
@@ -916,7 +921,7 @@ function toast(t) { const el = $('#toast'); el.textContent = t; el.hidden = fals
 let PF = {};                                   // filters of the open panel (home always uses the whole company)
 const withF = (f, fn) => { const s = PF; PF = f; try { return fn(); } finally { PF = s; } };
 filter = function () { return { ...PF }; };    // every calculation reads the panel's filters
-const NAME = { CEO: 'Sarah', CFO: 'David', CMO: 'Emma', CSO: 'Mike', COO: 'Tom' };
+const NAME = { CEO: 'CEO', CFO: 'CFO', CMO: 'CMO', CSO: 'Chief Sales Officer', COO: 'COO' };
 const first = p => (p || '').split(', ')[0].split(' ')[0];
 const plain = v => (v * 100).toFixed(1).replace('-', MINUS) + '%';
 
@@ -959,7 +964,7 @@ const CARD_DEF = {
   CHINV: ['Channel inventory', 'Weeks of our stock sitting with distributors and stores, against normal.', 'Channel stock ÷ weekly shopper sales'],
   OTIF: ['Service level (OTIF)', 'Orders delivered on time and in full (counted by case, within each customer\'s contract window), retailers below their contract target, and sales lost because we could not supply.', 'On-time, in-full cases ÷ ordered cases'],
   INVD: ['Inventory days', 'Days of stock in our warehouses against target, and items about to run out.', 'Inventory ÷ average daily demand'],
-  RISK: ['Supply risk, next 13 weeks', 'Products at a warehouse that will run out before we can restock them in the next 13 weeks (from the supply planner, including confirmed recovery plans).', 'Projected days of stock < time to restock'],
+  RISK: ['Supply risk, next 13 weeks', 'Products at a warehouse that will run out before we can restock them in the next 13 weeks (from the 13-week supply plan in Anaplan, illustrative, including confirmed recovery plans).', 'Projected days of stock < time to restock'],
 };
 Object.entries(CARD_DEF).forEach(([k, v]) => DEF[k] = v);
 DEF.FRESH = ['How up to date is this?', 'Sales and costs run to the week ending 11 October 2026. September is closed and matches the management accounts, and October is still open. Market share runs to 20 September. Consumer panel and brand tracker data are for September.', ''];
@@ -1006,12 +1011,12 @@ function card(id) {
     case 'OSG': case 'OSGB': { const g = A.ns / L.ns - 1, fy = vr(D.FA.ns, D.FT.ns);
       if (state.comp === 'L') return { value: plain(g), raw: g, rk: 'pts', rg: 1, delta: dv(A.ns - L.ns, '$', 1, 'vs last year'), sev: g >= 0 ? 'good' : 'crit', per: P.label, ref: `Last year ${fmt$(L.ns)}`, prov: 'ERP', insight: `Full-year forecast ${fmt$(D.FA.ns)}, ${pcn(fy, 1)} ${fy >= 0 ? 'above' : 'below'} plan`, say: `Sales are ${g >= 0 ? 'up' : 'down'} ${plain(Math.abs(g))} on last year.` };
       const gp = C.ns / (state.comp === 'M' ? agg(D.f, 'L', Math.max(1, P.w0 - 4), Math.max(1, P.wa - 4)).ns : L.ns) - 1, d = (g - gp) * 100;
-      return { value: plain(g), raw: g, craw: gp, rk: 'pts', rg: 1, delta: dv(d, 'pts', 1, cmp), sev: sevOf(d, 'pts'), per: P.label, ref: `${compLab()} ${plain(gp)}`, prov: state.comp === 'T' ? 'From RGM tool' : compProv(), insight: `Full-year forecast ${fmt$(D.FA.ns)}, ${pcn(fy, 1)} ${fy >= 0 ? 'above' : 'below'} plan`, say: d < -.1 ? `Sales growth is ${plain(g)}, which is ${Math.abs(d).toFixed(1)} points behind ${compName()}.` : `Sales growth is ${plain(g)}, in line with ${compName()}.` }; }
+      return { value: plain(g), raw: g, craw: gp, rk: 'pts', rg: 1, delta: dv(d, 'pts', 1, cmp), sev: sevOf(d, 'pts'), per: P.label, ref: `${compLab()} ${plain(gp)}`, prov: state.comp === 'T' ? 'From Asper.ai (illustrative)' : compProv(), insight: `Full-year forecast ${fmt$(D.FA.ns)}, ${pcn(fy, 1)} ${fy >= 0 ? 'above' : 'below'} plan`, say: d < -.1 ? `Sales growth is ${plain(g)}, which is ${Math.abs(d).toFixed(1)} points behind ${compName()}.` : `Sales growth is ${plain(g)}, in line with ${compName()}.` }; }
     case 'SSG': { const s = shopper(D.f, P.w0, P.wa), d = (s.g - s.cat) * 100;
       return { value: plain(s.g), raw: s.g, craw: s.cat, rk: 'pts', rg: 1, delta: dv(d, 'pts', 1, 'vs category'), sev: d >= -.2 ? 'good' : d >= -1.5 ? 'warn' : 'crit', per: P.label, ref: `Category ${sPct(s.cat)}, shipments ${sPct(s.ship)}`, prov: 'Retailer data and market data', insight: Math.abs(s.ship - s.g) < .002 ? 'We ship about as much as shoppers buy, so channel stock is steady' : `We are shipping ${s.ship > s.g ? 'more' : 'less'} than shoppers buy, so channel stock is ${s.ship > s.g ? 'building' : 'falling'}`, say: d < -.2 ? `Shopper sales grew ${plain(s.g)}, which is ${Math.abs(d).toFixed(1)} points behind the category.` : `Shopper sales grew ${plain(s.g)}, ahead of the category.` }; }
     case 'SALES': { const hs = withF({}, () => headsData({})), a = hs.reduce((x, h) => x + h.a, 0), t = hs.reduce((x, h) => x + h.t, 0), tm = hs.reduce((x, h) => x + h.tm, 0), miss = hs.filter(h => h.pv < 1).length;
       const el = monthWk().filter(w => w <= CW).length * 7, rem = Math.max(7, (monthWk().length * 7) - el), need = (tm - a) / rem, now = a / el;
-      return { value: plain(a / t), raw: a / t, craw: 1, rk: 'pts', rg: 1, delta: dv(a / t - 1, 'pct', 1, 'vs sales target'), sev: a / t >= 1 ? 'good' : a / t >= .98 ? 'warn' : 'crit', per: 'MTD', ref: `We need to sell ${fmt$(need)} a day for the rest of October, and we sell ${fmt$(now)} a day now`, prov: 'Sales target (bonus basis)', insight: `${miss} of ${hs.length} sales heads will miss October`, heads: miss, say: a / t >= 1 ? `Sales are ${pct1(a / t - 1)} ahead of the October target.` : `Sales are ${pct1(1 - a / t)} behind the October target.` }; }
+      return { value: plain(a / t), raw: a / t, craw: 1, rk: 'pts', rg: 1, delta: dv(a / t - 1, 'pct', 1, 'vs sales target'), sev: a / t >= 1 ? 'good' : a / t >= .98 ? 'warn' : 'crit', per: 'MTD', ref: `We need to sell ${fmt$(need)} a day for the rest of October, and we sell ${fmt$(now)} a day now`, prov: 'Targets from Anaplan (illustrative)', insight: `${miss} of ${hs.length} sales heads will miss October`, heads: miss, say: a / t >= 1 ? `Sales are ${pct1(a / t - 1)} ahead of the October target.` : `Sales are ${pct1(1 - a / t)} behind the October target.` }; }
     case 'OM': { const m = D.opA.op / D.opA.ns, mc = D.opC.op / D.opC.ns, d = (m - mc) * 1e4;
       return { value: plain(m), raw: m, craw: mc, rk: 'bps', rg: 1, delta: dv(d, 'bps', 1, cmp), sev: sevOf(d, 'bps'), per: P.label, ref: `${compLab()} ${plain(mc)}, profit ${fmt$(D.opA.op)}`, prov: compProv(), insight: 'Lower overheads are hiding weaker product margins', say: d < -10 ? `Operating margin is ${Math.round(Math.abs(d))} bps below ${compName()}.` : `Operating margin is on ${compName()}.` }; }
     case 'GM': { const gm = x => (x.ns - x.cogs) / x.ns, d = (gm(A) - gm(C)) * 1e4;
@@ -1108,25 +1113,34 @@ function gapOf(id, x) {
   return { arrow: up ? '▲' : '▼', amt, words: (x.rg > 0 ? (up ? 'ahead of ' : 'behind ') : (up ? 'above ' : 'below ')) + vs };
 }
 const gapHtml = g => g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b> ${g.words}` : g ? g.words : '';
-const lowFirst = t => t.charAt(0).toLowerCase() + t.slice(1);
+const lowFirst = t => /^[A-Z]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1);
+// A home card reads in the order an executive asks: what is off, by how much, against what goal,
+// where it stands now, why, and which of its parts could be causing it. The parts open in the panel below.
+CARD_DEF.QUAL = ['Consumer complaints', 'Complaints per million units sold, with recalls and open regulatory cases.', CARD_DEF.QUAL[2]]; DEF.QUAL = CARD_DEF.QUAL;
+const HOME_WHY = { EPS: 'Oat costs and promotions are hurting margin, and overhead savings only cover part of it', OSG: 'Bolt Brew UK and Orchard Juice Indonesia are behind, and Glow India is ahead', CHINV: 'We shipped 13% more than shoppers bought after a distributor incentive', RISK: 'The Indonesia port delays and Diwali demand in India' };
 function cardHtml(id, i) {
-  const x = withF({}, () => card(id)), t = withF({}, () => trendOf(id)), g = gapOf(id, x);
-  const since = id === 'FCF' && t ? `<span class="dv neu">${fmt$(t.a[t.a.length - 1] - t.a[t.a.length - 2])} <small>generated in Sep</small></span>` : t ? changeHtml(id, x, t.a[t.a.length - 2], t.a[t.a.length - 1], t.step === 'week' ? 'vs last week' : t.step === 'month' ? 'vs last month' : 'vs prior read') : '';
-  const val = `${x.value}${x.valueUnit ? ' ' + x.valueUnit : ''}`, ref = (x.ref || '').split(/, |\. /)[0];
-  const gap = g ? `<span class="c-gap">${g.arrow ? `<i>${g.arrow}</i><b class="num">${g.amt}</b>` : ''}<span>${g.amt ? g.words : `<b class="flat">${g.words}</b>`}</span></span>`
-    : `<span class="c-gap"><b class="num">${val}</b></span>`;
-  const now = g ? `<span class="c-now">Now <b class="num">${val}</b>${ref && ref.length <= 28 && (id === 'CHINV' || /^(Plan|Last year|Latest estimate|Last month|Guidance|Target)\b/.test(ref)) ? `, ${esc(lowFirst(ref))}` : ''}</span>` : `<span class="c-now">${x.delta}</span>`;
-  return `<button class="card s-${x.sev} ${OPEN === id ? 'on' : ''}" data-open="${id}" aria-expanded="${OPEN === id}" style="--d:${i * 50}ms" title="${esc(x.ref + '. Source: ' + x.prov)}">
-    <span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="c-per">${esc(x.per)}</span></span>
-    <span class="c-name">${esc(CARD_DEF[id][0])}<span class="info" data-def="${id}" aria-hidden="true">i</span></span>
-    ${gap}${now}
-    <span class="c-tr">${t ? `${trendSvg(t, x.sev)}${trendStart(x, t) ? `<i class="c-tr-s" style="top:${Math.max(0, Math.round(t.y0) - 13)}px">from ${trendStart(x, t)}</i>` : ''}` : gapBar(id, x)}<span class="c-tr-l"><span class="c-tr-n">${t ? `${esc(t.lab)}${t.c ? ` <i class="dash-k"></i>${id === 'SHARE' ? 'last year' : id === 'EPS' ? 'consensus' : id === 'SSG' ? 'category' : VS[id] ? VS[id].replace(/^the /, '') : compLab().toLowerCase()}` : ''}` : `Now against ${esc(VS[id] || compName())} <i class="tick-k"></i>`}</span>${since}</span></span>
-    <span class="c-ins"><span>${esc(x.insight)}</span><i class="c-go" aria-hidden="true">→</i></span><span class="c-slot">${SLOTS[CARD_SLOT[id]]}</span></button>`;
+  const x = withF(HF, () => card(id)), t = withF(HF, () => trendOf(id)), g = gapOf(id, x), name = CARD_DEF[id][0];
+  const since = t ? changeHtml(id, x, t.a[t.a.length - 2], t.a[t.a.length - 1], t.step === 'week' ? 'vs last week' : t.step === 'month' ? 'vs last month' : 'vs prior read') : '';
+  const val = `${x.value}${x.valueUnit ? ' ' + x.valueUnit : ''}`;
+  const gap = g && g.amt ? `<span class="c-gap${x.sev === 'good' && /^behind/.test(g.words) ? ' tol' : ''}"><i>${g.arrow}</i><b class="num">${g.amt}</b><span>${esc(g.words)}</span></span>` : g ? `<span class="c-gap"><b class="flat">${esc(g.words)}</b></span>` : `<span class="c-gap"><b class="num">${val}</b></span>`;
+  const now = g ? withF(HF, () => nowLine(id, x)) : `<span class="c-now">${x.delta || ''}</span>`;
+  const rs = withF(HF, () => reasonsOf(id)), off = rs.filter(r => r.x.sev !== 'good' && r.x.sev !== 'opp'), list = (off.length ? off : rs).slice(0, 2);
+  const reason = r => `<button class="k-r s-${r.x.sev}" data-node="${id}|${r.id}" title="Open ${esc(CARD_DEF[r.id][0])} in the panel below"><i class="k-r-d" aria-hidden="true"></i><span class="k-r-n">${esc(CARD_DEF[r.id][0])}</span><span class="k-r-g">${r.g && r.g.amt ? `${r.g.arrow} <b class="num">${r.g.amt}</b> ${esc(r.g.words)}` : r.g ? esc(r.g.words) : `<b class="num">${r.x.value}</b>`}</span><i class="k-r-go" aria-hidden="true">→</i></button>`;
+  return `<article class="card k5 s-${x.sev} ${OPEN === id ? 'on' : ''}" data-open="${id}" style="--d:${i * 50}ms">
+    <button class="k-main" aria-label="Open ${esc(name)}" title="${esc((x.ref || '') + '. Source: ' + x.prov)}">
+      <span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="c-per">${esc(x.per)}</span></span>
+      <span class="c-name">${esc(name)}<span class="info" data-def="${id}" aria-hidden="true">i</span></span>
+      <span class="k-fig">${gap}${now}</span>
+      <span class="k-tr">${t ? trendSvg(t, x.sev) : gapBar(id, x)}<span class="k-tr-l">${since || `<span class="dv neu">${t ? esc(t.lab) : 'against ' + esc(VS[id] || compName())}</span>`}</span></span>
+      <span class="k-why"><span><b>Why</b> ${esc(HOME_WHY[id] || x.insight || x.say)}</span><span class="prov">${esc(x.prov)}</span></span>
+    </button>
+    ${list.length ? `<div class="k-rs"><span class="k-rh">${!off.length ? 'Its parts, all on track' : x.sev === 'good' ? 'Slipping underneath' : 'Possible reasons'}</span>${list.map(reason).join('')}</div>` : ''}
+  </article>`;
 }
 
 /* ---------- summary ---------- */
 function summaryView(ex) {
-  const ids = ROLE_CARDS[state.role], cs = ids.map(id => ({ id, ...withF({}, () => card(id)) })), bad = cs.filter(c => c.sev !== 'good');
+  const ids = ROLE_CARDS[state.role], cs = ids.map(id => ({ id, ...withF(HF, () => card(id)) })), bad = cs.filter(c => c.sev !== 'good');
   // each headline sentence opens the metric it is about
   const head = bad.length ? bad.slice(0, 2).map(c => `<button class="say" data-open="${c.id}"${c.id === 'TRADE' && /losing money/.test(c.say) ? ' data-then="F5"' : ''} title="Open ${esc(CARD_DEF[c.id][0])}">${emph(c.say)}<span class="say-go" aria-hidden="true"> →</span></button>`).join(' ') : 'Everything you own is on track.';
   const watch = [];
@@ -1143,7 +1157,7 @@ function summaryView(ex) {
   if (state.role === 'CSO') { const sc = cs.find(c => c.id === 'SALES'); if (sc && sc.heads > 3) watch.push({ t: 'Sales heads', l: 'Behind target', sev: 'warn', issue: `${sc.heads} of 10 sales heads will miss October at the current pace.`, go: { card: 'SALES' } }); }
   const CARD_WHY = { EPS: 'Oat costs and promotions are hurting margin, and overhead savings only cover part of it', GM: 'Oat costs are rising faster than our prices', OSG: 'Bolt Brew UK and Orchard Juice Indonesia are behind, and Glow India is ahead', CHINV: 'We shipped 13% more than shoppers bought after a distributor incentive', RISK: 'The causes are the Indonesia port delays and Diwali demand in India' };
   // the gap line already says how far off it is, so this line carries the reason instead
-  bad.slice(2).forEach(c => { const gap = c.raw != null && c.craw != null ? changeText(c.id, c.rk, c.craw, c.raw) : '';
+  bad.forEach(c => { const gap = c.raw != null && c.craw != null ? changeText(c.id, c.rk, c.craw, c.raw) : '';
     watch.push({ t: CARD_DEF[c.id][0], l: 'Core metric', sev: c.sev, gap: gapOf(c.id, c) ? gapHtml(gapOf(c.id, c)) : `<b class="num">${c.value}${c.valueUnit ? ' ' + c.valueUnit : ''}</b>`, issue: dot(CARD_WHY[c.id] || c.insight || c.say), imp: gap ? ['Gap', gap, 'unf'] : null, go: { card: c.id } }); });
   ex.filter(e => e.d.sev !== 'good').slice(0, 6 - Math.min(watch.length, 2)).forEach(e => { const d = e.d, imp = d.cls === 'loading' ? ['Close to expiry', fmt$(d.value), 'unf'] : d.cls === 'opportunity' ? ['Full-year upside', '+' + fmt$(Math.abs(d.fyNs)), 'fav'] : d.fyCm ? ['Full-year margin', s$(d.fyCm), d.fyCm < 0 ? 'unf' : 'fav'] : ['Full-year sales', s$(d.fyNs), d.fyNs < 0 ? 'unf' : 'fav'];
     const amt = imp[1].replace(/[()+−]/g, ''), neg = /−/.test(imp[1]);
@@ -1151,10 +1165,13 @@ function summaryView(ex) {
     watch.push({ t: e.title, l: d.label, sev: d.sev, gap, issue: `${dot(d.cause)}${d.dir === 'worse' ? ' It has been getting worse over the last 4 weeks.' : ''}`, imp, aid: e.id, rec: d.action, owner: d.owner, go: { card: cardFor(d.cls), f: e.f } }); });
   // every row carries its own next step, so one line reads: what is wrong, why, and what to do
   const openActs = actionsList().filter(a => a.status !== 'Done');
-  const roleOf = p => { const r = (p || '').split(', ')[1]; return r ? 'the ' + r : first(p); };
+  const roleOf = p => 'the ' + ((p || '').split(', ')[1] || p);
   const askLine = a => `Ask ${roleOf(a.poc)} to ${(a.title.charAt(0).toLowerCase() + a.title.slice(1).split(/;|\.(?=\s|$)/)[0].replace(/ and extend.*$/, '')).replace(/\.$/, '')}.`;
   const srcLine = a => `Due ${fmtD(a.due)}${a.overdue ? ' (overdue)' : ''}. ${/^new/.test(a.id) ? `You created it on ${fmtD(a.assigned)}.` : a.status === 'New' ? 'Suggested by Pulse, not assigned yet.' : `You assigned it on ${fmtD(a.assigned)}.`}`;
-  const shown = watch.slice(0, 6), used = new Set();
+  // ranked so the list reads worst first: off track, then at risk, then opportunities (stable within each group)
+  const SEVR = { crit: 0, warn: 1, opp: 2, good: 3 };
+  watch.sort((a, b) => (SEVR[a.sev] ?? 2) - (SEVR[b.sev] ?? 2));
+  const shown = watch.slice(0, 8), used = new Set();
   const exOf = id => (window.__ex || []).find(x => x.id === id);
   // a row with no action of its own borrows the open action that sits on the same metric
   const actFor = w => {
@@ -1174,11 +1191,28 @@ function summaryView(ex) {
     const more = `<span class="menu-wrap"><button class="icon-btn sm" ${a ? `data-menu="${esc(a.id)}"` : `data-rowmenu="${i}"`} aria-label="More for this issue" title="More">${ICON.more}</button></span>`;
     return `<div class="sum-row s-${w.sev}"${i >= 3 ? ' hidden data-more' : ''}><button class="sum-why" data-watch="${i}" title="Open the analysis"><span class="sum-s">${SEV[w.sev] || ''}${w.l && w.l !== SEV[w.sev] ? `<span class="sum-l">${esc(w.l)}</span>` : ''}</span><span class="sum-hd"><b>${esc(w.t)}</b>${w.gap ? `<span class="sum-g">${w.gap}</span>` : ''}</span><span class="sum-t">${esc(w.issue || '')}</span>${nx}<i class="sum-go" aria-hidden="true">→</i></button><span class="sum-cta"><span class="sum-cta-r"><span class="sum-cta-c">${cta}<button class="link" data-watch="${i}">See analysis</button></span>${more}</span></span></div>`;
   }).join('');
-  return `<div class="sum-card">
-      <div class="sum-top"><p class="sum-meta"><span class="ai" data-def="AI">AI summary</span> All figures run to 11 Oct <span class="info" data-def="FRESH" tabindex="0" aria-label="Data freshness">i</span></p>${openActs.length ? `<button class="link" data-goact="" title="Open My actions">${openActs.length} open action${openActs.length === 1 ? '' : 's'} ↓</button>` : ''}</div>
-      <h1 class="sum-h">${head}</h1>
-      <div class="sum-rows">${rows || '<p class="muted" style="padding:12px 0">Nothing else needs you.</p>'}</div>
-      ${shown.length > 3 ? `<div class="sum-foot"><button class="link" data-iss-more>Show ${shown.length - 3} more issues</button></div>` : ''}
+  // home v4: the issue rows live behind "See all issues"; the summary itself is a short paragraph
+  window.__issueRows = rows;
+  const nonCore = shown.map((w, i) => ({ w, i })).filter(o => o.w.l !== 'Core metric' && !(o.w.go && o.w.go.card === 'EPS'));
+  const epsW = state.role === 'CEO' && shown[0] && shown[0].go && shown[0].go.card === 'EPS' ? shown[0] : null;
+  const epsV = K.finance({}, 'A', 1, NW).eps, gL = K.FIN.guidance.eps[0];
+  const epsLine = epsW ? `<button class="say" data-watch="0">${emph(`Earnings per share is heading to $${epsV.toFixed(2)}, ${epsV < gL ? `$${(gL - epsV).toFixed(2)} below the bottom of guidance` : 'within guidance'}.`)}</button> ` : '';
+  const issPhrase = o => `<button class="say" data-watch="${o.i}">${esc(o.w.t)}, ${esc(lowFirst(o.w.l || ''))}</button>${o.w.imp ? ` <span class="iss-amt">${esc(o.w.imp[1].replace(/[()]/g, ''))}</span> ${esc(o.w.imp[0].toLowerCase())}` : ''}`;
+  const top = nonCore.slice(0, 2);
+  // the other issues read as a short list: what, what is wrong, and what it is worth
+  const issItem = o => `<li><button class="say" data-watch="${o.i}"><b>${esc(o.w.t)}</b>: ${esc(lowFirst(o.w.l || ''))}</button>${o.w.imp ? `, <span class="iss-amt">${esc(o.w.imp[1].replace(/[()]/g, ''))}</span> ${esc(o.w.imp[0].toLowerCase())}` : ''}</li>`;
+  const issLine = top.length ? `<div class="sum-iss"><h4>Other issues</h4><ul>${top.map(issItem).join('')}</ul></div>` : '';
+  const od = openActs.filter(a => a.overdue).length;
+  // the one action that needs the executive soonest: overdue first, then the nearest due date
+  const nextAs = openActs.slice().sort((a, b) => (b.overdue ? 1 : 0) - (a.overdue ? 1 : 0) || a.due - b.due).slice(0, 3);
+  const roleOf2 = p => 'the ' + ((p || '').split(', ')[1] || p);
+  const dueHtml = nextAs.length ? `<div class="sum-next2"><h4>Needs you next</h4><ul>${nextAs.map(a => `<li><span class="nd-when ${a.overdue ? 'od' : ''}">${a.overdue ? `Overdue, ${fmtD(a.due)}` : fmtD(a.due)}</span><button class="link-plain" data-goact="${esc(a.id)}">Ask ${esc(roleOf2(a.poc))} to ${esc((a.title.charAt(0).toLowerCase() + a.title.slice(1)).split(/;|\.(?=\s|$)/)[0].replace(/\.$/, ''))}</button></li>`).join('')}</ul></div>` : '';
+  // the summary is the list of issues itself: one line each, worst first, each opening its own analysis
+  const list = shown.map((w, i) => `<li class="si s-${w.sev}"><button class="si-b" data-watch="${i}" title="Open the analysis for this issue"><span class="si-h"><span class="si-s">${SEV[w.sev] || ''}</span><b>${esc(w.t)}</b></span><span class="si-gw">${w.gap ? `<span class="si-g">${w.gap}</span>` : ''}<span class="si-w" title="${esc(w.issue || '')}">${esc(w.issue || '')}</span></span><i class="si-go" aria-hidden="true">→</i></button></li>`).join('');
+  return `<div class="sum2">
+      ${shown.length ? `<ol class="sum-list">${list}</ol>` : '<h1 class="sum-h">Everything you own is on track.</h1>'}
+      <div class="sum-foot2">${openActs.length ? `<button class="link" data-goact="" title="Open My actions">${openActs.length} open action${openActs.length === 1 ? '' : 's'}${od ? `, <span class="od-n">${od} overdue</span>` : ''} ↓</button>` : '<span>No open actions</span>'}</div>
+      <p class="sum-meta"><span class="ai" data-def="AI">AI generated</span> All figures run to 11 Oct <span class="info" data-def="FRESH" tabindex="0" aria-label="Data freshness">i</span></p>
     </div>`
     + `<script type="application/json" id="watch-data">${JSON.stringify(shown).replace(/</g, '\\u003c')}</script>`;
 }
@@ -1206,7 +1240,7 @@ const PANEL = {
 const RGM = {
   SHARE: { label: 'Re-check price and promotion plan', scope: 'Bolt Brew Coffee, UK, convenience', title: 'Bolt Brew UK: which promotion wins back share at a profit?', chip: 'From the RGM tool, scenario run on 14 October 2026', rows: [['Price-marked pack £1.19 (current)', '+0.2 pts', '0.50x', '−£0.4M', 'crit'], ['Deeper 25% price cut', '+1.1 pts', '0.62x', '−£1.1M', 'crit'], ['2 for £2.20 multibuy (recommended)', '+0.8 pts', '1.35x', '+£0.6M', 'good'], ['Hold price, +visibility only', '+0.3 pts', '1.10x', '+£0.1M', 'warn']], cols: ['Option', 'Share won back', 'Promo ROI', 'Margin effect'], head: 'Volt Coffee is 12% cheaper, which makes Bolt Brew 14% more expensive. The current price-marked pack loses money. A 2 for £2.20 multibuy wins back most of the share and still makes a profit.' },
   SALES: { label: 'Re-check promotion plan', scope: 'Orchard Juice, FreshMart, Indonesia', title: 'FreshMart juice bundle: run now, move it, or shrink it?', chip: 'From the RGM tool and supply planner, run on 14 October 2026', rows: [['Run as planned, weeks 43 to 46', '$0.9M', '55% stock ready', 'OTIF breach risk', 'crit'], ['Move to weeks 47 to 50 (recommended)', '$1.3M', '95% stock ready', 'Contract kept', 'good'], ['Halve the volume, keep dates', '$0.6M', '90% stock ready', 'Contract kept', 'warn']], cols: ['Option', 'Sales delivered', 'Stock', 'Delivery contract'], head: 'Only 55% of the stock for the bundle is ready, and Orchard Juice supply stays near 85% until week 44. Moving the bundle to weeks 47 to 50 sells about $0.4M more and keeps FreshMart above its 95% delivery target.' },
-  TRADE: { label: 'Review promotion results', scope: 'Crunch Chips, BigBox, USA', title: 'Crunch Chips at BigBox: where did the Buy-2-get-1 money go?', chip: 'From the RGM tool, after-the-event analysis', rows: [['Extra sales margin before checks', '$8.1M', '', '', 'good'], ['Our own sales moving into the deal', '−$2.7M', '', '', 'crit'], ['Shoppers stocking up (sales borrowed from later)', '−$1.4M', '', '', 'crit'], ['Real extra margin', '$5.4M', 'on $9.8M spend', 'ROI 0.55x', 'crit']], cols: ['Step', 'Margin', '', ''], head: 'Sales beat plan, but a third of the extra margin was just our own sales moving into the deal. Each $1 spent on the promotion earned back 55 cents. We recommend replacing it with a multibuy at 20% depth.' },
+  TRADE: { label: 'Review promotion results', scope: 'Crunch Chips, BigBox, USA', title: 'Crunch Chips at BigBox: where did the Buy-2-get-1 money go?', chip: 'Post-event analysis by Asper.ai', rows: [['Extra sales margin before checks', '$8.1M', '', '', 'good'], ['Our own sales moving into the deal', '−$2.7M', '', '', 'crit'], ['Shoppers stocking up (sales borrowed from later)', '−$1.4M', '', '', 'crit'], ['Real extra margin', '$5.4M', 'on $9.8M spend', 'ROI 0.55x', 'crit']], cols: ['Step', 'Margin', '', ''], head: 'Sales beat plan, but a third of the extra margin was just our own sales moving into the deal. Each $1 spent on the promotion earned back 55 cents. We recommend replacing it with a multibuy at 20% depth.' },
   GM: { label: 'Review promotion results', alias: 'TRADE' },
 };
 // why the RGM tool recommends what it does: the rule, the evidence, and what has to hold true
@@ -1233,7 +1267,7 @@ function rgmWhyBlock(key) {
 function openRgm(key) {
   const r = RGM[key].alias ? RGM[RGM[key].alias] : RGM[key];
   openLevel({ crumb: 'RGM check', title: r.head, rgm: true, blocks: [{ h: r.title, sub: r.chip + ' (illustrative)', html: `<div class="tbl-wrap"><table class="t rgm"><thead><tr>${r.cols.map((c, i) => `<th class="${i ? 'r' : ''}">${c}</th>`).join('')}</tr></thead><tbody>${r.rows.map(x => `<tr class="${x[4] === 'good' && /recommended|Real/.test(x[0]) ? 'rec' : ''}"><td>${esc(x[0])}</td>${x.slice(1, 4).map(v => `<td class="r num">${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <div class="rgm-act"><button class="btn primary" data-rgm-action="${key}">Create action from this</button><button class="btn" aria-disabled="true" title="Prototype only: opens the RGM tool">Open in RGM tool ↗</button></div>`, src: 'RGM tool (illustrative)' }].concat(rgmWhyBlock(key) || []) });
+    <div class="rgm-act"><button class="btn primary" data-rgm-action="${key}">Create action from this</button><button class="btn" aria-disabled="true" title="Prototype only: opens ${r === RGM.TRADE ? 'Asper.ai' : 'the RGM tool'}">Open in ${r === RGM.TRADE ? 'Asper.ai' : 'RGM tool'} ↗</button></div>`, src: r === RGM.TRADE ? 'Asper.ai post-event analysis (illustrative)' : 'RGM tool (illustrative)' }].concat(rgmWhyBlock(key) || []) });
 }
 
 /* ---------- panel helpers ---------- */
@@ -1352,7 +1386,7 @@ function openRISK() {
   const sv = tbl(['Warehouse', 'Days of stock', 'Stock value', 'Close to expiry (under 30 days)'], wh.map(w => `<tr><td>${w.name}, ${K.CMAP[w.c].name}</td><td class="r num">${w.days.toFixed(0)} <span class="muted">/ ${K.INV_TARGET_DAYS}</span></td><td class="r num">${fmt$(w.val)}</td><td class="r num">${w.exp ? fmt$(w.exp) : 'none'}</td></tr>`), `Stock close to expiry held by distributors and stores: ${fmt$(Object.values(K.NEAR_EXPIRY.channel).reduce((x, y) => x + y, 0))} (mostly India general trade).`);
   const nw = later[0];
   openLevel({ crumb: 'Supply risk, next 13 weeks', title: 'Supply risk, next 13 weeks', insight: r.length === 0 ? `No item runs short in the next 13 weeks. ${(() => { const wc = cs.slice().sort((a, b) => K.FORECAST_BIAS[b] - K.FORECAST_BIAS[a])[0]; return wc && K.FORECAST_BIAS[wc] > .05 ? `${K.CMAP[wc].name} forecasts are ${(K.FORECAST_BIAS[wc] * 100).toFixed(0)}% too high.` : ''; })()}`.trim() : `${r.length} items will run short in the next 13 weeks, ${near.length} of them in the next 4 weeks${near.length ? ` (${[...new Set(near.map(x => K.BMAP[x.b].name + ' in ' + K.CMAP[x.c].name))].join(', ')})` : ''}.${nw ? ` There is a new risk too: ${K.BMAP[nw.b].name} in ${K.CMAP[nw.c].name} from ${wkLabel(CW + 1 + nw.first)}.` : ''} ${(() => { const wc = cs.slice().sort((a, b) => K.FORECAST_BIAS[b] - K.FORECAST_BIAS[a])[0]; return wc && K.FORECAST_BIAS[wc] > .05 ? `${K.CMAP[wc].name} forecasts are ${(K.FORECAST_BIAS[wc] * 100).toFixed(0)}% too high.` : 'Forecasts show no consistent bias.'; })()}`,
-    blocks: [{ h: 'Items running short, week by week', sub: `Projected days of stock over the next 13 weeks, to ${wkLabel(CW + RISK_H)}`, html: heat, wide: true, src: 'Supply planner' }, { h: 'Forecast accuracy and bias', html: fa, src: 'Demand planning' }, { h: 'Plant capacity', html: pl, src: 'Manufacturing system' }, { h: 'Stock, value and expiry', html: sv, wide: true, src: 'Supply planner and ERP' }] }, true);
+    blocks: [{ h: 'Items running short, week by week', sub: `Projected days of stock over the next 13 weeks, to ${wkLabel(CW + RISK_H)}`, html: heat, wide: true, src: 'Anaplan 13-week supply plan (illustrative)' }, { h: 'Forecast accuracy and bias', html: fa, src: 'Demand planning' }, { h: 'Plant capacity', html: pl, src: 'Manufacturing system' }, { h: 'Stock, value and expiry', html: sv, wide: true, src: 'Supply planner and ERP' }] }, true);
 }
 function cogsExtras() {
   const sv = K.SAVINGS, tot = k => sv.reduce((x, s) => x + s[k], 0);
@@ -1404,7 +1438,7 @@ function paintBand() {
   $('#band-crumbs').innerHTML = [`<button class="link" data-crumb="0">${esc(CARD_DEF[OPEN][0])}</button>`].concat(drill.stack.slice(1).map((l, i) => i < drill.stack.length - 2 ? `<i>›</i><button class="link" data-crumb="${i + 1}">${esc(l.crumb)}</button>` : `<i>›</i><span>${esc(l.crumb)}</span>`)).join('');
   $('#band-title').innerHTML = emph(lv.insight || lv.title || '');
   const rg = RGM[OPEN] && !lv.rgm ? `<button class="btn rgm-btn" data-rgm="${OPEN}">${esc((RGM[OPEN].alias ? RGM[RGM[OPEN].alias] : RGM[OPEN]).label)}</button>` : '';
-  $('#band-tools').innerHTML = `${rg}<button class="icon-btn" data-bookmark aria-label="Add this view to my watchlist" title="Add this view to my watchlist">${ICON.bm}</button><button class="icon-btn" data-panel-action aria-label="Create action from this view" title="Create action from this view">${ICON.plus}</button><button class="icon-btn" data-share aria-label="Copy a link to this view" title="Copy a link to this exact view">${ICON.link}</button><button class="icon-btn" data-export aria-label="Export this view" title="Export this view (print or save as PDF)">${ICON.print}</button><button class="icon-btn" id="band-close" aria-label="Close panel" title="Close (Esc)">${ICON.x}</button>`;
+  $('#band-tools').innerHTML = `${rg}<button class="icon-btn" data-bookmark aria-label="Add this view to my watchlist" title="Add this view to my watchlist">${ICON.bm}</button><button class="btn sm cta band-assign" data-assign-level title="Assign what this view shows to an owner, with a due date">Assign</button><button class="icon-btn" data-share aria-label="Copy a link to this view" title="Copy a link to this exact view">${ICON.link}</button><button class="icon-btn" data-export aria-label="Export this view" title="Export this view (print or save as PDF)">${ICON.print}</button><button class="icon-btn" id="band-close" aria-label="Close panel" title="Close (Esc)">${ICON.x}</button>`;
   $('#pf-bar').innerHTML = filterBar();
   const body = $('#band-body');
   body.classList.remove('in'); void body.offsetWidth;
@@ -1422,11 +1456,12 @@ function paintBand() {
     if (first_) { const top = el.getBoundingClientRect().top + scrollY - 140; scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   });
 }
-const srcFor = id => ({ SHARE: 'Market data, 4 weeks to 20 Sep', PEN: 'Consumer panel', ROMI: 'Marketing mix model, Q2', OTIF: 'Supply planner', INVD: 'Supply planner', CHINV: 'Distributor system', DIST: 'Retail execution', EPS: 'FP&A and investor relations', QUAL: 'Quality system' })[id] || 'ERP, actuals to week 41';
+const srcFor = id => ({ SHARE: 'Market data, 4 weeks to 20 Sep', PEN: 'Consumer panel', ROMI: 'Marketing mix model, Q2', OTIF: 'Supply planner', INVD: 'Supply planner', CHINV: 'Distributor system', DIST: 'NielsenIQ / Circana retail audit (illustrative)', DISTOSA: 'NielsenIQ / Circana retail audit (illustrative)', EPS: 'FP&A and investor relations', QUAL: 'Quality system' })[id] || 'ERP, actuals to week 41';
 // after the panel has finished painting, bring it into view wherever you clicked from
 const showBand = () => setTimeout(() => { const el = $('#band'); if (!el.hidden) el.scrollIntoView({ block: 'start' }); }, 140);
 function closePanel() { $('#band').hidden = true; OPEN = null; PF = {}; PFOPEN = false; drill.stack = []; document.querySelectorAll('.card').forEach(c => { c.classList.remove('on'); c.setAttribute('aria-expanded', 'false'); }); hideTip(); }
 let PFOPEN = false;
+let HF = {};   // the home page scope, set from the header
 function filterBar() {
   const sel = (k, label, opts) => `<label class="fsel ${PF[k] ? 'set' : ''}"><span>${label}</span><select data-pf="${k}">${opts.map(([v, t]) => `<option value="${v}" ${(PF[k] || [''])[0] === v || (!PF[k] && !v) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
   const set = Object.keys(PF).some(k => PF[k]);
@@ -1482,7 +1517,7 @@ function runAsk(q, inPanel) {
   } else target = inPanel && OPEN ? OPEN : ids[0];
   if (r.per && r.per !== state.period) { state.period = r.per; if (!SHORT.includes(r.per) && state.comp === 'M') state.comp = 'T'; syncControls(); renderHome(); }
   openCard(target, r.f);
-  const chips = Object.entries(r.f).map(([k, v]) => k === 'c' ? K.CMAP[v[0]].name : k === 'b' ? K.BMAP[v[0]].name : K.CHMAP[v[0]].name);
+  const chips = Object.entries(r.f).map(([k, v]) => k === 'c' ? K.CMAP[v[0]].name : k === 'b' ? (v.length > 1 && new Set(v.map(b => K.BMAP[b].cat)).size === 1 ? K.BMAP[v[0]].cat : K.BMAP[v[0]].name) : K.CHMAP[v[0]].name);
   const out = $('#ask-out'); out.hidden = false;
   out.innerHTML = `<span class="ai" data-def="AI">Ask</span> Showing <b>${esc(CARD_DEF[target][0])}</b>${chips.length ? ' for ' + chips.map(c => `<span class="chip-f">${esc(c)}</span>`).join(' ') : ' for the whole company'}${r.per ? `, ${esc(PERIODS[r.per].label)}` : ''}.${via ? ` <span class="muted">${esc(via)}</span>` : ''}${r.unused.length ? ` <span class="muted">Not understood: ${esc(r.unused.slice(0, 4).join(', '))}.</span>` : ''}`;
   $('#ask-panel-in').value = q;
@@ -1519,7 +1554,8 @@ function cardIn(v) {
   const s = { period: state.period, comp: state.comp, year: state.year }; state.period = v.period; state.comp = v.comp; state.year = v.year || 'CAL';
   try { return withF(v.pf || {}, () => card(v.card)); } finally { Object.assign(state, s); }
 }
-const scopeOf = (pf, lv) => lv && lv.rgm ? (RGM[OPEN].alias ? RGM[RGM[OPEN].alias] : RGM[OPEN]).scope : [pf.c && K.CMAP[pf.c[0]].name, pf.b && K.BMAP[pf.b[0]].name, pf.ch && K.CHMAP[pf.ch[0]].name].filter(Boolean).join(', ') || 'Whole company';
+const cScope = c => !c ? null : c.length === 1 ? K.CMAP[c[0]].name : c.length >= K.COUNTRIES.length ? 'All markets' : ((K.REGIONS.find(r => r.countries.length === c.length && r.countries.every(x => c.includes(x))) || {}).id || c.map(x => K.CMAP[x].name).join(' and '));
+const scopeOf = (pf, lv) => lv && lv.rgm ? (RGM[OPEN].alias ? RGM[RGM[OPEN].alias] : RGM[OPEN]).scope : [cScope(pf.c), pf.b && (pf.b.length > 1 && new Set(pf.b.map(b => K.BMAP[b].cat)).size === 1 ? K.BMAP[pf.b[0]].cat : K.BMAP[pf.b[0]].name), pf.ch && K.CHMAP[pf.ch[0]].name].filter(Boolean).join(', ') || 'Whole company';
 const b64 = { enc: s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), dec: s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))) };
 
 /* ---------- bookmarks = a live watchlist ---------- */
@@ -1556,22 +1592,22 @@ function watchTile(r, compact) {
     <span class="pin-t">${esc(b.title)}</span>
     <span class="pin-k">${esc(CARD_DEF[b.v.card][0])}, ${esc(b.scope)}, ${b.v.card === 'ASK' ? 'custom view' : esc(PERIODS[b.v.period].label)}${deep}${compact ? `, ${esc(ROLES[b.v.role].label)}` : ''}</span>
     ${g ? `<span class="pin-g">${gapHtml(g)}</span>` : ''}
-    <span class="pin-c">Now <b class="num">${x.value}</b>${r.ch ? `, ${r.ch}` : ''}</span></button></div>`;
+    <span class="pin-c">Now <b class="num">${x.value}</b>${r.ch ? `, ${r.ch}` : ''}</span></button>
+    <label class="pin-teams"><input type="checkbox" data-bm-teams="${b.id}" ${b.teams ? 'checked' : ''}><span>Notify me in Teams when it crosses a value I set</span> <small>(illustrative)</small></label></div>`;
 }
-function renderPins() {
+function renderPins() {   // home v4: one slim strip of saved views between the summary split and My actions
   const rows = BM.filter(b => b.v.role === state.role).map(watchRow).filter(Boolean).sort((a, b) => b.rank - a.rank), all = rows.length;   // each role's watchlist is its own
-  $('#pins').hidden = false;
-  // the watchlist rides on the same shelf as the cards, to the right of them
-  const lab = `<div class="watch-lab"><b>Watchlist</b><span>${all ? 'Views you saved, with what has changed' : 'Nothing saved yet'}</span>${all ? `<button class="link" data-bm-all>See all ${all}</button>` : ''}</div>`;
-  const slot = rows.length < 4 ? `<p class="pin-empty">${ICON.bm} Save any panel or chart here. Each one shows the latest number and what has changed since you saved it.</p>` : '';
-  $('#pins').innerHTML = lab + rows.slice(0, 4).map(r => watchTile(r)).join('') + slot;
-  const go = $('#shelf-go'), sh = $('#shelf');
-  if (go && sh) { go.hidden = false; go.textContent = all ? `Watchlist, ${all} saved →` : 'Watchlist →';
-    go.onclick = () => sh.scrollTo({ left: sh.scrollLeft > 20 ? 0 : sh.scrollWidth, behavior: 'smooth' });
-    sh.onscroll = () => { go.textContent = sh.scrollLeft > 20 ? '← Core metrics' : (all ? `Watchlist, ${all} saved →` : 'Watchlist →'); }; }
+  const el = $('#pins'); el.hidden = false;
+  const tile = r => { const b = r.b, x = r.x; return `<button class="st-tile s-${x.sev}" data-pin="${b.id}" title="${esc(CARD_DEF[b.v.card][0] + ', ' + b.scope + '. Opens this view exactly as you saved it.')}"><i class="st-dot"></i><span class="st-t">${esc(b.title)}</span><span class="st-v">${x.value}</span><span class="st-c">${(r.ch || '').replace('since you saved it ', 'since ')}${r.flip ? `, was ${SEV[b.sev0].toLowerCase()}` : ''}</span>${b.teams ? `<span class="st-tm" title="You get a Microsoft Teams message when this changes (illustrative)">Teams alert</span>` : ''}</button>`; };
+  el.innerHTML = `<div class="st-lab"><b>Watchlist</b></div>`
+    + (rows.length ? `<div class="st-row">${rows.slice(0, 4).map(tile).join('')}</div><button class="link st-all" data-bm-all>See all ${all}</button>`
+      : `<p class="st-empty">${ICON.bm} Save any panel or chart with its bookmark button. It shows here with the latest number and what has changed since.</p>`);
   const changed = rows.filter(r => r.flip || !/no change/.test(r.ch)).length;
   $('#bm-count').textContent = changed || ''; $('#bm-count').title = changed ? `${changed} changed since you saved them` : '';
 }
+// a saved view can message you in Microsoft Teams when its status flips or its number moves (illustrative)
+document.addEventListener('change', e => { const c = e.target.closest('[data-bm-teams]'); if (!c) return; const b = BM.find(x => x.id === c.dataset.bmTeams); if (!b) return;
+  b.teams = c.checked; saveBM(); renderPins(); toast(c.checked ? 'Teams alert on. You get a Microsoft Teams message when this view changes status or moves (illustrative, nothing is sent).' : 'Teams alert off for this view.'); });
 function openWatchAll() {   // only the current role's saved views: a watchlist is personal
   const rows = BM.filter(b => b.v.role === state.role).map(watchRow).filter(Boolean).sort((a, b) => b.rank - a.rank), who = ROLES[state.role].label;
   openModal(`${who} watchlist`, rows.length ? `<p class="muted" style="margin:0 0 12px">These are the views you saved as ${esc(who)}, with the latest number. Opening one brings back the exact view, with the same filters, period and comparison. Other roles keep their own watchlists.</p><div class="pin-col">${rows.map(r => watchTile(r)).join('')}</div>` : `<p class="pin-empty">${ICON.bm} Nothing saved yet as ${esc(who)}. Open any metric and use the bookmark button on the panel or on a chart.</p>`);
@@ -1601,8 +1637,9 @@ function actionsList() {
   return mine.concat(actions().filter(a => !mine.find(m => m.id === a.id))).slice(0, 20);
 }
 const STEPS = ['New', 'Assigned', 'In progress', 'Done'];
+const odDays = a => { const n = Math.max(1, Math.round((TODAY - a.due) / DAY)); return `${n} day${n === 1 ? '' : 's'} overdue`; };
 // the one button an action offers next, used in My actions and in the summary rows
-const actionCta = a => a.status === 'New' ? `<button class="btn sm cta" data-assign="${esc(a.id)}">Assign</button>` : a.status === 'Assigned' ? `<button class="btn sm cta" data-mail="${esc(a.id)}">Email</button>` : a.status === 'In progress' ? `<button class="btn sm cta" data-meet="${esc(a.id)}">Book meeting</button>` : '';
+const actionCta = a => a.status === 'New' ? `<button class="btn sm cta" data-assign="${esc(a.id)}">Assign</button>` : a.status === 'Assigned' ? `<button class="btn sm cta" data-mail="${esc(a.id)}">Email</button>` : a.status === 'In progress' ? `<button class="btn sm cta" data-meet="${esc(a.id)}">Teams meeting invite</button>` : '';
 function actionsView() {
   const all = actionsList(), fl = state.actFilter || 'Open', pg = state.actPage || 0;
   const list = all.filter(a => fl === 'Open' ? a.status !== 'Done' : fl === 'Overdue' ? a.overdue : a.status === 'Done');
@@ -1612,11 +1649,11 @@ function actionsView() {
   return `<div class="act-top"><div class="seg-tabs" role="tablist">${Object.entries(cnt).map(([k, n]) => `<button role="tab" aria-selected="${fl === k}" data-af="${k}" class="${k === 'Overdue' && n ? 'alert' : ''}">${k} <span>${n}</span></button>`).join('')}</div>
     <button class="btn cta" data-new-act ${all.length >= 20 ? 'disabled title="Up to 20 actions in this prototype"' : ''}>${ICON.plus} New action</button></div>
     <div id="new-form" hidden></div>
-    <div class="atable" role="table" aria-label="My actions"><div class="arow ahead" role="row"><span>Action</span><span>Owner</span><span>Due</span><span class="r">At stake</span><span>Status</span><span></span></div>
+    <div class="atable" role="table" aria-label="My actions"><div class="arow ahead" role="row"><span>Action</span><span>Due</span><span>Owner</span><span class="r">At stake</span><span>Status</span><span></span></div>
     ${shown.map(a => `<div class="arow-wrap ${state.openAct === a.id ? 'exp' : ''}"><div class="arow" role="row">
       <button class="a-ask" data-exp="${esc(a.id)}" aria-expanded="${state.openAct === a.id}"><span class="chev">${ICON.chev}</span><span><b>${esc(a.title.split(/;/)[0].replace(/\.$/, ''))}</b><span class="a-why">${esc(a.issue)}${a.urgency === 'High' ? ', <em>high priority</em>' : ''}</span></span></button>
+      <span class="num ${a.overdue ? 'od' : ''}">${fmtD(a.due)}${a.overdue ? `<small>${odDays(a)}</small>` : ''}</span>
       <span class="a-own">${esc(a.poc.split(', ')[1] || a.poc.split(', ')[0])}<small>${esc(a.poc.split(', ')[1] ? a.poc.split(', ')[0] : '')}</small></span>
-      <span class="num ${a.overdue ? 'od' : ''}">${fmtD(a.due)}${a.overdue ? '<small>Overdue</small>' : ''}</span>
       <span class="num r">${a.value ? '~' + fmt$(a.value) : 'n/a'}</span>
       <span class="a-st"><i class="dot ${a.status.replace(' ', '-').toLowerCase()}"></i>${a.status}</span>
       <span class="a-btn">${primary(a)}<div class="menu-wrap"><button class="icon-btn sm" data-menu="${esc(a.id)}" aria-label="More actions" aria-haspopup="true">${ICON.more}</button></div></span></div>
@@ -1637,7 +1674,7 @@ function newActionForm(prefill) {
 }
 function menu(id, btn) {
   closeMenus(); const m = document.createElement('div'); m.className = 'menu'; m.setAttribute('role', 'menu');
-  m.innerHTML = `<button role="menuitem" data-mail="${esc(id)}">Email draft</button><button role="menuitem" data-meet="${esc(id)}">Meeting invite</button><button role="menuitem" data-assign="${esc(id)}">Reassign</button><button role="menuitem" data-see="${esc(id)}">Open analysis</button><button role="menuitem" data-step="${esc(id)}|Done">Mark done</button>`;
+  m.innerHTML = `<button role="menuitem" data-mail="${esc(id)}">Email draft</button><button role="menuitem" data-meet="${esc(id)}">Teams meeting invite</button><button role="menuitem" data-assign="${esc(id)}">Reassign</button><button role="menuitem" data-see="${esc(id)}">Open analysis</button><button role="menuitem" data-step="${esc(id)}|Done">Mark done</button>`;
   btn.parentElement.appendChild(m); m.querySelector('button').focus();
 }
 // an issue with no action of its own still has somewhere to go
@@ -1661,7 +1698,7 @@ const ASKD = {
   q: 'Why is Bolt Brew losing share in UK convenience, and what should we do?',
   pf: { b: ['bolt'], c: ['UK'], ch: ['CONV'] },
   applied: [['Brand', 'Bolt Brew Coffee'], ['Market', 'UK'], ['Channel', 'Convenience'], ['Period', 'Last 13 weeks'], ['Compare to', 'Last year']],
-  to: [['Bob Smith', 'UK Sales Director', 'bob.smith@northstar.example'], ['Chloe Adams', 'Bolt Brew Brand Director', 'chloe.adams@northstar.example'], ['Alice Brown', 'Head of RGM', 'alice.brown@northstar.example']],
+  to: [['UK sales', 'UK Sales Director', 'uk.sales.director@northstar.example'], ['Bolt Brew brand', 'Bolt Brew Brand Director', 'bolt.brand.director@northstar.example'], ['Revenue growth', 'Head of RGM', 'head.rgm@northstar.example']],
 };
 CARD_DEF.ASK = ['Ask Pulse', 'A custom view Pulse built from your question.', '']; DEF.ASK = CARD_DEF.ASK;
 const cardBase = card; card = function (id) { return id === 'ASK' ? { ...cardBase('SHARE'), per: '4 weeks to 20 Sep' } : cardBase(id); };
@@ -1698,7 +1735,7 @@ PANEL.ASK = () => openAskView(false);
 const sleepD = ms => new Promise(r => setTimeout(r, ms));
 async function askBuild() {   // the "building" moment, then the finished view
   OPEN = 'ASK'; PF = { ...ASKD.pf }; drill.stack = []; drill.root = 'ASK';
-  const steps = ['Understanding the question', 'Choosing the data: market share, sales, consumer panel, brand tracker, RGM tool', 'Applying filters: Bolt Brew Coffee, UK, convenience, last 13 weeks, against last year', 'Building 4 charts', 'Writing the answer and the recommendation'];
+  const steps = ['Understanding the question', 'Choosing the data: market share and store audits from NielsenIQ / Circana (illustrative), sales, consumer panel, brand tracker, RGM tool', 'Applying filters: Bolt Brew Coffee, UK, convenience, last 13 weeks, against last year', 'Building 4 charts', 'Writing the answer and the recommendation'];
   openLevel({ crumb: 'Your question', title: 'Building your view…', ask: true, blocks: [{ h: '', wide: true, html: `<ul class="build">${steps.map((s, i) => `<li class="bstep" data-bs="${i}"><span class="ic" aria-hidden="true"></span>${esc(s)}</li>`).join('')}</ul>` }] }, true);
   await sleepD(80); $('#band').scrollIntoView({ behavior: 'smooth', block: 'start' });
   for (let i = 0; i < steps.length; i++) { const li = document.querySelector(`[data-bs="${i}"]`); if (!li) break; li.classList.add('run'); await sleepD(520); li.classList.remove('run'); li.classList.add('done'); }
@@ -1706,10 +1743,11 @@ async function askBuild() {   // the "building" moment, then the finished view
 }
 function askEmailHtml() {
   const x = askFacts(), link = location.href.split('#')[0] + '#v=' + b64.enc(JSON.stringify({ role: state.role, card: 'ASK', pf: ASKD.pf, period: state.period, comp: state.comp, year: state.year, path: [], chart: null }));
-  const body = `Hi Bob, Chloe and Alice,\n\nBolt Brew lost ${Math.abs(x.chg).toFixed(1)} share points in the UK since Volt Coffee cut its convenience price by 12% in week 34. About ${x.buyers}M buyers switched.\n\n• Convenience sales: ${sPct(x.g)} against last year (last 13 weeks)\n• Price gap: Bolt Brew now costs 14% more than Volt\n• Our price-marked pack earns back only ${Math.round(x.pmp.roi * 100)} cents per $1\n• The RGM tool recommends a 2 for £2.20 multibuy: about ${x.rec[1]} of share at ${x.rec[2]} return\n\nCan we agree the multibuy at Thursday's UK review?\n\nOpen the exact view: ${link}`;
+  const body = `Hi all,\n\nBolt Brew lost ${Math.abs(x.chg).toFixed(1)} share points in the UK since Volt Coffee cut its convenience price by 12% in week 34. About ${x.buyers}M buyers switched.\n\n• Convenience sales: ${sPct(x.g)} against last year (last 13 weeks)\n• Price gap: Bolt Brew now costs 14% more than Volt\n• Our price-marked pack earns back only ${Math.round(x.pmp.roi * 100)} cents per $1\n• The RGM tool recommends a 2 for £2.20 multibuy: about ${x.rec[1]} of share at ${x.rec[2]} return\n\nCan we agree the multibuy at Thursday's UK review?\n\nOpen the exact view: ${link}`;
   return { body, html: `<dl class="mf"><dt>To</dt><dd><div class="to-chips" id="demo-to"></div></dd><dt>Subject</dt><dd>Bolt Brew in UK convenience: why we are losing share and what to do</dd></dl>
     <textarea id="demo-body" rows="13" readonly>${esc(body)}</textarea>
     <div class="attach">${ICON.print}<span><b>Bolt Brew UK convenience, Pulse view.pdf</b> <span class="muted">Snapshot of this view, data to the week ending 11 Oct 2026</span></span></div>
+    <label class="teams-opt"><input type="checkbox" id="demo-teams" checked><span><b>Also share to the #uk-coffee channel in Microsoft Teams</b> <span class="muted">(illustrative)</span><small>Posts the answer, the PDF snapshot and a link to this view for the UK coffee team.</small></span></label>
     <div class="m-act"><button class="btn primary" id="demo-send">Send</button><button class="btn" data-close>Cancel</button></div><p class="foot">Demo: nothing is sent from the prototype. In production this opens in your own email app.</p>` };
 }
 async function askEmail() {
@@ -1719,7 +1757,8 @@ async function askEmail() {
 }
 async function askSend() {
   const s = $('#demo-send'); if (s) { s.classList.remove('demo-ring'); s.textContent = 'Sending…'; s.disabled = true; await sleepD(650); s.textContent = '✓ Sent (demo)'; }
-  await sleepD(550); closeModal(); toast('Demo: email prepared for Bob, Chloe and Alice. Nothing was sent.');
+  const tm = $('#demo-teams'), teams = !tm || tm.checked;
+  await sleepD(550); closeModal(); toast(`Demo: email prepared for the UK Sales Director, the Bolt Brew Brand Director and the Head of RGM${teams ? ', and a post for #uk-coffee in Microsoft Teams' : ''}. Nothing was sent.`);
 }
 async function askSave() {
   if (OPEN !== 'ASK') openAskView(false);
@@ -1728,15 +1767,15 @@ async function askSave() {
   const v = { role: state.role, card: 'ASK', pf: { ...ASKD.pf }, period: state.period, comp: state.comp, year: state.year, path: [], chart: null }, x = cardIn(v);
   BM = BM.filter(y => y.id !== 'demo-ask'); BM.unshift({ id: 'demo-ask', ts: Date.now(), v, title: ASKD.q, scope: 'Bolt Brew Coffee, UK, Convenience', v0: x.raw, sev0: x.sev, val0: x.value }); saveBM(); renderPins();
   toast('Saved to your watchlist. It reopens this exact view and shows what has changed.');
-  await sleepD(500); const tile = [...document.querySelectorAll('#pins .pin')].find(p => p.querySelector('[data-pin="demo-ask"]'));
+  await sleepD(900); const tile = $('#pins [data-pin="demo-ask"]') || $('#pins');
   if (tile) { tile.scrollIntoView({ behavior: 'smooth', block: 'center' }); tile.classList.add('new'); }
 }
 const DEMO_STEPS = [
   { n: 0, t: 'See Ask in action', d: 'A short demo that is the same for every role. You ask a question in plain English and Pulse builds a custom view. Then you email it to the team and save it for later.', btn: 'Start' },
   { n: 1, t: 'Ask a question', d: 'Type it the way you would ask an analyst. There are no menus and no filters to set.', btn: 'Build my view', run: async () => { closeModal(); scrollTo({ top: 0, behavior: 'smooth' }); const i = $('#ask-global-in'), fm = $('#ask-global'); i.value = ''; i.focus(); fm.classList.add('demo-ring'); for (const ch of ASKD.q) { i.value += ch; await sleepD(24); } fm.classList.remove('demo-ring'); } },
   { n: 2, t: 'Pulse builds a custom view', d: 'Pulse works out what you mean, sets the filters, picks the charts and writes the answer. Every chart shows its source.', btn: 'Email the results', run: async () => { $('#ask-global-in').blur(); await askBuild(); } },
-  { n: 3, t: 'Email the results', d: 'Send the answer to the people who need to act. The email has the summary, a PDF snapshot and a link to this exact view.', btn: 'Send', run: askEmail },
-  { n: 3, t: 'Sent', d: 'Bob, Chloe and Alice get the summary and the link. In this demo nothing actually leaves the prototype.', btn: 'Bookmark this view', run: askSend },
+  { n: 3, t: 'Email the results', d: 'Send the answer to the people who need to act, by email and to the team\'s Microsoft Teams channel. It carries the summary, a PDF snapshot and a link to this exact view.', btn: 'Send', run: askEmail },
+  { n: 3, t: 'Sent', d: 'The UK Sales Director, the Bolt Brew Brand Director and the Head of RGM get the summary and the link, and the #uk-coffee channel gets the same post in Teams. In this demo nothing actually leaves the prototype.', btn: 'Bookmark this view', run: askSend },
   { n: 4, t: 'Bookmark it for later', d: 'It goes on your watchlist. Tomorrow it opens this exact view and shows what has changed since today.', btn: 'Finish', run: askSave },
 ];
 let demoAt = -1, demoBusy = false;
@@ -1752,53 +1791,100 @@ async function demoNext() {
 }
 function demoStart() { demoAt = -1; demoBusy = false; closeModal(); demoNext(); }
 function demoExit() { demoAt = -1; $('#coach').hidden = true; document.querySelectorAll('.demo-ring').forEach(e => e.classList.remove('demo-ring')); }
+// the demo card sits next to what the current step is doing, not in a corner
+const shown_ = el => el && !el.closest('[hidden]') && el.getBoundingClientRect().width ? el : null;
+const modalOn = () => shown_($('#modal .modal-in'));
+[() => $('[data-demo]'), () => $('#ask-global'), () => shown_($('#band')) || $('#ask-global'), () => modalOn() || shown_($('#band')),
+  () => modalOn() || shown_($('#band-tools [data-bookmark]')), () => demoBusy ? shown_($('#band-tools [data-bookmark]')) : shown_($('#pins [data-pin="demo-ask"]')) || shown_($('#pins'))].forEach((f, i) => { DEMO_STEPS[i].at = f; });
+function placeCoach() {
+  const el = $('#coach'); if (el.hidden || demoAt < 0) return;
+  const t = DEMO_STEPS[demoAt].at && DEMO_STEPS[demoAt].at(), W = innerWidth, H = innerHeight, w = el.offsetWidth, h = el.offsetHeight, m = 12;
+  let x = W - w - 28, y = H - h - 28;
+  const r = t && t.getBoundingClientRect();
+  if (r && r.width && r.bottom > 0 && r.top < H) {
+    if (r.width > W * .6 && r.height > H * .5) { x = r.right - w - 24; y = Math.max(r.top + 84, 84); }   // a big panel: inside its top-right corner
+    else if (r.width > W * .6) { x = r.right - w; y = H - r.bottom >= h + 2 * m ? r.bottom + m : r.top - h - m; }   // a wide strip: just below or above it
+    else if (W - r.right >= w + 2 * m) { x = r.right + m; y = r.top; }
+    else if (H - r.bottom >= h + 2 * m) { x = r.left; y = r.bottom + m; }
+    else if (r.left >= w + 2 * m) { x = r.left - w - m; y = r.top; }
+    else if (r.top >= h + 2 * m) { x = r.left; y = r.top - h - m; }
+  }
+  el.style.left = Math.min(Math.max(m, x), W - w - m) + 'px'; el.style.top = Math.min(Math.max(72, y), H - h - m) + 'px';
+}
+let coachTick = null;
+const renderCoachBase = renderCoach;
+renderCoach = function () { renderCoachBase(); placeCoach(); clearInterval(coachTick); coachTick = setInterval(() => { if ($('#coach').hidden) clearInterval(coachTick); else placeCoach(); }, 200); };
+addEventListener('scroll', placeCoach, { passive: true }); addEventListener('resize', placeCoach);
 // typing the demo question yourself opens the same custom view
 const runAskBase = runAsk;
 runAsk = function (q, inPanel) { if (/bolt/i.test(q) && /convenience/i.test(q) && /(share|losing)/i.test(q)) { askBuild(); return; } return runAskBase(q, inPanel); };
 
 /* ======================================================================
-   Metric pyramid: each role sees its L1 metrics as cards. Opening one shows
-   the existing analysis plus its L2 metrics; an L2 opens its L3s in a side panel.
+   Metric tree: one tree for the whole company. Each role sees its own core
+   metrics as home cards; every metric lists the parts that add up to it
+   ('sum') or the levers that move it ('levers'), and the lenses to read
+   beside it, which never enter a sum. Drilling stays in the one panel.
    ====================================================================== */
-const TREE = {
-  CEO: [['OSG', [['OVG', ['PEN', 'BUY', 'REP']], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']], ['SHARE', ['CATG', 'DIST', 'OSA']], ['BEQ', ['AWR', 'CONS', 'INNO']]]],
-    ['OM', [['GM', ['ICI', 'OEE', 'RCL', 'TRIR']], ['AMS', ['ROMI', 'ROAS', 'ESOV']], ['DEX', ['LCPC']], ['OHD', ['PRODS']]]],
-    ['FCFC', [['CCC', ['DIO', 'DSO', 'DPO', 'EO']], ['CAPEX', ['ROIC']]]],
-    ['POR', [['OTD', ['COTD', 'OFCT']], ['CFR', ['FA', 'SOTIF']], ['DFD', []], ['ODA', []]]]],
-  COO: [['POR', [['OTD', ['COTD', 'OFCT']], ['CFR', ['FA', 'SOTIF']], ['DFD', []], ['ODA', []]]],
-    ['GM', [['ICI', []], ['OEE', []], ['DEX', ['LCPC']], ['RCL', []]]],
-    ['FCFC', [['CCC', ['DIO', 'DPO', 'EO']], ['CAPEX', ['ROIC']]]],
-    ['TRIR', []]],
-  CFO: [['OSG', [['OVG', []], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']]]],
-    ['GM', [['ICI', []], ['PRODS', []], ['RCL', []]]],
-    ['OM', [['AMS', ['ROMI']], ['DEX', []], ['OHD', []]]],
-    ['FCFC', [['CCC', ['DIO', 'DSO', 'DPO', 'ODA']], ['CAPEX', ['ROIC']]]]],
-  CSO: [['OSG', [['OVG', ['PEN', 'BUY']], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']]]],
-    ['SHARE', [['CATG', []], ['DIST', []], ['OSA', []]]],
-    ['POR', [['OTD', []], ['CFR', ['FA']], ['ODA', []]]],
-    ['DSO', []]],
-  CMO: [['BEQ', [['AWR', []], ['CONS', []], ['INNO', []]]],
-    ['OSG', [['OVG', ['PEN', 'BUY', 'REP']], ['PMX', ['MIX', 'PRC']], ['SHARE', ['CATG']]]],
-    ['AMS', [['ROMI', []], ['ROAS', []], ['ESOV', []]]]],
+const NODE = {
+  OSG: { k: 'sum', kids: ['OVG', 'PMX'], lens: ['SHARE', 'CATG', 'BEQ'] },
+  OVG: { k: 'levers', kids: ['PEN', 'BUY', 'DIST', 'OSA', 'CFR'] },
+  PMX: { k: 'sum', kids: ['PRC', 'MIX', 'TRADE'] },
+  TRADE: { k: 'levers', kids: ['TPR', 'PRC', 'MIX'] },
+  SHARE: { k: 'levers', kids: ['PEN', 'DIST', 'OSA', 'ESOV'], lens: ['CATG', 'BEQ'] },
+  SSG: { k: 'sum', kids: ['PEN', 'BUY', 'REP'], lens: ['CATG', 'CHINV'] },
+  BEQ: { k: 'sum', kids: ['AWR', 'CONS'], lens: ['ESOV', 'INNO'] },
+  AP: { k: 'levers', kids: ['ROMI', 'ROAS', 'ESOV', 'AMS'] },
+  AMS: { k: 'levers', kids: ['ROMI', 'ROAS', 'ESOV'] },
+  OM: { k: 'sum', kids: ['GM', 'AMS', 'DEX', 'OHD'] },
+  GM: { k: 'sum', kids: ['PRC', 'TRADE', 'MIX', 'ICI', 'PRODS'] },
+  PRODS: { k: 'levers', kids: ['OEE'] },
+  DEX: { k: 'levers', kids: ['LCPC'] },
+  EPS: { k: 'levers', kids: ['OSG', 'GM', 'OM'], lens: ['FCFC'] },
+  FCFC: { k: 'sum', kids: ['CCC', 'CAPEX'], lens: ['OM'] },
+  CCC: { k: 'sum', kids: ['DIO', 'DSO', 'DPO'] },
+  DIO: { k: 'levers', kids: ['EO', 'FA'] },
+  CAPEX: { k: 'levers', kids: ['ROIC'] },
+  POR: { k: 'sum', kids: ['OTD', 'CFR', 'DFD', 'ODA'] },
+  OTD: { k: 'levers', kids: ['COTD', 'OFCT'] },
+  CFR: { k: 'levers', kids: ['FA', 'SOTIF', 'OEE'] },
+  SALES: { k: 'levers', kids: ['OVG', 'PMX', 'DIST', 'CFR'] },
+  DIST: { k: 'levers', kids: ['OSA', 'CFR', 'FA'] },
+  CHINV: { k: 'levers', kids: ['SSG', 'DSO', 'FA'] },
+  COGS: { k: 'levers', kids: ['ICI', 'PRODS', 'OEE', 'LCPC'] },
+  RISK: { k: 'levers', kids: ['FA', 'SOTIF', 'DIO', 'EO'] },
+  TRIR: { k: 'levers', kids: ['RCL', 'QUAL'] },
 };
-Object.keys(TREE).forEach(r => { ROLE_CARDS[r] = TREE[r].map(n => n[0]); });
+// home cards per role, from the value-tree review (the CEO's earnings line sits in the summary, not on a card)
+Object.assign(ROLE_CARDS, { CEO: ['OSG', 'SHARE', 'OM', 'FCFC'], CFO: ['EPS', 'OSG', 'GM', 'FCFC'], CMO: ['SHARE', 'SSG', 'BEQ', 'AP'], CSO: ['SALES', 'TRADE', 'DIST', 'CHINV'], COO: ['POR', 'COGS', 'RISK', 'TRIR'] });
 const LOGIC = {
-  OSG: 'Organic sales growth = volume growth + price/mix. Market share and brand health explain the why.',
-  OM: 'Operating margin = gross margin − marketing − distribution − overheads, each as a % of net sales.',
-  FCFC: 'Cash conversion = free cash flow ÷ net earnings. Working capital and capital spending decide it.',
-  POR: 'Perfect order = on time × in full × damage free × correct paperwork.',
-  GM: 'Gross margin = 1 − cost of goods ÷ net sales. These are the cost levers behind it.',
-  SHARE: 'Share change is roughly our growth minus category growth. Distribution and shelf availability show how much of the gap is reach.',
-  BEQ: 'Brand equity moves before penetration and share do, so it warns early.',
+  OSG: 'Organic sales growth = volume growth + price/mix. Market share, category growth and brand equity explain why, but are not part of the sum.',
+  OVG: 'Volume moves with how many households buy, how often they buy, how many stores stock us, whether the shelf is full and whether we ship in full.',
+  PMX: 'Price/mix = pricing + mix − the change in trade spend.',
+  TRADE: 'Trade spend pays back when promotions earn more margin than they cost and list price increases stick.',
+  SHARE: 'Share moves with buyers, store reach, full shelves and how loudly we advertise for our size. Category growth is read beside it.',
+  SSG: 'Shopper sales = buying households × trips per household × spend per trip. Repeat rate says whether new buyers stay.',
+  BEQ: 'Brand equity is the average of awareness, consideration and preference. It moves before penetration and share do.',
+  AP: 'Marketing return depends on what each channel earns back and whether we spend enough for our share.',
   AMS: 'How much we spend on brands, and whether that spend pays back.',
-  OVG: 'Volume = households × penetration × buying rate.',
-  PMX: 'Price/mix = pricing + mix, after trade spend.',
+  OM: 'Operating margin = gross margin − marketing − distribution − overheads, each as a % of net sales.',
+  GM: 'Gross margin after trade moves with pricing, trade spend, mix, input costs and productivity savings.',
+  EPS: 'Earnings per share follows sales, gross margin and operating margin. Cash conversion is read beside it.',
+  FCFC: 'Cash conversion = free cash flow ÷ net earnings. Working capital and capital spending decide it.',
   CCC: 'Cash conversion cycle = inventory days + receivable days − payable days.',
+  DIO: 'Inventory days rise when forecasts are too high or stock goes out of date.',
   CAPEX: 'Capital spending should earn a return above our cost of capital.',
+  POR: 'Perfect order = on time × in full × damage free × correct paperwork.',
   OTD: 'Late deliveries usually start with carriers or slow order handling.',
-  CFR: 'Short shipments usually start with a poor forecast or a late supplier.',
+  CFR: 'Short shipments usually start with a poor forecast, a late supplier or a slow line.',
+  SALES: 'Sales against target move with volume, price/mix, store reach and whether we ship in full.',
+  DIST: 'Reach only sells when the shelf is full, we ship in full and the forecast is right.',
+  CHINV: 'Channel stock builds when we ship more than shoppers buy. Slow payment and a high forecast make it worse.',
+  COGS: 'Cost per case moves with input prices, savings delivered, plant efficiency and freight.',
+  RISK: 'Stock runs short when forecasts are off or suppliers are late, and runs long when stock ages.',
+  TRIR: 'Safety comes first. Recalls and complaints show whether quality holds.',
   DEX: 'The cost of getting product from the factory to the customer.',
   OHD: 'The cost of the corporate centre, the sales organisation and support functions.',
+  PRODS: 'Savings land when plants run efficiently.',
 };
 
 /* ---------- metric registry ---------- */
@@ -1843,7 +1929,7 @@ mx('PRC', 'Pricing', 'Price increases that actually stuck at the shelf, after di
   f: (f, P) => { const pz = pricing(f, P); return { raw: pz.real, craw: pz.plan, insight: isFinite(pz.recovery) ? `Price increases have won back ${(pz.recovery * 100).toFixed(0)}% of the cost increase` : '' }; } });
 mx('MIX', 'Mix', 'Whether shoppers are trading up or down across packs, products and channels.', 'Change in net sales per case not explained by price', { rk: 'pts', rg: 1, by: 'cb', refL: 'Plan',
   f: (f, P) => { const br = bridge(f, P, 'ns'), C = compAgg(f, P), m = br.items.find(i => i[2] === 'mix')[1] / C.ns; return { raw: m, craw: 0, ref: 'Plan 0.0%', insight: m < 0 ? 'Shoppers are moving to cheaper packs and channels' : 'Shoppers are moving to pricier packs and channels' }; } });
-mx('TPR', 'Trade promotion ROI', 'Whether promotions create real extra sales or pay for sales we would have made anyway.', 'Extra gross margin ÷ promotion cost', { rk: 'x', rg: 1, by: 'c', per: 'Evaluated promotions', prov: 'RGM tool',
+mx('TPR', 'Trade promotion ROI', 'Whether promotions create real extra sales or pay for sales we would have made anyway.', 'Extra gross margin ÷ promotion cost', { rk: 'x', rg: 1, by: 'c', per: 'Evaluated promotions', prov: 'Asper.ai (illustrative)',
   f: f => { const ev = promosIn(f).filter(p => p.roi != null); if (!ev.length) return { raw: null, craw: null, value: 'n/a', insight: 'No promotions evaluated here' }; const roi = ev.reduce((x, p) => x + p.incGM, 0) / ev.reduce((x, p) => x + p.spend, 0);
     return { raw: roi, craw: 1.2, insight: `${ev.filter(p => p.roi < .8).length} of ${ev.length} promotions earn back less than 80 cents per dollar` }; } });
 mx('CATG', 'Category growth', 'How fast the whole category is growing. Separates growth the market gave us from growth we earned.', 'Category sales ÷ last year category sales − 1', { rk: 'pts', rg: 0, by: 'cb', vs: 'our growth', refL: 'Our growth', per: '4 weeks to 20 Sep', prov: 'Market data',
@@ -1869,7 +1955,7 @@ mx('REP', 'Repeat rate', 'Whether buyers come back after their first purchase.',
 /* ---------- margin and cost ---------- */
 mx('ICI', 'Input cost inflation', 'Raw and packaging material cost against budget.', 'Current material price ÷ budget price − 1, weighted by spend', { rk: 'pts', rg: -1, by: 'b', vs: 'budget', refL: 'Budget', per: 'Year to date', prov: 'Procurement system',
   f: (f, P) => { let w = 0, s = 0, worst = null; for (const b of brandsOf(f)) { const B = K.BMAP[b], cm = K.COMMODITIES.find(x => x.name === B.mat); if (!cm || !has({ ...f, b: [b] })) continue; const c = agg({ ...f, b: [b] }, 'A', P.w0, P.w1).cogs * B.matShare; w += c; s += c * cm.vsBudget; if (!worst || cm.vsBudget > worst.vsBudget) worst = cm; }
-    return { raw: w ? s / w : 0, craw: 0, ref: 'Budget 0.0%', insight: worst ? `${worst.name} is ${pcn(worst.vsBudget)} over budget and ${pcn(worst.hedge)} is locked in` : '' }; } });
+    return { raw: w ? s / w : 0, craw: 0, ref: 'Budget 0.0%', insight: worst ? `${worst.name} ${/s$/.test(worst.name) ? 'are' : 'is'} ${pcn(worst.vsBudget)} over budget, with ${pcn(worst.hedge)} hedged` : '' }; } });
 mx('OEE', 'Overall equipment effectiveness', 'How productively the plants use their lines, after downtime, speed losses and waste.', 'Availability × performance × quality', { rk: 'pts', rg: 1, by: 'c', vs: 'target', refL: 'Target', per: 'Last 13 weeks', prov: 'Manufacturing system',
   f: f => { const ps = K.PLANTS.filter(p => countriesOf(f).includes(p.c)); if (!ps.length) return { raw: null, craw: null, value: 'n/a' }; const w = ps.slice().sort((a, b) => (a.oee - a.oeeT) - (b.oee - b.oeeT))[0];
     return { raw: ps.reduce((x, p) => x + p.oee, 0) / ps.length, craw: ps.reduce((x, p) => x + p.oeeT, 0) / ps.length, insight: `${w.name} is furthest behind, at ${pcn(w.oee)} against ${pcn(w.oeeT)}` }; } });
@@ -1952,68 +2038,181 @@ const FULL = { OSG: () => band('C1'), OVG: () => openSSG(), PMX: () => openTile(
   FCFC: () => PANEL.FCF(), CCC: () => PANEL.FCF(), DIO: () => band('O1'), DSO: openDSO, DPO: () => PANEL.FCF(), EO: () => band('O1'), CAPEX: () => PANEL.FCF(), ROIC: () => PANEL.FCF(),
   POR: () => band('O2'), OTD: () => band('O2'), CFR: () => band('O2'), DFD: () => band('O2'), ODA: () => band('O2'), COTD: () => band('O2'), OFCT: () => band('O2'), FA: () => openRISK(), SOTIF: () => openSAFQ(), PEN: () => openPENF(), BUY: () => openPENF(), REP: () => openPENF() };
 
-/* ---------- L2 tiles inside the panel ---------- */
-function nodeKids(l1, l2) { for (const t of [TREE[state.role], TREE.CEO]) { const a = t.find(x => x[0] === l1); if (!a) continue; if (!l2) return a[1].map(x => x[0]); const b = a[1].find(x => x[0] === l2); if (b) return b[1]; } return []; }
-function findPath(tree, id) { for (const [l1, kids] of tree) { if (l1 === id) return [l1]; for (const [l2, l3s] of kids) { if (l2 === id) return [l1, l2]; if (l3s.includes(id)) return [l1, l2, id]; } } return null; }
+/* ---------- reading the tree ---------- */
 // "Now 2.9%" on its own says nothing, so the comparison it is judged against comes with it
 const nowLine = (id, x) => { const ref = (x.ref || '').split(/, |\. /)[0];
   const named = ref && ref.length <= 30 && /^(Plan|Target|Budget|Last year|Latest estimate|Last month|Guidance|Our growth|Share of market|Normal)\b/.test(ref);
-  const vs = named ? `, ${esc(lowFirst(ref))}` : x.craw != null && isFinite(x.craw) && TREND_UNITS[x.rk] ? `, ${esc(VS[id] || compName())} ${x.rk === 'eps' ? '$' + x.craw.toFixed(2) : fmtV(x.rk, x.craw)}` : '';
+  const cv = x.craw == null || !isFinite(x.craw) ? null : x.rk === 'eps' ? '$' + x.craw.toFixed(2) : x.rk === 'wks' ? x.craw.toFixed(1) + ' wks' : x.rk === 'pct' && /^\$/.test(x.value) ? '$' + x.craw.toFixed(2) : TREND_UNITS[x.rk] ? fmtV(x.rk, x.craw) : null;
+  const vs = named ? `, ${esc(lowFirst(ref))}` : cv ? `, ${esc((VS[id] || compName()).replace(/^the /, ''))} ${cv}` : '';
   return `<span class="c-now">Now <b class="num">${x.value}${x.valueUnit ? ' ' + x.valueUnit : ''}</b>${vs}</span>`; };
-const gapLine = (id, x) => { const g = gapOf(id, x); return `<span class="c-gap">${g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b><span>${g.words}</span>` : g ? `<b class="flat">${g.words}</b>` : `<b class="num">${x.value}</b>`}</span>`; };
-function l2Block(l1) {
-  const kids = nodeKids(l1); if (!kids.length) return null;
-  const tiles = kids.map(id => { const x = card(id), n = nodeKids(l1, id).length; return `<button class="l2 s-${x.sev}" data-l2="${l1}|${id}"><span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="l2-k">${n ? `${n} driver${n > 1 ? 's' : ''}` : 'Details'} →</span></span><span class="c-name">${esc(CARD_DEF[id][0])}</span>${gapLine(id, x)}${nowLine(id, x)}<span class="l2-i">${esc(x.insight)}</span></button>`; }).join('');
-  return { h: `What adds up to ${CARD_DEF[l1][0].toLowerCase()}`, sub: LOGIC[l1] || '', wide: true, html: `<div class="l2-row" style="--n:${kids.length}">${tiles}</div>`, src: 'Same filters and period as this panel. Click a metric to see what drives it.' };
+const kidsOf = id => ((NODE[id] || {}).kids || []).filter(k => CARD_DEF[k]);
+const lensOf = id => ((NODE[id] || {}).lens || []).filter(k => CARD_DEF[k]);
+function findPath(id) {
+  const walk = (n, d) => n === id ? [n] : d >= 3 ? null : kidsOf(n).concat(lensOf(n)).reduce((acc, k) => acc || (p => p && [n].concat(p))(walk(k, d + 1)), null);
+  for (const r of ROLE_CARDS[state.role].concat(...Object.values(ROLE_CARDS))) { const p = walk(r, 0); if (p) return p; }
+  return null;
+}
+const SEV_RANK = { crit: 0, warn: 1, opp: 2, good: 3 };
+// how far off, relative to the goal, so a gap in days and a gap in points can be ranked together
+const offBy = x => x.raw == null || x.craw == null || !isFinite(x.raw) || !isFinite(x.craw) || !x.rg ? 0 : Math.max(0, (x.craw - x.raw) * x.rg) / (Math.abs(x.craw) || 1);
+const rankRows = rows => rows.sort((a, b) => SEV_RANK[a.x.sev] - SEV_RANK[b.x.sev] || offBy(b.x) - offBy(a.x));
+// the parts of a metric, worst first: on a card these are its possible reasons
+const reasonsOf = id => {
+  // parts first, by what each does to the metric (the biggest hit first), then the levers; a part shows its effect on the metric
+  const p = typeof partsOf === 'function' ? partsOf(id) : null, nm = typeof nounOf === 'function' ? nounOf(id) : lowFirst(CARD_DEF[id][0]);
+  const parts = p ? Object.entries(p.eff).map(([k, v]) => { const x = card(k), hurt = p.bad ? v : -v, sev = hurt > 1e-9 ? (x.sev === 'good' ? 'warn' : x.sev) : 'good';
+    return { id: k, hurt, x: { ...x, sev }, g: Math.abs(v) < 1e-9 ? { arrow: '', amt: '', words: 'No effect on ' + nm } : { arrow: v > 0 ? '▲' : '▼', amt: p.fmt(Math.abs(v)).replace(/^[+−]/, ''), words: (v > 0 ? 'onto ' : 'off ') + nm } }; }).sort((a, b) => b.hurt - a.hurt) : [];
+  const rest = rankRows(kidsOf(id).filter(k => !parts.some(r => r.id === k)).map(k => { const x = card(k); return { id: k, x, g: gapOf(k, x) }; }));
+  return parts.filter(r => r.hurt > 1e-9).concat(rest, parts.filter(r => r.hurt <= 1e-9));
+};
+const dotEnd = t => /[.!?]$/.test(t) ? t : t + '.';
+const gapWords = g => g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b> ${esc(g.words)}` : g ? esc(g.words) : '';
+
+/* ---------- who should own an issue: the local owner first ---------- */
+const AREA = { sales: ['OVG', 'SALES', 'DIST', 'OSA', 'CHINV', 'DSO'], rgm: ['PMX', 'PRC', 'MIX', 'TRADE', 'TPR'], brand: ['SHARE', 'SSG', 'BEQ', 'AWR', 'CONS', 'INNO', 'PEN', 'BUY', 'REP', 'AP', 'AMS', 'ROMI', 'ROAS', 'ESOV', 'CATG'],
+  supply: ['POR', 'OTD', 'CFR', 'DFD', 'ODA', 'COTD', 'OFCT', 'FA', 'DIO', 'EO', 'RISK', 'COGS', 'PRODS', 'OEE', 'DEX', 'LCPC', 'TRIR'], proc: ['ICI', 'SOTIF', 'DPO'], quality: ['RCL', 'QUAL'] };
+function ownerFor(id, f) {
+  const P = K.PEOPLE, c = f.c && f.c.length === 1 ? f.c[0] : null, b = f.b && f.b.length === 1 ? f.b[0] : null, a = Object.keys(AREA).find(k => AREA[k].includes(id));
+  if (id === 'OSG') return c === 'UK' ? P.UK_GM : c === 'IN' ? P.IN_GM : c ? P[c + '_SALES'] : P.CSO;
+  return a === 'sales' ? (c ? P[c + '_SALES'] : P.CSO) : a === 'rgm' ? P.RGM : a === 'brand' ? (b === 'bolt' ? P.BRAND_BOLT : b === 'glow' ? P.BRAND_GLOW : P.CMO)
+    : a === 'supply' ? (c === 'ID' ? P.ID_SUPPLY : P.COO) : a === 'proc' ? P.PROC : a === 'quality' ? P.QA : P.CFO;
+}
+const owners = () => Object.values(K.PEOPLE).concat(K.SALES_HEADS.map(h => `${h.name}, Sales Head, ${h.region}`));
+const ownerRole = p => (p || '').split(', ').slice(1).join(', ') || p || '';
+
+/* ---------- one issue row, used everywhere in the deep dive ---------- */
+// it reads like the card: what, how far off against what, the value now, why, and then who owns it
+const sliceKey = f => JSON.stringify(Object.keys(f || {}).filter(k => f[k] && f[k].length).sort().map(k => [k, f[k]]));
+const issueKey = (id, f) => id + '|' + sliceKey(f);
+const assignedFor = key => actionsList().find(a => a.key === key && a.status !== 'Done');
+const assignedChip = a => `<button class="ir-own" data-goact="${esc(a.id)}" title="Open this action in My actions"><span>Assigned to ${esc(ownerRole(a.poc))}</span><small>Due ${fmtD(a.due)}${a.overdue ? ', overdue' : ''}</small></button>`;
+const assignBtn = (id, f, quiet) => `<button class="btn sm ${quiet ? 'quiet' : 'cta'}" data-assign-issue="${esc(JSON.stringify({ id, f }))}">Assign</button>`;
+function issueRow(o) {
+  const x = withF(o.f, () => card(o.id)), g = gapOf(o.id, x), key = issueKey(o.id, o.f), a = assignedFor(key);
+  const go = o.where ? `data-where="${esc(JSON.stringify(o.where))}" title="Show this whole view for ${esc(o.label)} only"` : `data-node-go="${o.id}" title="Open ${esc(CARD_DEF[o.id][0])}"`;
+  return `<div class="ir s-${x.sev}" data-ikey="${esc(key)}"><button class="ir-main" ${go}>
+      <span class="ir-s">${SEV[x.sev]}</span>
+      <span class="ir-n">${esc(o.label)}${o.tag ? `<small>${esc(o.tag)}</small>` : ''}</span>
+      <span class="ir-g">${gapWords(g) || `<b class="num">${x.value}</b>`}</span>
+      <span class="ir-now">${g ? nowLine(o.id, withF(o.f, () => x)) : ''}</span>
+      <span class="ir-why">${esc(x.insight || '')}</span><i class="ir-go" aria-hidden="true">→</i></button>
+    <span class="ir-a">${a ? assignedChip(a) : assignBtn(o.id, o.f, x.sev === 'good')}</span></div>`;
+}
+// the parts of a metric, as issue rows, with the lenses to read beside them
+function driversBlock(id) {
+  const ks = kidsOf(id); if (!ks.length) return null;
+  const ls = lensOf(id), f = { ...PF };
+  const make = () => withF(f, () => `<div class="ir-list">${rankRows(ks.map(k => ({ id: k, x: card(k) }))).map(r => issueRow({ id: r.id, f, label: CARD_DEF[r.id][0], tag: kidsOf(r.id).length ? `${kidsOf(r.id).length} driver${kidsOf(r.id).length > 1 ? 's' : ''}` : '' })).join('')}</div>
+    ${ls.length ? `<p class="ir-lens"><span>Read it with</span>${ls.map(k => { const y = card(k); return `<button class="lens s-${y.sev}" data-node-go="${k}" title="Not part of the sum. Open ${esc(CARD_DEF[k][0])}">${esc(CARD_DEF[k][0])} <b class="num">${y.value}</b></button>`; }).join('')}</p>` : ''}`);
+  return { h: (NODE[id] || {}).k === 'sum' ? `What adds up to ${lowFirst(CARD_DEF[id][0])}` : `What moves ${lowFirst(CARD_DEF[id][0])}`, sub: `${LOGIC[id] || ''} Worst first.`.trim(), wide: true, html: make(), make, src: 'Same filters and period as this panel' };
+}
+// where the metric is off, ranked worst first; a row filters the whole view to that place
+function whereBlock(id) {
+  const by = BY[id] || ''; if (!by) return null;
+  const f = { ...PF }, dims = ['c', 'b'].filter(d => by.includes(d));
+  const make = () => dims.map(dim => {
+    const keys = dim === 'c' ? countriesOf(f).filter(c => has({ ...f, c: [c] })) : brandsOf(f).filter(b => has({ ...f, b: [b] }));
+    if (keys.length < 2) return '';
+    const rows = rankRows(keys.map(k => { const ff = { ...f, [dim]: [k] }; return { k, f: ff, x: withF(ff, () => card(id)) }; }));
+    return `<h4 class="ir-h">By ${dim === 'c' ? 'country' : 'brand'}</h4><div class="ir-list">${rows.map(r => issueRow({ id, f: r.f, label: dim === 'c' ? K.CMAP[r.k].name : K.BMAP[r.k].name, where: { [dim]: [r.k] } })).join('')}</div>`;
+  }).join('');
+  const html = make(); if (!html) return null;
+  return { h: `Where ${lowFirst(CARD_DEF[id][0])} is off`, sub: 'Worst first. Open a row to see this whole view for that place, or assign it to the local owner.', wide: true, html, make, src: srcFor(id) };
+}
+// the metric itself, laid out like its card, at the top of every level below the home card
+function headBlock(id) {
+  const f = { ...PF };
+  const make = () => withF(f, () => { const x = card(id), g = gapOf(id, x), t = trendOf(id), key = issueKey(id, f), a = assignedFor(key);
+    return `<div class="nh s-${x.sev}" data-ikey="${esc(key)}"><div class="nh-fig"><span class="c-sig">${SEV[x.sev]}</span><span class="c-gap">${g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b><span>${esc(g.words)}</span>` : g ? `<b class="flat">${esc(g.words)}</b>` : `<b class="num">${x.value}</b>`}</span>${g ? nowLine(id, x) : `<span class="c-now">${x.delta || ''}</span>`}</div>
+      <div class="nh-tr">${t ? trendSvg(t, x.sev) : gapBar(id, x)}<small>${t ? esc(t.lab) : `Now against ${esc(VS[id] || compName())}`}</small></div>
+      <div class="nh-why"><b>Why</b> ${esc(x.insight || x.say)}<small>${esc(CARD_DEF[id][1])}</small></div>
+      <span class="ir-a">${a ? assignedChip(a) : assignBtn(id, f, x.sev === 'good')}</span></div>`; });
+  const x = withF(f, () => card(id));
+  return { h: CARD_DEF[id][0], sub: `${scopeOf(f)}, ${x.per}. Source: ${x.prov}.`, wide: true, html: make(), make, src: x.prov };
 }
 
-/* ---------- side panel: an L2 and its L3s, or one L3 ---------- */
-const DR = { path: null };
-function openDrawer(path) { DR.path = path; renderDrawer(); const d = $('#drawer'); d.hidden = false; requestAnimationFrame(() => d.classList.add('in')); }
-function closeDrawer() { const d = $('#drawer'); if (!d) return; d.classList.remove('in'); d.hidden = true; DR.path = null; }
-function byTable(id, dim) {
-  const keys = dim === 'c' ? countriesOf(PF).filter(c => has({ ...PF, c: [c] })) : brandsOf(PF).filter(b => has({ ...PF, b: [b] }));
-  if (keys.length < 2) return '';
-  const rows = keys.map(k => { const s = dim === 'c' ? { c: [k] } : { b: [k] }, y = withF({ ...PF, ...s }, () => card(id)), g = gapOf(id, y); return { k, s, y, g }; });
-  return `<h4>By ${dim === 'c' ? 'country' : 'brand'}</h4><div class="dr-by">${rows.map(r => `<button class="dr-row s-${r.y.sev}" data-dr-slice='${JSON.stringify(r.s)}'><span>${dim === 'c' ? K.CMAP[r.k].name : K.BMAP[r.k].name}</span><b class="num">${r.y.value}</b><span class="dr-g">${r.g && r.g.amt ? `${r.g.arrow} ${r.g.amt}` : r.g ? 'in line' : ''}</span></button>`).join('')}</div>`;
+/* ---------- one drill model: every level opens in place, under one breadcrumb ---------- */
+function openNodeRaw(id) {
+  const step = STEP.cur, x = card(id), say = `${x.say}${x.insight ? ' ' + dotEnd(x.insight) : ''}`;
+  const pre = [headBlock(id), driversBlock(id), whereBlock(id)].filter(Boolean), n0 = drill.stack.length;
+  // the metric's own analysis comes below, unless the panel above already shows it
+  if (FULL[id]) {
+    drill.pushNext = true; try { FULL[id](); } catch (e) { }
+    const lv = drill.stack[drill.stack.length - 1];
+    if (drill.stack.length === n0 + 1 && !drill.stack.slice(0, -1).some(l => l.title === lv.title)) {
+      Object.assign(lv, { crumb: CARD_DEF[id][0], node: id, step: lv.step || step, title: say });
+      extendTop({ pre, insight: say }); return;
+    }
+    drill.stack = drill.stack.slice(0, n0);
+  }
+  drill.pushNext = true; openLevel({ crumb: CARD_DEF[id][0], node: id, step, title: say, insight: say, blocks: pre });
 }
-function renderDrawer() {
-  const [l1, l2, l3] = DR.path, id = l3 || l2, x = card(id), t = trendOf(id), kids = l3 ? [] : nodeKids(l1, l2), names = [l1, l2, l3].filter(Boolean);
-  const crumbs = names.map((k, i) => i < names.length - 1 ? `<button class="link" data-dr-go="${names.slice(0, i + 1).join('|')}">${esc(CARD_DEF[k][0])}</button>` : `<span>${esc(CARD_DEF[k][0])}</span>`).join('<i>›</i>');
-  const scope = Object.keys(PF).some(k => PF[k]) ? `${nameOf(PF)}, ` : '';
-  const kidRows = kids.map(k => { const y = card(k); return `<button class="iss s-${y.sev}" data-l3="${k}"><span class="iss-b"><span class="iss-s">${SEV[y.sev]}</span><span class="iss-h"><b>${esc(CARD_DEF[k][0])}</b><span class="iss-g">${gapHtml(gapOf(k, y)) || `<b class="num">${y.value}</b>`}</span></span><span class="iss-t">Now ${y.value}. ${esc(y.insight)}</span></span><span class="iss-go" aria-hidden="true">→</span></button>`; }).join('');
-  const by = BY[id] ? (BY[id].includes('c') ? byTable(id, 'c') : '') + (BY[id].includes('b') ? byTable(id, 'b') : '') : '';
-  $('#drawer').innerHTML = `<div class="dr-top"><div class="crumbs">${crumbs}</div><button class="icon-btn" data-dr-close aria-label="Close side panel" title="Close (Esc)">${ICON.x}</button></div>
-    <div class="dr-body">
-      <div class="card dr-card s-${x.sev}"><span class="c-head"><span class="c-sig">${SEV[x.sev]}</span><span class="c-per">${esc(scope + x.per)}</span></span>
-        <span class="c-name">${esc(CARD_DEF[id][0])}<span class="info" data-def="${id}" aria-hidden="true">i</span></span>${gapLine(id, x)}${nowLine(id, x)}
-        <span class="c-tr">${t ? `${trendSvg(t, x.sev)}${trendStart(x, t) ? `<i class="c-tr-s" style="top:${Math.max(0, Math.round(t.y0) - 13)}px">from ${trendStart(x, t)}</i>` : ''}` : gapBar(id, x)}<span class="c-tr-l"><span class="c-tr-n">${t ? esc(t.lab) : `Now against ${esc(VS[id] || compName())} <i class="tick-k"></i>`}</span></span></span>
-        <span class="c-ins"><span>${esc(x.insight)}</span></span></div>
-      <p class="dr-def">${esc(CARD_DEF[id][1])}${LOGIC[id] ? ` <b>How it adds up:</b> ${esc(LOGIC[id])}` : ''}</p>
-      ${kids.length ? `<h4>What drives it</h4><div class="iss-list">${kidRows}</div>` : ''}
-      ${by}
-      ${FULL[id] ? `<button class="btn primary dr-full" data-full="${id}">Open the full analysis</button>` : ''}
-      <p class="foot">Source: ${esc(x.prov || 'ERP')}. Same filters and period as the panel.</p>
-    </div>`;
-  $('#drawer').scrollTop = 0;
+function openNode(...args) { const outer = !STEP.cur; if (outer) STEP.cur = { fn: 'openNode', args }; try { return openNodeRaw(...args); } finally { if (outer) STEP.cur = null; } }
+REPLAY.openNode = openNode;
+// rebuild the open view, at the same depth, for new filters
+function reloadAt(pf) {
+  const steps = getView(null).path; openCard(OPEN, { ...pf });
+  for (const st of steps) { const fn = REPLAY[st.fn]; if (!fn) break; drill.pushNext = true; try { fn(...st.args.map(a => a === '$P' ? win() : a)); } catch (e) { drill.pushNext = false; break; } }
+  drill.pushNext = false;
+}
+const bandTop = () => { const el = $('#band'); if (!el.hidden && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+
+/* ---------- assign an issue to an owner with a date, from any level ---------- */
+function assignIssue(o) {
+  const id = o.id, f = o.f || {}, x = withF(f, () => card(id)), g = gapOf(id, x), key = issueKey(id, f) + (o.ctx ? '|' + o.ctx : ''), prev = assignedFor(key);
+  const name = CARD_DEF[id][0], where = scopeOf(f), sug = ownerFor(id, f), ppl = owners();
+  const nowTxt = g ? withF(f, () => nowLine(id, x)).replace(/<[^>]+>/g, '') : '', gapTxt = g && g.amt ? `${g.amt} ${g.words}` : g ? g.words : x.value;
+  const goal = nowTxt.split(', ').slice(1).join(', ');
+  const title0 = o.ctx ? `Follow up: ${o.ctx}` : x.sev === 'good' ? `Keep ${lowFirst(name)} on track${where !== 'Whole company' ? ' in ' + where : ''}` : `Get ${lowFirst(name)} back to ${VS[id] || compName()}${where !== 'Whole company' ? ' in ' + where : ''}`;
+  const days = x.sev === 'crit' ? 7 : x.sev === 'warn' ? 14 : 21, iso = t => new Date(t).toISOString().slice(0, 10);
+  const pick = prev ? prev.poc : sug, opts = ppl.includes(pick) ? ppl : [pick].concat(ppl);
+  openModal('Assign this issue', `<div class="as-iss s-${x.sev}"><p class="as-k"><span class="c-sig">${SEV[x.sev]}</span><b>${esc(name)}</b><span>${esc(where)}, ${esc(x.per)}</span></p>
+      <p class="as-gap">${gapWords(g) || `<b class="num">${x.value}</b>`}${nowTxt ? `<span>${esc(nowTxt)}</span>` : ''}</p>
+      ${x.insight ? `<p class="as-why"><b>Why</b> ${esc(dotEnd(x.insight))}</p>` : ''}</div>
+    ${prev ? `<p class="as-prev">Already assigned to ${esc(ownerRole(prev.poc))}, due ${fmtD(prev.due)}. Saving changes the owner and date.</p>` : ''}
+    <label class="lab" for="ai-t">What needs to happen</label><input id="ai-t" value="${esc(prev ? prev.title : title0)}">
+    <div class="as-2"><div><label class="lab" for="ai-o">Owner</label><select id="ai-o">${opts.map(p => `<option value="${esc(p)}" ${p === pick ? 'selected' : ''}>${esc(ownerRole(p))}${p === sug ? ' (suggested)' : ''}</option>`).join('')}</select></div>
+      <div><label class="lab" for="ai-d">Due</label><input id="ai-d" type="date" value="${iso(prev ? prev.due : TODAY + days * DAY)}"></div></div>
+    <label class="lab" for="ai-n">Note for the owner <span class="muted">(optional)</span></label><textarea id="ai-n" rows="2" placeholder="What you need back, and by when">${esc(prev && prev.note || '')}</textarea>
+    <div class="m-act"><button class="btn primary" id="ai-ok">${prev ? 'Save' : 'Assign'}</button><button class="btn" id="ai-mail">${prev ? 'Save' : 'Assign'} and draft email</button><button class="btn" data-close>Cancel</button></div>
+    <p class="foot">It goes into My actions with a link back to this exact view. Nothing is sent from the dashboard.</p>`, () => {
+    const save = mail => {
+      const poc = $('#ai-o').value, due = Date.parse($('#ai-d').value) || TODAY + days * DAY, note = $('#ai-n').value.trim();
+      const a = { id: prev ? prev.id : 'iss' + Date.now(), key, role: state.role, title: $('#ai-t').value.trim() || title0, issue: `${name}${where !== 'Whole company' ? ', ' + where : ''}${OPEN && OPEN !== id ? `, in ${lowFirst(CARD_DEF[OPEN][0])}` : ''}`, why: dotEnd(x.insight || x.say), note,
+        chain: [gapTxt, nowTxt].filter(Boolean).concat(note ? [note] : []), poc, urgency: x.sev === 'crit' ? 'High' : x.sev === 'warn' ? 'Medium' : 'Low', target: goal ? 'Back to ' + goal : '', value: 0, sev: x.sev, f,
+        assigned: TODAY, due, status: 'Assigned', view: OPEN ? getView(null) : null, path: OPEN ? [CARD_DEF[OPEN][0]].concat(drill.stack.slice(1).map(l => l.crumb)).filter(Boolean) : [] };
+      const i = NEWACTS.findIndex(n => n.id === a.id); if (i >= 0) NEWACTS[i] = a; else NEWACTS.unshift(a);
+      delete ACTS[a.id]; saveNew();
+      $('#acts').innerHTML = actionsView(); $('#act-sum').textContent = `${actionsList().filter(z => z.status !== 'Done').length} open, sorted by priority`; renderSummaryOnly();
+      // the row that was assigned now says who owns it, here and when you come back to this level
+      document.querySelectorAll('[data-ikey]').forEach(el => { if (el.dataset.ikey === key) { const s = el.querySelector('.ir-a'); if (s) { s.innerHTML = assignedChip(a); s.classList.add('flash'); } } });
+      drill.stack.forEach(l => (l.blocks || []).forEach(b => { if (b.make) b.html = b.make(); }));
+      toast(`Assigned to ${ownerRole(poc)}, due ${fmtD(due)}. You will find it in My actions.`);
+      if (mail) mailModal(a); else closeModal();
+    };
+    $('#ai-ok').onclick = () => save(false); $('#ai-mail').onclick = () => save(true); $('#ai-t').focus();
+  });
 }
 document.addEventListener('click', e => {
   const t = e.target, g = s => t.closest(s);
-  const a = g('[data-l2]'); if (a) { openDrawer(a.dataset.l2.split('|')); return; }
-  const b = g('[data-l3]'); if (b && DR.path) { openDrawer([DR.path[0], DR.path[1], b.dataset.l3]); return; }
-  const c = g('[data-dr-go]'); if (c) { const p = c.dataset.drGo.split('|'); if (p.length < 2) closeDrawer(); else openDrawer(p); return; }
-  if (g('[data-dr-close]')) { closeDrawer(); return; }
-  const s = g('[data-dr-slice]'); if (s && DR.path) { const p = DR.path.slice(); openCard(p[0], { ...PF, ...JSON.parse(s.dataset.drSlice) }); openDrawer(p); return; }
-  const fu = g('[data-full]'); if (fu) { const id = fu.dataset.full; closeDrawer(); goDeeper(FULL[id]); $('#band').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  const nd = g('[data-node]'); if (nd) { e.stopImmediatePropagation(); const [r, k] = nd.dataset.node.split('|'); PF = {}; openCard(r); goDeeper(() => openNode(k)); showBand(); return; }
+  const ng = g('[data-node-go]'); if (ng && OPEN) { e.stopImmediatePropagation(); goDeeper(() => openNode(ng.dataset.nodeGo)); bandTop(); return; }
+  const wh = g('[data-where]'); if (wh && OPEN) { e.stopImmediatePropagation(); reloadAt({ ...PF, ...JSON.parse(wh.dataset.where) }); bandTop(); return; }
+  const ai = g('[data-assign-issue]'); if (ai) { e.stopImmediatePropagation(); assignIssue(JSON.parse(ai.dataset.assignIssue)); return; }
+  if (g('[data-assign-level]') && OPEN) { e.stopImmediatePropagation(); const st = drill.stack, lv = st[st.length - 1], nodeLv = st.slice().reverse().find(l => l.node), id = nodeLv ? nodeLv.node : OPEN;
+    assignIssue({ id: CARD_DEF[id] && id !== 'ASK' ? id : 'SHARE', f: { ...PF }, ctx: lv.node || st.length === 1 ? '' : (lv.crumb || '') }); return; }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && DR.path && $('#modal').hidden) { closeDrawer(); e.stopPropagation(); } }, true);
 
 /* ---------- hooks into the existing panel, Ask and summary ---------- */
 const openCardBase = openCard;
-openCard = function (id, f, keep) { openCardBase(id, f, keep); const b = l2Block(id); if (b) extendTop({ pre: [b] }); if (DR.path) { if (DR.path[0] === id) renderDrawer(); else closeDrawer(); } };
-const closePanelBase = closePanel;
-closePanel = function () { closePanelBase(); closeDrawer(); };
-cardFor = function (cls) { const r = state.role, m = { CEO: { competitor: 'OSG', market: 'OSG', opportunity: 'OSG', supply: 'POR', loading: 'FCFC', cost: 'OM', buying: 'OM', volume: 'OSG' }, CFO: { cost: 'GM', buying: 'GM', loading: 'FCFC', supply: 'OSG', market: 'OSG', competitor: 'OSG', opportunity: 'OSG', volume: 'OSG' }, CMO: { competitor: 'OSG', market: 'OSG', opportunity: 'AMS', buying: 'OSG', cost: 'OSG', supply: 'OSG', loading: 'OSG', volume: 'OSG' }, CSO: { loading: 'OSG', supply: 'POR', competitor: 'SHARE', buying: 'OSG', cost: 'OSG', market: 'SHARE', opportunity: 'OSG', volume: 'OSG' }, COO: { supply: 'POR', cost: 'GM', loading: 'FCFC', buying: 'GM', competitor: 'POR', market: 'POR', opportunity: 'POR', volume: 'POR' } }; return (m[r] || {})[cls] || ROLE_CARDS[r][0]; };
+openCard = function (id, f, keep) { openCardBase(id, f, keep); const lv = drill.stack[0]; if (!lv) return; lv.node = id; const b = driversBlock(id); if (b) extendTop({ pre: [b] }); };
+const trendOfBase = trendOf;
+trendOf = function (id) {
+  if (id === 'TRIR') { const h = K.SAFETY.history; return { a: h.map(v => v * 2.6), c: h.map(() => K.SAFETY.target * 2.6), step: 'month', lab: '12 months to Oct' }; }
+  if (id === 'POR' || id === 'CFR') { const a = []; for (let s = 12; s >= 0; s--) a.push(asOf(s, () => card(id).raw)); const c0 = card(id).craw; return { a, c: a.map(() => c0), step: 'week', lab: '13 weeks to 11 Oct' }; }
+  return trendOfBase(id);
+};
+cardFor = function (cls) { const m = { CEO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'OSG', supply: 'OSG', loading: 'FCFC', cost: 'OM', buying: 'OM', volume: 'OSG' }, CFO: { cost: 'GM', buying: 'GM', loading: 'FCFC', supply: 'OSG', market: 'OSG', competitor: 'OSG', opportunity: 'OSG', volume: 'OSG' }, CMO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'AP', buying: 'AP', cost: 'SSG', supply: 'SSG', loading: 'SSG', volume: 'SSG' }, CSO: { loading: 'CHINV', supply: 'DIST', competitor: 'SALES', buying: 'TRADE', cost: 'TRADE', market: 'SALES', opportunity: 'SALES', volume: 'SALES' }, COO: { supply: 'POR', cost: 'COGS', buying: 'COGS', loading: 'RISK', competitor: 'POR', market: 'POR', opportunity: 'POR', volume: 'POR' } }; return (m[state.role] || {})[cls] || ROLE_CARDS[state.role][0]; };
 Object.keys(METRIC_WORDS).forEach(k => delete METRIC_WORDS[k]);
 Object.assign(METRIC_WORDS, { OSG: ['organic sales growth', 'organic growth', 'sales growth', 'revenue growth', 'net sales', 'revenue', 'growth', 'sales'], OVG: ['volume growth', 'volume', 'cases sold', 'shipments'], PMX: ['price mix', 'price/mix'], PRC: ['pricing', 'price increase', 'price increases', 'price'], MIX: ['mix', 'trading down', 'trading up'],
   TRADE: ['trade spend', 'trade rate', 'gross to net', 'gross-to-net', 'discounts', 'discount'], TPR: ['promotion roi', 'promo roi', 'promotions', 'promotion', 'promos', 'promo'], CATG: ['category growth', 'category', 'market growth'], SHARE: ['market share', 'value share', 'share'], DIST: ['weighted distribution', 'distribution', 'listings', 'outlets'], OSA: ['on shelf availability', 'on-shelf availability', 'shelf', 'osa', 'out of stock', 'stockouts'],
@@ -2027,25 +2226,636 @@ const runAskBase3 = runAsk;
 runAsk = function (q, inPanel) {
   if (/bolt/i.test(q) && /convenience/i.test(q) && /(share|losing)/i.test(q)) return runAskBase3(q, inPanel);
   const r = parseAsk(q); if (!r.metric) return runAskBase3(q, inPanel);
-  const path = findPath(TREE[state.role], r.metric) || findPath(TREE.CEO, r.metric); if (!path) return runAskBase3(q, inPanel);
+  const path = findPath(r.metric); if (!path) return runAskBase3(q, inPanel);
   if (r.per && r.per !== state.period) { state.period = r.per; if (!['LW', 'MTD', 'LM', 'R4W'].includes(r.per) && state.comp === 'M') state.comp = 'T'; syncControls(); renderHome(); }
-  openCard(path[0], r.f); if (path.length > 1) openDrawer(path); else closeDrawer();
-  const owner = ['CMO', 'CSO', 'COO', 'CFO', 'CEO'].find(x => TREE[x].some(n => n[0] === path[0])), via = ROLE_CARDS[state.role].includes(path[0]) ? '' : `It normally lives in the ${owner} view.`;
-  const chips = Object.entries(r.f).map(([k, v]) => k === 'c' ? K.CMAP[v[0]].name : k === 'b' ? K.BMAP[v[0]].name : K.CHMAP[v[0]].name);
+  openCard(path[0], r.f); if (path.length > 1) goDeeper(() => openNode(path[path.length - 1]));
+  const owner = ['CMO', 'CSO', 'COO', 'CFO', 'CEO'].find(x => ROLE_CARDS[x].includes(path[0])), via = ROLE_CARDS[state.role].includes(path[0]) ? '' : `It normally lives in the ${owner} view.`;
+  const chips = Object.entries(r.f).map(([k, v]) => k === 'c' ? K.CMAP[v[0]].name : k === 'b' ? (v.length > 1 && new Set(v.map(b => K.BMAP[b].cat)).size === 1 ? K.BMAP[v[0]].cat : K.BMAP[v[0]].name) : K.CHMAP[v[0]].name);
   const out = $('#ask-out'); out.hidden = false;
   out.innerHTML = `<span class="ai" data-def="AI">Ask</span> Showing <b>${esc(CARD_DEF[r.metric][0])}</b>${path.length > 1 ? ` inside ${esc(CARD_DEF[path[0]][0].toLowerCase())}` : ''}${chips.length ? ' for ' + chips.map(c => `<span class="chip-f">${esc(c)}</span>`).join(' ') : ' for the whole company'}${r.per ? `, ${esc(PERIODS[r.per].label)}` : ''}.${via ? ` <span class="muted">${esc(via)}</span>` : ''}${r.unused.length ? ` <span class="muted">Not understood: ${esc(r.unused.slice(0, 4).join(', '))}.</span>` : ''}`;
   $('#ask-panel-in').value = q;
 };
 const renderHomeBase = renderHome;
-renderHome = function () { renderHomeBase(); $('#cards').style.gridTemplateColumns = `repeat(${ROLE_CARDS[state.role].length},minmax(0,1fr))`; };
+renderHome = function () { renderHomeBase(); $('#cards').style.gridTemplateColumns = ''; };   // home v4: cards sit 2 by 2 beside the summary (CSS)
+
+/* ======================================================================
+   Metric pyramid (pulse-metric-pyramid.md, agreed 19 Oct 2026).
+   Four L1 cards per role. Under every metric: the parts that add up to it,
+   multiply to it or sit on its scorecard, the lenses that explain it, and the
+   levers that move it, each with an owner. One tree per metric (its owner's),
+   so a metric reads the same from every role. Every level of the deep dive
+   reads the same way: the metric, its parts and what each does to it, where
+   it is off, and the actions on it.
+   ====================================================================== */
+const PY = window.PYR || { M: {}, ROLE: {}, ROLES: [] };
+// spec ids that already exist in Pulse under another id
+const SPEC = { VOL: 'OVG', PRICE: 'PRC', AOM: 'OM', AP: 'AMS', TPROI: 'TPR', AWARE: 'AWR', CONSID: 'CONS', REPEAT: 'REP', RECALL: 'RCL', WD: 'DIST', RISK13: 'RISK', SISO: 'CHINV', NSVT: 'SALES', CPC: 'COGS', SELLOUT: 'SSG' };
+const IID = s => SPEC[s] || s, SID = Object.fromEntries(Object.entries(SPEC).map(([a, b]) => [b, a]));
+const META = id => PY.M[SID[id] || id] || null;
+const ROLE_T = { CEO: 'CEO', CFO: 'CFO', CMO: 'CMO', CSO: 'Chief Sales Officer', COO: 'COO' };
+const KIND_H = { add: 'Adds up', mul: 'Multiplies', item: 'Scorecard', lens: 'Explains', lever: 'Lever' };
+const shortName = n => n.replace(/\s*\([^)]*\)$/, '');
+const NOUN = { EPS: 'EPS', GM: 'gross margin', OM: 'operating margin', OSG: 'growth', PMX: 'price/mix', TRADE: 'the trade rate', TTERMS: 'the overspend', SALES: 'sales', CHINV: 'channel cover', DISTOSA: 'availability', POR: 'perfect orders', DMG: 'perfect orders', COGS: 'cost per case', INV: 'inventory days', FCFC: 'cash conversion', SHARE: 'share', PEN: 'penetration', ROMI: 'marketing return' };
+const nounOf = id => NOUN[id] || lowFirst(CARD_DEF[id] ? CARD_DEF[id][0] : id);
+const ownerOf = id => ((META(id) || {}).own || [])[0] || null;
+
+/* ---------- one tree per metric: the owner's ---------- */
+const TREE = {};
+{ const pri = {};
+  const take = (n, p) => { const id = IID(n.m), kids = (n.kids || []).map(k => ({ id: IID(k.m), k: k.k })); if (!kids.length) return; if (pri[id] == null || p < pri[id]) { TREE[id] = kids; pri[id] = p; } };
+  for (const r of PY.ROLES) for (const l1 of PY.ROLE[r].tree) { const own = m => (PY.M[m].own || [])[0] === r; take(l1, own(l1.m) ? 0 : 1); l1.kids.forEach(k => take(k, own(k.m) ? 2 : 3)); }
+  TREE.DMG = [{ id: 'DFD', k: 'mul' }, { id: 'ODA', k: 'mul' }];   // damage-free and paperwork are measured separately already
+}
+const kindIn = (p, c) => ((TREE[p] || []).find(x => x.id === c) || {}).k;
+Object.keys(NODE).forEach(k => delete NODE[k]);
+for (const [id, ks] of Object.entries(TREE)) NODE[id] = { k: ks.some(x => x.k === 'add' || x.k === 'mul' || x.k === 'item') ? 'sum' : 'levers', kids: ks.filter(x => x.k !== 'lens').map(x => x.id), lens: ks.filter(x => x.k === 'lens').map(x => x.id) };
+for (const r of PY.ROLES) ROLE_CARDS[r] = PY.ROLE[r].tree.map(l => IID(l.m));
+const L1SPEC = {}; for (const r of PY.ROLES) for (const l of PY.ROLE[r].tree) (L1SPEC[IID(l.m)] = L1SPEC[IID(l.m)] || {})[r] = l;
+Object.keys(LOGIC).forEach(k => delete LOGIC[k]);
+Object.keys(HOME_WHY).forEach(k => delete HOME_WHY[k]);   // the why on a card now comes from the part that hurts most
+
+/* ---------- small helpers ---------- */
+const cmpWin = P => state.comp === 'M' ? [Math.max(1, P.w0 - 4), Math.max(1, P.wa - 4)] : [P.w0, P.w1];
+const cmpSc = () => state.comp === 'M' ? 'A' : state.comp;
+const cAgg = (f, P) => compAgg(f, P);
+const share$ = (a, b) => b ? a / b : 0;
+const scenOf = sc => sc === 'M' ? 'A' : sc;
+// trade spend split, operating margin with overheads allocated by sales, cash parts
+function aom(f, sc, w0, w1) { const x = K.finance(f, sc, w0, w1), co = K.finance({}, sc, w0, w1), oh = co.overhead * x.ns / co.ns; return { ns: x.ns, gm: (x.ns - x.cogs) / x.ns, ap: x.ap / x.ns, dist: x.dist / x.ns, oh: oh / x.ns, om: (x.cm - oh) / x.ns }; }
+function aomPair(f, P) { const w1 = P.w1 > CW ? NW : P.w1, [c0, c1] = state.comp === 'M' ? cmpWin(P) : [P.w0, w1]; return { A: aom(f, 'A', P.w0, w1), C: aom(f, cmpSc(), c0, state.comp === 'M' ? c1 : w1) }; }
+// growth from comparator to actual, in $: volume, mix, price and trade (trade includes returns)
+function nsWalk(f, w0, w1, cmp) {
+  let vol = 0, price = 0, trade = 0, Ua = 0, Uc = 0, Cc = 0, start = 0, end = 0;
+  for (const s of K.SERIES) {
+    if (!K.match(s, f)) continue;
+    const a = sumS(s, 'A', w0, w1), c = cmp.shift ? sumS(s, 'A', Math.max(1, w0 - cmp.shift), Math.max(1, w1 - cmp.shift)) : sumS(s, cmp.sc, w0, w1);
+    if (cmp.k) for (const k of K.FIELDS) c[k] *= cmp.k; if (cmp.k) { c.ns *= cmp.k; c.cogs *= cmp.k; }
+    if (c.vol <= 0 || a.vol <= 0) continue;
+    const lpa = a.gs / a.vol, lpc = c.gs / c.vol, dedc = (c.tr + c.ret) / c.gs, unit = lpc * (1 - dedc);
+    Ua += a.vol; Uc += c.vol; Cc += c.vol * unit; vol += (a.vol - c.vol) * unit;
+    price += a.vol * (lpa - lpc) * (1 - dedc); trade += -((a.tr + a.ret) - a.gs * dedc); start += c.ns; end += a.ns;
+  }
+  const v = Uc ? (Ua - Uc) * (Cc / Uc) : 0;
+  return { vol: v, mix: vol - v, price, trade, start, end };
+}
+// gross margin walk in margin points: mix, then price, then trade, then cost per case (each step reconciles)
+function gmWalk(f, P) {
+  const [c0, c1] = cmpWin(P), sc = cmpSc(); let pa = 0, pc = 0, ca = 0, cc = 0;
+  for (const s of K.SERIES) { if (!K.match(s, f)) continue; const a = sumS(s, 'A', P.w0, P.w1), c = sumS(s, sc, c0, c1); if (!a.vol || !c.vol) continue; pa += a.gs; pc += a.vol * c.gs / c.vol; ca += a.cogs; cc += a.vol * c.cogs / c.vol; }
+  const A = agg(f, 'A', P.w0, P.w1), C = agg(f, sc, c0, c1), lp = x => x.gs / x.vol, d = x => (x.tr + x.ret) / x.gs, uc = x => x.cogs / x.vol;
+  const G = (l, dd, u) => 1 - u / (l * (1 - dd)), pF = pa / pc, cF = ca / cc, mF = lp(A) / lp(C) / pF, cmF = uc(A) / uc(C) / cF;
+  const g0 = G(lp(C), d(C), uc(C)), g1 = G(lp(C) * mF, d(C), uc(C) * cmF), g2 = G(lp(A), d(C), uc(C) * cmF), g3 = G(lp(A), d(A), uc(C) * cmF), g4 = G(lp(A), d(A), uc(A));
+  return { start: g0, end: g4, MIX: g1 - g0, PRC: g2 - g1, TRADE: g3 - g2, COGS: g4 - g3 };
+}
+const tradeRates = x => ({ promo: x.trp / x.gs, terms: x.trt / x.gs, ret: x.ret / x.gs, all: (x.tr + x.ret) / x.gs });
+function cashParts(sc) { const c = cash(sc, 1, 39), dt = (c.op - c.interest) * (K.FIN.taxRate - K.CASH.taxRate); return { conv: c.conv, DANC: (c.da + dt) / c.np, WCMOV: -c.wc / c.np, CAPEX: -c.capex / c.np, c }; }
+function epsParts() {
+  const a = K.finance({}, 'A', 1, NW), t = K.finance({}, 'T', 1, NW), tx = 1 - K.FIN.taxRate, sh = t.shares, om = x => x.op / x.ns;
+  const G = (a.ns - t.ns) * om(t) * tx / sh, M = a.ns * (om(a) - om(t)) * tx / sh, I = -(a.interest - t.interest) * tx / sh, S = a.eps - a.np / sh;
+  return { a, t, EPSG: G, EPSM: M, BELOW: I + S, interest: I, shares: S };
+}
+// channel stock, split between distributors and retailers, in weeks of sell-out
+function chanWeeks(f) {
+  let dA = 0, rA = 0, dN = 0, rN = 0, so = 0, soT = 0;
+  for (const s of K.SERIES) { if (!K.match(s, f)) continue; const sh = K.CH_DIST_SHARE[s.ch] || 0, st = s.A.stock[CW], stT = s.T.stock[CW]; let c4 = 0, t4 = 0; for (let w = CW - 3; w <= CW; w++) { c4 += s.A.cons[w]; t4 += s.T.cons[w]; }
+    dA += st * sh; rA += st * (1 - sh); dN += stT * sh; rN += stT * (1 - sh); so += c4 / 4; soT += t4 / 4; }
+  return { d: dA / so, r: rA / so, dn: dN / soT, rn: rN / soT, all: (dA + rA) / so, normal: (dN + rN) / soT };
+}
+// household flows behind penetration, % of households
+function penFlows(f) {
+  let n = 0, now = 0, ly = 0, lost = 0, gain = 0, lostN = 0, worst = null;
+  for (const b of brandsOf(f)) for (const c of countriesOf(f)) { const p = K.PENETRATION[b + '|' + c]; if (!p || !has({ b: [b], c: [c] })) continue;
+    const w = agg({ b: [b], c: [c] }, 'A', 1, CW).ns, sw = (K.PEN_FLOW.switched[b + '|' + c] || 0) / K.PEN_FLOW.hh[c] * 100, l = p[0] * K.PEN_FLOW.lapse + sw, g = p[1] - p[0] + l;
+    n += w; now += p[1] * w; ly += p[0] * w; lost += l * w; gain += g * w; lostN += p[0] * K.PEN_FLOW.lapse * w;
+    if (sw && (!worst || sw > worst.sw)) worst = { sw, label: K.BMAP[b].name + ' in ' + K.CMAP[c].name, m: K.PEN_FLOW.switched[b + '|' + c], to: (K.SWITCHING.find(x => x.from === K.BMAP[b].name) || {}).to }; }
+  return n ? { now: now / n, ly: ly / n, lost: lost / n, gain: gain / n, lostN: lostN / n, worst } : null;
+}
+// marketing return by media: each series' modelled return split by media weight
+const MEDIA = [['TV', 'apTv'], ['Digital', 'apDig'], ['Other', 'apOth']];
+function mediaReturn(f, sc, w0, w1) {
+  const o = MEDIA.map(([m]) => ({ m, sp: 0, inc: 0 }));
+  for (const s of K.SERIES) { if (!K.match(s, f)) continue; const x = sumS(s, sc, w0, w1); const wts = MEDIA.map(([m, k]) => x[k] * K.MEDIA_ROMI[m]), tw = wts.reduce((a, b) => a + b, 0) || 1; MEDIA.forEach(([, k], i) => { o[i].sp += x[k]; o[i].inc += x.inc * wts[i] / tw; }); }
+  const sp = o.reduce((a, r) => a + r.sp, 0); o.forEach(r => { r.share = r.sp / sp; r.roi = r.sp ? r.inc / r.sp : 0; }); return { rows: o, roi: o.reduce((a, r) => a + r.share * r.roi, 0) };
+}
+const reachOf = f => { const hs = K.SALES_HEADS.filter(h => countriesOf(f).includes(h.c)); if (!hs.length) return null; const R = hs.map(h => ({ h, ...K.REACH[h.id] })), o = R.reduce((x, r) => x + r.outlets, 0); return { wd: R.reduce((x, r) => x + r.wd * r.outlets, 0) / o, wdT: R.reduce((x, r) => x + r.wdT * r.outlets, 0) / o, wdLY: R.reduce((x, r) => x + r.wdLY * r.outlets, 0) / o, worst: R.slice().sort((a, b) => (a.wd - a.wdT) - (b.wd - b.wdT))[0] }; };
+const OSA_T = .95, OTD_T = .96, CFR_T = .97, DFD_T = .995, ODA_T = .983;
+const dioDays = f => dioOf(f);
+function eoDays(f) { let d = 0, cogs = 0; const all = agg({ c: f.c }, 'A', CW - 12, CW).cogs, part = agg(f, 'A', CW - 12, CW).cogs; for (const c of countriesOf(f)) d += (K.NEAR_EXPIRY.own[c] || 0) + (K.EXCESS_OWN[c] || 0); cogs = all / 91; return { days: d * (all ? part / all : 1) / (part / 91 || 1), $: d * (all ? part / all : 1) }; }
+const salesT = (f, w0, w1) => agg(f, 'T', w0, w1).ns * (1 + K.SALES_STRETCH);
+function salesMTD(f) { const ws = monthWk(), w0 = ws[0], el = ws.filter(w => w <= CW).length, tot = ws.length, a = agg(f, 'A', w0, CW).ns, t = salesT(f, w0, CW), tm = salesT(f, w0, ws[tot - 1]), days = el * 7, rem = Math.max(7, (tot - el) * 7);
+  return { w0, a, t, tm, now: a / days, need: (tm - a) / rem, proj: a / el * tot }; }
+const pIdx = f => { let n = 0, a = 0, p = 0, worst = null; for (const b of brandsOf(f)) for (const c of countriesOf(f)) { if (!has({ ...f, b: [b], c: [c] })) continue; const v = K.PRICE_INDEX[b + '|' + c] || [102, 102], w = agg({ ...f, b: [b], c: [c] }, 'A', CW - 12, CW).ns; n += w; a += v[1] * w; p += v[0] * w; if (!worst || v[1] - v[0] > worst.d) worst = { d: v[1] - v[0], v, label: K.BMAP[b].name + ' in ' + K.CMAP[c].name }; } return n ? { now: a / n, plan: p / n, worst } : null; };
+const PROMO_DEPTH = .22;   // average promoted price cut: turns promotional spend into the share of volume sold on deal
+const logShare = (pairs, total) => { const ls = pairs.map(([a, t]) => Math.log(a / t)), s = ls.reduce((x, y) => x + y, 0); return ls.map(l => Math.abs(s) < 1e-12 ? total / ls.length : total * l / s); };
+
+/* ---------- PARTS: what each part does to its parent, in the parent's unit (reconciles) ---------- */
+// returns { eff: { child: number }, start, end, fmt } where start + sum(eff) = end
+const fP = v => (v >= 0 ? '+' : MINUS) + Math.abs(v * 100).toFixed(1) + ' pts';
+const fPp = v => (v >= 0 ? '+' : MINUS) + Math.abs(v).toFixed(1) + ' pts';
+const fB = v => (v >= 0 ? '+' : MINUS) + Math.round(Math.abs(v * 1e4)) + ' bps';
+const fE = v => (v >= 0 ? '+' : MINUS) + '$' + Math.abs(v).toFixed(2);
+const fC = v => (v >= 0 ? '+' : MINUS) + '$' + Math.abs(v).toFixed(2);
+const fD = v => (v >= 0 ? '+' : MINUS) + Math.abs(v).toFixed(1) + ' days';
+const fW = v => (v >= 0 ? '+' : MINUS) + Math.abs(v).toFixed(1) + ' wks';
+const fX = v => (v >= 0 ? '+' : MINUS) + Math.abs(v).toFixed(2) + 'x';
+const fS = v => (v >= 0 ? '+' : MINUS) + fmt$(Math.abs(v));
+const PARTS = {
+  OSG: (f, P) => { const x = card0('OVG'), y = card0('PMX'); return { eff: { OVG: x.raw - x.craw, PMX: y.raw - y.craw }, start: card0('OSG').craw, end: card0('OSG').raw, fmt: fP, sv: v => plain(v) }; },
+  PMX: (f, P) => { const L = agg(f, 'L', P.w0, P.w1), [c0, c1] = cmpWin(P), w = nsWalk(f, P.w0, P.w1, state.comp === 'M' ? { shift: 4 } : { sc: state.comp }), C = agg(f, cmpSc(), c0, c1), A = agg(f, 'A', P.w0, P.w1), y = card0('PMX');
+    const cross = (A.vol - C.vol) / L.vol * ((C.ns / C.vol) / (L.ns / L.vol) - 1), tot = y.raw - y.craw, e = { PRC: w.price / L.ns, MIX: w.mix / L.ns + cross, TRADE: w.trade / L.ns };
+    e.MIX += tot - (e.PRC + e.MIX + e.TRADE); return { eff: e, start: y.craw, end: y.raw, fmt: fP, sv: v => plain(v) }; },
+  SHARE: (f, P) => { const [s0, s1] = shareWin(P), s = K.share(f, s0, s1), k = s.ly / (1 + s.mktGrowth); return { eff: { SSG: k * s.ourGrowth, CATG: -k * s.mktGrowth }, start: s.ly, end: s.now, fmt: fP, sv: v => plain(v), startL: 'Last year' }; },
+  OM: (f, P) => { const { A, C } = aomPair(f, P); return { eff: { GM: A.gm - C.gm, AMS: -(A.ap - C.ap), DEX: -(A.dist - C.dist), OHD: -(A.oh - C.oh) }, start: C.om, end: A.om, fmt: fB, sv: v => plain(v) }; },
+  GM: (f, P) => { const g = gmWalk(f, P); return { eff: { PRC: g.PRC, MIX: g.MIX, TRADE: g.TRADE, COGS: g.COGS }, start: g.start, end: g.end, fmt: fB, sv: v => plain(v) }; },
+  EPS: () => { const e = epsParts(); return { eff: { EPSG: e.EPSG, EPSM: e.EPSM, BELOW: e.BELOW }, start: e.t.eps, end: e.a.eps, fmt: fE, sv: v => '$' + v.toFixed(2), startL: 'Plan (guidance midpoint)', endL: 'Full-year outlook' }; },
+  FCFC: () => { const a = cashParts('A'), t = cashParts('T'); return { eff: { DANC: a.DANC - t.DANC, WCMOV: a.WCMOV - t.WCMOV, CAPEX: a.CAPEX - t.CAPEX }, start: t.conv, end: a.conv, fmt: fP, sv: v => (v * 100).toFixed(1) + '%' }; },
+  TRADE: (f, P) => { const a = tradeRates(agg(f, 'A', P.w0, P.w1)), c = tradeRates(cAgg(f, P)); return { eff: { PROMOSP: a.promo - c.promo, TERMSP: a.terms - c.terms, RETURNS: a.ret - c.ret }, start: c.all, end: a.all, fmt: fB, sv: v => plain(v), bad: 1 }; },
+  TTERMS: (f, P) => { const A = agg(f, 'A', P.w0, P.w1), T = agg(f, 'T', P.w0, P.w1), a = tradeRates(A), t = tradeRates(T); return { eff: { PROMOSP: (a.promo - t.promo) * A.gs, TERMSP: (a.terms - t.terms) * A.gs }, start: 0, end: (a.promo - t.promo + a.terms - t.terms) * A.gs, fmt: fS, sv: v => fmt$(v), bad: 1, startL: 'Agreed terms', endL: 'Paid' }; },
+  PEN: f => { const p = penFlows(f); return p ? { eff: { NEWBUY: p.gain, LOSTBUY: -p.lost }, start: p.ly, end: p.now, fmt: fPp, sv: v => v.toFixed(1) + '%', startL: 'Last year' } : null; },
+  ROMI: (f, P) => { const x = card0('ROMI'); return { eff: { ROAS: x.raw - x.craw }, start: x.craw, end: x.raw, fmt: fX, sv: v => v.toFixed(2) + 'x' }; },
+  SALES: f => { const m = salesMTD(f), w = nsWalk(f, m.w0, CW, { sc: 'T', k: 1 + K.SALES_STRETCH }); return { eff: { OVG: w.vol, MIX: w.mix, PRC: w.price, TRADE: w.trade }, start: m.t, end: m.a, fmt: fS, sv: v => fmt$(v), startL: 'Sales target' }; },
+  CHINV: f => { const c = chanWeeks(f); return { eff: { DSTOCK: c.d - c.dn, RSTOCK: c.r - c.rn }, start: c.normal, end: c.all, fmt: fW, sv: v => v.toFixed(1) + ' wks', bad: 1, startL: 'Normal' }; },
+  DISTOSA: f => { const x = card0('DIST'), y = card0('OSA'), e = logShare([[x.raw, x.craw], [y.raw, y.craw]], x.raw * y.raw - x.craw * y.craw); return { eff: { DIST: e[0], OSA: e[1] }, start: x.craw * y.craw, end: x.raw * y.raw, fmt: fP, sv: v => plain(v), mul: 1 }; },
+  POR: f => { const ids = ['OTD', 'CFR', 'DMG'], xs = ids.map(card0), t = xs.reduce((a, x) => a * x.craw, 1), a = xs.reduce((p, x) => p * x.raw, 1), e = logShare(xs.map(x => [x.raw, x.craw]), a - t); return { eff: Object.fromEntries(ids.map((k, i) => [k, e[i]])), start: t, end: a, fmt: fP, sv: v => plain(v), mul: 1, startL: 'Target' }; },
+  DMG: f => { const ids = ['DFD', 'ODA'], xs = ids.map(card0), t = xs.reduce((a, x) => a * x.craw, 1), a = xs.reduce((p, x) => p * x.raw, 1), e = logShare(xs.map(x => [x.raw, x.craw]), a - t); return { eff: { DFD: e[0], ODA: e[1] }, start: t, end: a, fmt: fP, sv: v => plain(v), mul: 1, startL: 'Target' }; },
+  COGS: (f, P) => { const A = agg(f, 'A', P.w0, P.w1), C = cAgg(f, P), u = (x, k) => k.reduce((s, z) => s + x[z], 0) / x.vol; return { eff: { MATC: u(A, ['mat', 'pack']) - u(C, ['mat', 'pack']), CONVC: u(A, ['conv']) - u(C, ['conv']), LOGC: u(A, ['inb']) - u(C, ['inb']) }, start: C.cogs / C.vol, end: A.cogs / A.vol, fmt: fC, sv: v => '$' + v.toFixed(2), bad: 1 }; },
+  INV: f => { const d = dioDays(f), e = eoDays(f).days; return { eff: { HEALTHY: (d - e) - (K.DIO_TARGET - K.EO_TARGET_DAYS), EO: e - K.EO_TARGET_DAYS }, start: K.DIO_TARGET, end: d, fmt: fD, sv: v => v.toFixed(1) + ' days', bad: 1, startL: 'Target' }; },
+};
+const partsOf = id => { const fn = PARTS[id]; if (!fn) return null; try { const p = fn(filter(), win()); if (!p) return null; const sum = Object.values(p.eff).reduce((a, b) => a + b, 0), tot = p.end - p.start; if (Math.abs(sum - tot) > Math.abs(tot) * .02 + 1e-9 && Math.abs(sum) > 1e-12) { (window.__pyrWarn = window.__pyrWarn || []).push([id, sum, tot, JSON.stringify(filter())]); const k = tot / sum; for (const c in p.eff) p.eff[c] *= k; } return p; } catch (e) { (window.__pyrErr = window.__pyrErr || []).push([id, String(e)]); return null; } };
+
+/* ---------- metric definitions: new metrics, and old ones whose definition changed ---------- */
+const sp = (id, o) => { const m = META(id), cur = CARD_DEF[id] || []; mx(id, m ? shortName(m.name) : cur[0] || id, m ? m.tells : cur[1] || '', m ? m.formula : cur[2] || '', o); };
+const fmtWk = v => v.toFixed(1) + ' wks';
+// growth: price/mix is growth minus volume (the spec's definition), so the two add up to organic growth exactly
+sp('PMX', { rk: 'pts', rg: 1, by: 'kcbh', f: (f, P) => { const { A, T, L } = grow(f, P), C = compAgg(f, P), Lc = state.comp === 'M' ? agg(f, 'L', ...cmpWin(P)) : L, g = A.ns / L.ns - 1, v = A.vol / L.vol - 1, gc = C.ns / Lc.ns - 1, vc = C.vol / Lc.vol - 1, pz = pricing(f, P);
+  return { raw: g - v, craw: gc - vc, insight: pz.real < pz.plan ? `Price increases landed at ${sPct(pz.real).replace(/[()]/g, '')} against ${sPct(pz.plan).replace(/[()]/g, '')} planned, and the oats increase is stuck at UK and US retailers` : `Price increases landed as planned` }; } });
+sp('OVG', { rk: 'pts', rg: 1, by: 'kcbh', f: (f, P) => { const { A, L } = grow(f, P), C = compAgg(f, P), Lc = state.comp === 'M' ? agg(f, 'L', ...cmpWin(P)) : L; let dn = 0, n = 0, w = null; for (const b of brandsOf(f)) for (const c of countriesOf(f)) { const ff = sub(f, { b: [b], c: [c] }); if (!has(ff)) continue; n++; const a = agg(ff, 'A', P.w0, P.w1).vol, l = agg(ff, 'L', P.w0, P.w1).vol, t = agg(ff, cmpSc(), ...cmpWin(P)).vol; if (a < l) dn++; if (!w || a / t < w.r) w = { r: a / t, label: K.BMAP[b].name + ' ' + K.CMAP[c].name }; }
+  return { raw: A.vol / L.vol - 1, craw: C.vol / Lc.vol - 1, insight: `${n > 1 ? `${dn} of ${n} brand and country pairs sell fewer cases than last year; ` : ''}${w && w.r < 1 ? `${w.label} is furthest behind on cases, ${pcn(1 - w.r, 1)} below ${compName()}` : 'Cases are at or above ' + compName()}` }; } });
+sp('TRADE', { rk: 'bps', rg: -1, by: 'kch', f: (f, P) => { const a = tradeRates(agg(f, 'A', P.w0, P.w1)), c = tradeRates(cAgg(f, P)), ev = promosIn(f).filter(p => p.roi != null), roi = ev.length ? ev.reduce((x, p) => x + p.incGM, 0) / ev.reduce((x, p) => x + p.spend, 0) : null;
+  return { raw: a.all, craw: c.all, ref: `${compLab()} ${plain(c.all)} of gross sales`, insight: `Promotional spend is ${plain(a.promo)} of gross sales against ${plain(c.promo)}${roi != null ? `, and promotions return ${roi.toFixed(2)}x` : ''}. Crunch Chips USA is the deepest` }; } });
+function worstCell(f, P, fn) { let w = null; for (const b of brandsOf(f)) for (const c of countriesOf(f)) { const ff = sub(f, { b: [b], c: [c] }); if (!has(ff)) continue; const v = fn(agg(ff, 'A', P.w0, P.w1), cAgg(ff, P)); if (!w || v > w.v) w = { v, b, c, label: K.BMAP[b].name + ' ' + K.CMAP[c].name }; } return w; }
+sp('PROMOSP', { rk: 'bps', rg: -1, by: 'kch', f: (f, P) => { const a = tradeRates(agg(f, 'A', P.w0, P.w1)), c = tradeRates(cAgg(f, P)), w = worstCell(f, P, (x, y) => tradeRates(x).promo - tradeRates(y).promo);
+  return { raw: a.promo, craw: c.promo, insight: w && w.b === 'crunch' && w.c === 'US' ? 'Buy-2-get-1 and endcap deals at BigBox and FreshFields pushed Crunch Chips USA to about 21% of gross sales' : w && w.v > .0005 ? `${w.label} is furthest over, by ${Math.round(w.v * 1e4)} bps` : 'Promotional spend is on plan here' }; } });
+sp('TERMSP', { rk: 'bps', rg: -1, by: 'kch', f: (f, P) => { const a = tradeRates(agg(f, 'A', P.w0, P.w1)), c = tradeRates(cAgg(f, P)), lr = countriesOf(f).some(x => x === 'UK' || x === 'US') && (!f.ch || f.ch.includes('LR')); return { raw: a.terms, craw: c.terms, insight: lr ? 'Large retailers in the UK and USA took extra allowances to accept the price increase' : 'Allowances are paid at the agreed terms here' }; } });
+sp('RETURNS', { rk: 'bps', rg: -1, by: 'ch', vs: 'the provision', refL: 'Provision', f: (f, P) => { const a = tradeRates(agg(f, 'A', P.w0, P.w1)), t = tradeRates(agg(f, 'T', P.w0, P.w1)); return { raw: a.ret, craw: t.ret, insight: countriesOf(f).includes('IN') && (!f.ch || f.ch.includes('GT')) ? 'India distributors are sending back near-expiry stock since week 36, after the push' : 'Returns are close to the provision here' }; } });
+sp('PCTPROMO', { rk: 'pts', rg: -1, by: 'kch', f: (f, P) => { const a = agg(f, 'A', P.w0, P.w1), c = cAgg(f, P), v = x => Math.min(1, x.trp / x.gs / PROMO_DEPTH); return { raw: v(a), craw: v(c), insight: 'Crunch Chips USA sells most of its volume on deal since week 22' }; } });
+sp('TPR', { rk: 'x', rg: 1, by: 'c', per: 'Evaluated promotions', prov: 'Asper.ai (illustrative)', vs: 'the 1.2x hurdle', refL: 'Hurdle', f: f => { const ev = promosIn(f).filter(p => p.roi != null); if (!ev.length) return { raw: null, craw: null, value: 'n/a', insight: 'No promotions evaluated here' }; const roi = ev.reduce((x, p) => x + p.incGM, 0) / ev.reduce((x, p) => x + p.spend, 0), w = ev.slice().sort((a, b) => a.roi - b.roi)[0];
+  return { raw: roi, craw: 1.2, insight: `${ev.filter(p => p.roi < .8).length} of ${ev.length} promotions earn back less than 80 cents per dollar; ${K.BMAP[w.b].name} ${K.CMAP[w.c].name} "${w.name}" returns ${w.roi.toFixed(2)}x` }; } });
+sp('COMPLY', { rk: 'pts', rg: 1, by: 'c', vs: 'target', refL: 'Target', per: 'Evaluated promotions', prov: 'Retail execution', f: f => { const ev = promosIn(f).filter(p => p.compliance != null); if (!ev.length) return { raw: null, craw: null, value: 'n/a', insight: 'No promotions checked here' }; const v = ev.reduce((x, p) => x + p.compliance * p.spend, 0) / ev.reduce((x, p) => x + p.spend, 0), w = ev.slice().sort((a, b) => a.compliance - b.compliance)[0];
+  return { raw: v, craw: .95, insight: `${K.RETAILERS.find(r => r.id === w.ka)?.name || 'One retailer'} ran ${pcn(w.compliance)} of the agreed "${w.name}" promotion` }; } });
+sp('TTERMS', { rk: '$', rg: -1, by: 'cbh', vs: 'agreed terms', refL: 'Agreed terms', per: 'Year to date', prov: 'Trade promotion system', f: (f, P) => { const p = PARTS.TTERMS(f, P), A = agg(f, 'A', P.w0, P.w1), rel = p.end / (A.tr || 1), ev = promosIn(f).filter(x => x.roi != null), roi = ev.length ? ev.reduce((x, q) => x + q.incGM, 0) / ev.reduce((x, q) => x + q.spend, 0) : null;
+  return { raw: p.end, craw: 0, value: fmt$(Math.abs(p.end)) + (p.end >= 0 ? ' over' : ' under'), ref: 'Agreed terms $0', sev: rel > .02 ? 'crit' : rel > .005 ? 'warn' : 'good', say: p.end > 0 ? `Trade spend is ${fmt$(p.end)} over the agreed terms.` : 'Trade spend is within the agreed terms.', insight: p.end <= 0 ? 'Trade spend is within the agreed terms here' : `${p.eff.PROMOSP >= p.eff.TERMSP ? 'Promotions' : 'Allowances'} account for most of the overspend${roi != null ? `; promotions return ${roi.toFixed(2)}x, and Crunch Chips USA runs at 0.55x` : ''}` }; } });
+// sales against the target the team is paid on (plan plus 2%), month to date
+sp('SALES', { rk: '$', rg: 1, by: 'ch', vs: 'target', refL: 'Target', per: 'October to date', prov: 'Targets from Anaplan (illustrative)', f: f => { const m = salesMTD(f), hs = withF({}, () => headsData(f)), miss = hs.filter(h => h.pv < 1).length;
+  return { raw: m.a, craw: m.t, heads: miss, value: fmt$(m.a), ref: `Target ${fmt$(m.t)}`, sev: m.a / m.t >= 1 ? 'good' : m.a / m.t >= .98 ? 'warn' : 'crit', say: m.a >= m.t ? `Sales are ${pct1(m.a / m.t - 1)} ahead of the October target.` : `Sales are ${fmt$(m.t - m.a)} behind the October target.`,
+    insight: `We need ${fmt$(m.need)} a day for the rest of October and sell ${fmt$(m.now)} a day now; ${miss} of ${hs.length} sales heads will miss` }; } });
+sp('RUNRATE', { rk: '$', rg: 1, by: 'c', vs: 'the rate needed', refL: 'Needed', per: 'Rest of October', prov: 'Targets from Anaplan (illustrative)', f: f => { const m = salesMTD(f); return { raw: m.now, craw: m.need, value: fmt$(m.now) + ' a day', ref: `Needed ${fmt$(m.need)} a day`, insight: `At today's pace October ends at ${fmt$(m.proj)} against ${fmt$(m.tm)}` }; } });
+// channel stock: whole scope against normal, status from the worst channel
+sp('CHINV', { rk: 'wks', rg: -1, by: 'ch', vs: 'normal', refL: 'Normal', per: 'Week ' + CW, prov: 'Distributor system', f: f => { const c = chanWeeks(f), w = channelStock(f)[0];
+  return { raw: c.all, craw: c.normal, value: fmtWk(c.all), ref: `Normal ${fmtWk(c.normal)}`, sev: w && w.cover > w.normal * 1.3 ? 'crit' : w && w.cover > w.normal * 1.15 ? 'warn' : 'good', say: w ? `${w.label} holds ${w.cover.toFixed(1)} weeks of stock, against ${w.normal} normally.` : '', insight: w && w.cover > w.normal * 1.15 ? `${w.label} holds ${w.cover.toFixed(1)} weeks against ${w.normal} normal, after the distributor incentive` : 'Channel stock is close to normal everywhere' }; } });
+sp('DSTOCK', { rk: 'wks', rg: -1, by: 'c', vs: 'normal', refL: 'Normal', per: 'Week ' + CW, prov: 'Distributor system', f: f => { const c = chanWeeks(f); return { raw: c.d, craw: c.dn, value: fmtWk(c.d), ref: `Normal ${fmtWk(c.dn)}`, insight: countriesOf(f).includes('IN') ? 'India general-trade distributors took extra stock for the quarter-end incentive' : 'Distributor stock is close to normal here' }; } });
+sp('RSTOCK', { rk: 'wks', rg: -1, by: 'c', vs: 'normal', refL: 'Normal', per: 'Week ' + CW, prov: 'Retailer data', f: f => { const c = chanWeeks(f); return { raw: c.r, craw: c.rn, value: fmtWk(c.r), ref: `Normal ${fmtWk(c.rn)}`, insight: 'Retailer stock is near normal outside India' }; } });
+// shopper sales and share on the same market-data window
+sp('SSG', { rk: 'pts', rg: 1, by: 'kcb', vs: 'the category', refL: 'Category', prov: 'Retailer data and market data', f: (f, P) => { const [s0, s1] = shareWin(P), s = K.share(f, s0, s1), a = agg(f, 'A', s0, s1), l = agg(f, 'L', s0, s1), ship = a.ns / l.ns - 1;
+  return { raw: s.ourGrowth, craw: s.mktGrowth, per: `Weeks ${s0} to ${s1}`, insight: Math.abs(ship - s.ourGrowth) < .003 ? 'We ship about as much as shoppers buy' : `We ship ${plain(ship)} while shoppers buy ${plain(s.ourGrowth)}, so channel stock is ${ship > s.ourGrowth ? 'building' : 'falling'}` }; } });
+const SHARE_WHY = { 'bolt|UK': 'after Volt Coffee cut its price 12%', 'orchard|ID': 'during the out-of-stocks at FreshMart and HyperValue', 'silk|UK': 'as shoppers trade down to own brands', 'oats|UK': 'after the price increase landed' };
+function shareCells(f, P) { const [s0, s1] = shareWin(P), out = []; for (const b of brandsOf(f)) for (const c of countriesOf(f)) { if (!has({ b: [b], c: [c] })) continue; const s = K.share({ b: [b], c: [c] }, s0, s1), w = agg({ b: [b], c: [c] }, 'A', s0, s1).rsv; out.push({ b, c, chg: s.chg, w, label: K.BMAP[b].name + ' in ' + K.CMAP[c].name }); } return out; }
+sp('SHARE', { rk: 'pts', rg: 1, by: 'kcb', vs: 'last year', refL: 'Last year', prov: 'Market data', f: (f, P) => { const [s0, s1] = shareWin(P), s = K.share(f, s0, s1), cs = shareCells(f, P), W = cs.reduce((a, x) => a + x.w, 0) || 1, gain = cs.filter(x => x.chg >= -.0005).reduce((a, x) => a + x.w, 0) / W, w = cs.slice().sort((a, b) => a.chg - b.chg)[0];
+  return { raw: s.now, craw: s.ly, per: `Weeks ${s0} to ${s1}`, gain, ref: `Last year ${plain(s.ly)}`, say: `Value share is ${plain(s.now)}, ${Math.abs(s.chg * 100).toFixed(1)} points ${s.chg >= 0 ? 'ahead of' : 'behind'} last year. ${pcn(gain)} of the business is gaining or holding share.`,
+    insight: `${pcn(gain)} of the business is gaining or holding share${w && w.chg < -.0005 ? `; ${w.label} lost the most, ${Math.abs(w.chg * 100).toFixed(1)} points${SHARE_WHY[w.b + '|' + w.c] ? ', ' + SHARE_WHY[w.b + '|' + w.c] : ''}` : ''}` }; } });
+{ const catF = MX.CATG.f; sp('CATG', { ...MX.CATG, f: (f, P) => { const r = catF(f, P);
+  const uk = countriesOf(f).includes('UK') && brandsOf(f).includes('silk'); return { ...r, say: `The category is growing ${plain(r.raw)}, ${r.raw > r.craw ? 'faster' : 'slower'} than our ${plain(r.craw)}.`, insight: uk ? 'UK haircare is down 7% as shoppers trade down to own brands; India and Indonesia grow fastest' : 'India and Indonesia categories grow fastest' }; } }); }
+sp('PRICEGAP', { rk: 'n0', rg: -1, by: 'cb', vs: 'plan', refL: 'Plan', per: 'Last 13 weeks', prov: 'Retail price audits', f: f => { const p = pIdx(f); if (!p) return { raw: null, craw: null, value: 'n/a' }; return { raw: p.now, craw: p.plan, value: Math.round(p.now) + ' index', ref: `Plan ${Math.round(p.plan)}`, insight: p.worst && p.worst.d > 2 ? `${p.worst.label} is ${p.worst.v[1]} against ${p.worst.v[0]} planned, after Volt Coffee cut its price 12%` : 'Our price gap is close to plan' }; } });
+// penetration and its flows
+sp('PEN', { rk: 'pts', rg: 1, by: 'kcb', vs: 'last year', refL: 'Last year', per: '52 weeks to Sep', prov: 'Consumer panel', f: f => { const p = penFlows(f); if (!p) return { raw: null, craw: null, value: 'n/a' }; return { raw: p.now, craw: p.ly, value: p.now.toFixed(1) + '%', ref: `Last year ${p.ly.toFixed(1)}%`, insight: p.worst ? `${p.worst.label} lost ${p.worst.m}M buyers${p.worst.to ? ' to ' + p.worst.to : ''}` : 'Buyer numbers are stable' }; } });
+sp('NEWBUY', { rk: 'pts', rg: 1, by: 'kcb', vs: 'buyers lost', refL: 'Buyers lost', per: '52 weeks to Sep', prov: 'Consumer panel', f: f => { const p = penFlows(f); return p ? { raw: p.gain, craw: p.lost, value: p.gain.toFixed(1) + ' pts', ref: `Buyers lost ${p.lost.toFixed(1)} pts`, insight: 'Glow Skincare India e-commerce brings in the most new buyers' } : { raw: null, craw: null, value: 'n/a' }; } });
+sp('LOSTBUY', { rk: 'pts', rg: -1, by: 'kcb', vs: 'normal lapse', refL: 'Normal lapse', per: '52 weeks to Sep', prov: 'Consumer panel', f: f => { const p = penFlows(f); return p ? { raw: p.lost, craw: p.lostN, value: p.lost.toFixed(1) + ' pts', ref: `Normal lapse ${p.lostN.toFixed(1)} pts`, insight: p.worst ? `${p.worst.label} lost ${p.worst.m}M buyers${p.worst.to ? ' to ' + p.worst.to : ''}` : 'Lapsing at the normal rate' } : { raw: null, craw: null, value: 'n/a' }; } });
+// changeText reads penetration-style values as points already
+['NEWBUY', 'LOSTBUY'].forEach(k => { MX[k].pctUnits = 1; });
+// brand equity: the worst statistically significant move sets the status
+function beqMoves(f) { const out = []; for (const [k, v] of Object.entries(K.BRAND_HEALTH)) { const [b, c] = k.split('|'); if ((f.b && !f.b.includes(b)) || (f.c && !f.c.includes(c)) || !has({ b: [b], c: [c] })) continue; ['awareness', 'consideration', 'preference'].forEach((m, i) => out.push({ b, c, m, d: v[i][1] - v[i][0], label: K.BMAP[b].name + ' ' + K.CMAP[c].name })); } return out; }
+sp('BEQ', { rk: 'pts', rg: 1, by: 'cb', vs: 'last year', refL: 'Last year', per: 'Sep tracker', prov: 'Brand tracker', f: f => { const mv = beqMoves(f), sig = mv.filter(x => x.d <= -2), pairs = new Set(sig.map(x => x.b + x.c)).size, w = mv.slice().sort((a, b) => a.d - b.d)[0];
+  if (!w) return { raw: null, craw: null, value: 'n/a' };
+  return { raw: Math.min(0, w.d) / 100, craw: 0, value: pairs ? `${pairs} brand-market${pairs > 1 ? 's' : ''} falling` : 'None falling', ref: 'Target none', sev: pairs ? (w.d <= -4 ? 'crit' : 'warn') : 'good', say: pairs ? `${w.label} ${w.m} fell ${Math.abs(w.d).toFixed(1)} points, a significant drop.` : 'No brand is falling significantly.',
+    insight: pairs ? `${w.label} ${w.m} fell ${Math.abs(w.d).toFixed(1)} points, ahead of buyers and share` : 'No brand-market moved significantly' }; } });
+sp('ROAS', { rk: 'x', rg: 1, by: 'kcb', prov: 'Marketing mix model, Q2', per: 'Q2 model', f: (f, P) => { const a = mediaReturn(f, 'A', P.w0, P.wa), t = mediaReturn(f, 'T', P.w0, P.wa), lo = a.rows.slice().sort((x, y) => x.roi - y.roi)[0], hi = a.rows.slice().sort((x, y) => y.roi - x.roi)[0];
+  return { raw: a.roi, craw: t.roi, insight: `${lo.m} returns ${lo.roi.toFixed(2)}x against ${hi.roi.toFixed(2)}x for ${hi.m.toLowerCase()}` }; } });
+sp('CAMP', { rk: 'pts', rg: 1, by: 'cb', vs: 'plan', refL: 'Planned lift', per: 'Live campaigns', prov: 'Campaign tracking', f: f => { const cs = K.CAMPAIGNS.filter(c => c.w1 >= CW && (!f.c || f.c.includes(c.c)) && (!f.b || f.b.includes(c.b))); if (!cs.length) return { raw: null, craw: null, value: 'n/a', insight: 'No live campaigns here' }; const w = cs.slice().sort((a, b) => (a.lift - a.planLift) - (b.lift - b.planLift))[0];
+  return { raw: w.lift, craw: w.planLift, value: '+' + pcn(w.lift) + ' lift', ref: `Planned lift ${pcn(w.planLift)}`, insight: `${w.name} is lifting ${pcn(w.lift)} against ${pcn(w.planLift)} planned` }; } });
+// distribution and shelf
+sp('DIST', { rk: 'pts', rg: 1, by: 'c', vs: 'plan', refL: 'Plan', per: 'Sep retail audit', prov: 'NielsenIQ / Circana (illustrative)', f: f => { const r = reachOf(f); if (!r) return { raw: null, craw: null, value: 'n/a' }; return { raw: r.wd, craw: r.wdT, insight: `${r.worst.h.region} is furthest behind, at ${pcn(r.worst.wd)} against ${pcn(r.worst.wdT)}` }; } });
+sp('OSA', { rk: 'pts', rg: 1, by: 'c', vs: 'target', refL: 'Target', per: 'Store audits, 4 weeks', prov: 'Retail execution', f: f => ({ raw: wavgC(f, OSA_), craw: OSA_T, insight: `${K.CMAP[worstC(f, OSA_, 1)].name} has the most empty shelves` }) });
+sp('DISTOSA', { rk: 'pts', rg: 1, by: 'c', vs: 'plan', refL: 'Plan', per: 'Sep audit', prov: 'NielsenIQ / Circana (illustrative)', f: f => { const r = reachOf(f); if (!r) return { raw: null, craw: null, value: 'n/a' }; const o = wavgC(f, OSA_);
+  return { raw: r.wd * o, craw: r.wdT * OSA_T, ref: `Plan ${plain(r.wdT * OSA_T)}`, insight: `Weighted distribution ${pcn(r.wd, 1)}, shelf availability ${pcn(o, 1)}; reach is behind in ${r.worst.h.region}` }; } });
+sp('VELO', { rk: 'pts', rg: 1, by: 'cb', vs: 'last year', refL: 'Last year', per: 'Year to date', prov: 'Retailer data', f: (f, P) => { const r = reachOf(f), a = agg(f, 'A', P.w0, P.wa), l = agg(f, 'L', P.w0, P.wa); if (!r) return { raw: null, craw: null, value: 'n/a' }; const v = (a.cons / r.wd) / (l.cons / r.wdLY) - 1;
+  return { raw: v, craw: 0, value: sPct(v).replace(/[()]/g, ''), ref: 'Last year 0.0%', insight: 'Sales per store are growing fastest in India e-commerce and slowest for Bolt Brew in UK convenience' }; } });
+// lost sales and service
+sp('LOSTS', { rk: '$', rg: -1, by: 'cb', vs: 'normal', refL: 'Normal', per: '4 weeks', prov: 'Order management', f: f => { const a = agg(f, 'A', CW - 3, CW), norm = a.ord * (a.ns / a.vol) * .015;
+  return { raw: a.lost, craw: norm, value: fmt$(a.lost), ref: `Normal ${fmt$(norm)}`, sev: a.lost > norm * 2 ? 'crit' : a.lost > norm * 1.2 ? 'warn' : 'good', insight: 'Orchard Juice in Indonesia accounts for most of it, with fill rate near 82%' }; } });
+sp('OTD', { ...svc, f: f => ({ raw: wavgC(f, OTD_), craw: OTD_T, insight: `${K.CMAP[worstC(f, OTD_, 1)].name} is latest, mostly from carriers` }) });
+sp('CFR', { ...svc, f: f => { const fb = fillByC(f), w = worstC(f, fb, 1); return { raw: fillOf(f), craw: CFR_T, insight: w ? `${K.CMAP[w].name} ships the least in full, at ${pct1(fb[w])}; FreshMart and HyperValue are below contract` : '' }; } });
+sp('DFD', { ...svc, f: f => ({ raw: wavgC(f, DFD_), craw: DFD_T, insight: 'Most damage happens in transit in Indonesia and India' }) });
+sp('ODA', { ...svc, f: f => ({ raw: wavgC(f, ODA_), craw: ODA_T, insight: 'Invoice errors are highest in India modern trade' }) });
+sp('DMG', { ...svc, f: f => { const a = wavgC(f, DFD_), b = wavgC(f, ODA_); return { raw: a * b, craw: DFD_T * ODA_T, insight: `Damage-free ${pcn(a, 1)}, paperwork right ${pcn(b, 1)}; invoice errors in India modern trade` }; } });
+sp('POR', { ...svc, f: f => { const fb = fillByC(f), w = worstC(f, fb, 1); return { raw: wavgC(f, OTD_) * fillOf(f) * wavgC(f, DFD_) * wavgC(f, ODA_), craw: OTD_T * CFR_T * DFD_T * ODA_T, insight: w ? `${K.CMAP[w].name} has the lowest fill rate, at ${pct1(fb[w])}; FreshMart and HyperValue are below contract` : '' }; } });
+// cost per case and its lines
+const cpcLine = (keys, ins) => ({ rk: 'pct', rg: -1, by: 'kcb', prov: 'ERP', f: (f, P) => { const A = agg(f, 'A', P.w0, P.w1), C = cAgg(f, P), u = x => keys.reduce((s, k) => s + x[k], 0) / x.vol; return { raw: u(A), craw: u(C), value: '$' + u(A).toFixed(2), ref: `${compLab()} $${u(C).toFixed(2)}`, insight: ins }; } });
+sp('MATC', { ...cpcLine(['mat', 'pack'], ''), f: (f, P) => { const r = cpcLine(['mat', 'pack'], '').f(f, P); r.insight = withF(f, () => mkCard('ICI').insight); return r; } });
+sp('CONVC', { ...cpcLine(['conv'], ''), f: (f, P) => { const r = cpcLine(['conv'], '').f(f, P), ps = K.PLANTS.filter(p => countriesOf(f).includes(p.c) && p.oee < p.oeeT); const nm = ps.map(p => p.name.replace(/ plant$/, '')); r.insight = ps.length ? `${nm.length > 1 ? nm.slice(0, -1).join(', ') + ' and ' + nm[nm.length - 1] + ' plants run' : nm[0] + ' plant runs'} below ${ps.length > 1 ? 'their' : 'its'} efficiency target` : 'Plants here run at or above their efficiency target'; return r; } });
+sp('LOGC', cpcLine(['inb'], 'Replenishment freight is close to plan'));
+sp('COGS', { ...cpcLine(['mat', 'pack', 'conv', 'inb'], ''), f: (f, P) => { const A = agg(f, 'A', P.w0, P.w1), C = cAgg(f, P), u = x => x.cogs / x.vol, sv = K.SAVINGS, done = sv.reduce((x, s) => x + s.done, 0), plan = sv.reduce((x, s) => x + s.plan, 0);
+  return { raw: u(A), craw: u(C), value: '$' + u(A).toFixed(2), ref: `${compLab()} $${u(C).toFixed(2)}`, insight: `${withF(f, () => mkCard('ICI').insight)}${!f.c && !f.b ? `; savings are ${fmt$(done)} against ${fmt$(plan)} planned` : ''}` }; } });
+sp('ICI', { ...MX.ICI });
+sp('PRC', { ...MX.PRC, f: (f, P) => { const pz = pricing(f, P), stuck = brandsOf(f).includes('oats') && countriesOf(f).some(c => c === 'UK' || c === 'US');
+  return { raw: pz.real, craw: pz.plan, insight: `Realized ${sPct(pz.real).replace(/[()]/g, '')} against ${sPct(pz.plan).replace(/[()]/g, '')} planned${stuck ? '; the oats increase landed late at GreenGrocer, ValuePlus and BigBox' : pz.real < pz.plan ? '; large retailers accepted only part of the increase' : ''}` }; } });
+// inventory days
+sp('DIO', { rk: 'days', rg: -1, by: 'c', vs: 'target', refL: 'Target', prov: 'Supply planner', f: f => { const wh = warehouseData(f).sort((a, b) => b.days - a.days)[0]; return { raw: dioDays(f), craw: K.DIO_TARGET, insight: wh ? `${wh.name} holds the most days of stock` : '' }; } });
+sp('INV', { rk: 'days', rg: -1, by: 'c', vs: 'target', refL: 'Target', per: 'Week ' + CW, prov: 'Anaplan supply plan (illustrative)', f: f => { const r = supplyRisk(f), nw = r.filter(x => x.first >= 4)[0];
+  return { raw: dioDays(f), craw: K.DIO_TARGET, risk: r.length, insight: `${r.length} items run short in the next 13 weeks${nw ? `; ${K.BMAP[nw.b].name} ${K.CMAP[nw.c].name} is new from ${wkLabel(CW + 1 + nw.first)}` : ''}` }; } });
+sp('HEALTHY', { rk: 'days', rg: -1, by: 'c', vs: 'target', refL: 'Target', prov: 'Supply planner', f: f => ({ raw: dioDays(f) - eoDays(f).days, craw: K.DIO_TARGET - K.EO_TARGET_DAYS, insight: 'India warehouses built extra cover for snacks and haircare ahead of the push' }) });
+sp('EO', { rk: 'days', rg: -1, by: 'c', vs: 'target', refL: 'Target', prov: 'Supply planner', f: f => { const e = eoDays(f); return { raw: e.days, craw: K.EO_TARGET_DAYS, insight: `${fmt$(e.$)} of our stock is excess or close to expiry; UK instant oats after the ValuePlus delisting` }; } });
+// safety and quality: a scorecard, status from the worst item
+sp('TRIR', { rk: 'n2', rg: -1, vs: 'target', refL: 'Target', per: 'Rolling 12 months', prov: 'Safety system', f: () => { const s = K.SAFETY, i = s.incidents[0]; return { raw: s.ltifr, craw: s.target, insight: `One lost-time injury at ${i.site} in week ${i.w}; a guard has been fitted` }; } });
+sp('CPMU', { rk: 'n2', rg: -1, vs: 'target', refL: 'Target', per: 'Rolling 12 months', prov: 'Quality system', f: () => { const q = K.QUALITY; return { raw: q.cpmu, craw: q.cpmuTarget, value: q.cpmu.toFixed(1) + ' per million', ref: `Target ${q.cpmuTarget.toFixed(1)}`, insight: 'Complaints are below target in every plant' }; } });
+sp('RCL', { ...MX.RCL });
+sp('SAFQ', { rk: 'n2', rg: -1, vs: 'target', refL: 'Target', per: 'Rolling 12 months', prov: 'Safety and quality systems', f: () => { const s = K.SAFETY, q = K.QUALITY, bad = q.recalls || q.openCases || q.holds, worse = s.ltifr > s.target || q.cpmu > q.cpmuTarget;
+  return { raw: s.ltifr, craw: s.target, value: s.ltifr.toFixed(2) + ' injury rate', ref: `Target ${s.target.toFixed(2)}`, sev: bad ? 'crit' : worse ? 'warn' : 'good', say: bad ? 'There is an open recall or regulatory case.' : 'Safety and quality are on track: no recalls, complaints below target.', insight: `No recalls or holds; complaints ${q.cpmu} per million units against ${q.cpmuTarget}` }; } });
+// cash: conversion parts in points of net earnings
+const cashO = { rk: 'pts', rg: 1, vs: 'plan', refL: 'Plan', per: 'Jan to Sep, closed', prov: 'ERP, books closed' };
+sp('DANC', { ...cashO, f: () => { const a = cashParts('A'), t = cashParts('T'); return { raw: a.DANC, craw: t.DANC, insight: 'Depreciation is on plan' }; } });
+sp('WCMOV', { ...cashO, f: () => { const a = cashParts('A'), t = cashParts('T'); return { raw: a.WCMOV, craw: t.WCMOV, insight: `India distributors owe us ${fmt$(K.CASH.india_receivables)} more since the push, and inventory built ${fmt$(K.CASH.inventory_build)}` }; } });
+sp('CAPEX', { rk: 'pts', rg: 0, prov: 'ERP', per: 'Jan to Sep', vs: 'plan', refL: 'Plan', f: () => ({ raw: K.CASH.capexA, craw: K.CASH.capexT, value: plain(K.CASH.capexA) + ' of sales', ref: `Plan ${plain(K.CASH.capexT)}`, insight: 'Spending is behind plan on the new Midlands distribution centre; it helps cash this year' }) });
+sp('CCC', { ...MX.CCC, f: f => { const dio = dioDays(f), dso = wavgC(f, DSO_), dpo = wavgC(f, DPO_); return { raw: dio + dso - dpo, craw: K.DIO_TARGET + 36 - 60, insight: `Inventory ${dio.toFixed(0)} days + receivables ${dso.toFixed(0)} days − payables ${dpo.toFixed(0)} days` }; } });
+// earnings per share and its walk
+sp('EPS', { rk: 'eps', rg: 1, vs: 'the bottom of guidance', refL: 'Guidance', per: 'FY outlook', prov: 'FP&A and investor relations', f: () => { const e = epsParts(), g = K.FIN.guidance.eps, cs = K.FIN.consensus.eps, v = e.a.eps;
+  return { raw: v, craw: g[0], value: '$' + v.toFixed(2), ref: `Guidance $${g[0].toFixed(2)} to $${g[1].toFixed(2)}, analysts expect $${cs.toFixed(2)}`, sev: v < g[0] ? 'crit' : v < cs ? 'warn' : 'good', say: v < g[0] ? `Full-year EPS is heading for $${v.toFixed(2)}, $${(g[0] - v).toFixed(2)} below the bottom of guidance.` : 'EPS is within guidance.',
+    insight: `$${(cs - v).toFixed(2)} below what analysts expect; the margin change takes $${Math.abs(e.EPSM).toFixed(2)} off` }; } });
+const epsO = (k, ins) => ({ rk: 'eps', rg: 1, vs: 'plan', refL: 'Plan', per: 'FY outlook', prov: 'FP&A', f: () => { const e = epsParts(); return { raw: e[k], craw: 0, value: (e[k] >= 0 ? '+' : MINUS) + '$' + Math.abs(e[k]).toFixed(2) + ' a share', ref: 'Plan $0.00', insight: ins(e) }; } });
+sp('EPSG', epsO('EPSG', e => `Net sales are ${fmt$(Math.abs(e.a.ns - e.t.ns))} ${e.a.ns >= e.t.ns ? 'above' : 'below'} plan for the year`));
+sp('EPSM', epsO('EPSM', e => `Operating margin is ${Math.round(Math.abs((e.a.op / e.a.ns - e.t.op / e.t.ns) * 1e4))} bps ${e.a.op / e.a.ns >= e.t.op / e.t.ns ? 'above' : 'below'} plan for the year`));
+sp('BELOW', epsO('BELOW', e => `Higher interest takes $${Math.abs(e.interest).toFixed(2)} a share off, and the buyback adds $${Math.abs(e.shares).toFixed(2)}`));
+sp('INFREC', { rk: 'pts', rg: 1, by: 'cb', vs: 'full recovery', refL: 'Target', f: (f, P) => { const pz = pricing(f, P); return { raw: isFinite(pz.recovery) ? pz.recovery : null, craw: 1, value: isFinite(pz.recovery) ? pcn(pz.recovery) : 'n/a', ref: 'Target 100%', insight: `Price increases cover ${isFinite(pz.recovery) ? pcn(pz.recovery) : 'none'} of the cost increase; oats are the gap` }; } });
+// operating margin with overheads allocated, so it works for a brand or a market too
+sp('OM', { rk: 'bps', rg: 1, by: 'kcb', prov: 'ERP and FP&A', f: (f, P) => { const { A, C } = aomPair(f, P); return { raw: A.om, craw: C.om, ref: `${compLab()} ${plain(C.om)}`, insight: 'Lower overheads are hiding weaker gross margin' }; } });
+sp('GM', { rk: 'bps', rg: 1, by: 'kcbh', prov: 'ERP', f: (f, P) => { const A = agg(f, 'A', P.w0, P.w1), C = cAgg(f, P), g = x => (x.ns - x.cogs) / x.ns; return { raw: g(A), craw: g(C), ref: `${compLab()} ${plain(g(C))}`, insight: 'Oat costs are rising faster than prices' }; } });
+['AMS', 'DEX', 'OHD'].forEach(k => { MX[k].by = MX[k].by || 'kcb'; });
+sp('AMS', { ...MX.AMS, f: (f, P) => { const { A, C } = aomPair(f, P); return { raw: A.ap, craw: C.ap, insight: 'Glow Skincare in India is over budget on purpose, ahead of Diwali' }; } });
+sp('DEX', { ...MX.DEX, f: (f, P) => { const { A, C } = aomPair(f, P); return { raw: A.dist, craw: C.dist, insight: 'Rush shipments in Indonesia are adding freight' }; } });
+sp('OHD', { ...MX.OHD, f: (f, P) => { const { A, C } = aomPair(f, P); return { raw: A.oh, craw: C.oh, insight: 'The overhead freeze is keeping costs below plan' }; } });
+WIN_.push('OM', 'GM', 'TRADE', 'PROMOSP', 'TERMSP', 'RETURNS', 'PCTPROMO', 'MATC', 'CONVC', 'LOGC', 'COGS', 'ROAS', 'INFREC', 'TTERMS', 'OVG', 'PMX');
+WINDOWED.push('TTERMS', 'PROMOSP', 'TERMSP', 'RETURNS', 'PCTPROMO', 'MATC', 'CONVC', 'LOGC', 'INV', 'DIO', 'HEALTHY', 'CHINV', 'DSTOCK', 'RSTOCK', 'LOSTS');
+['SALES'].forEach(k => { const i = WINDOWED.indexOf(k); if (i >= 0) WINDOWED.splice(i, 1); });   // month to date has no meaningful weekly line
+// names, definitions and formulas from the spec, for every metric in the trees
+const PYIDS = new Set(Object.values(ROLE_CARDS).flat()); for (const [p, ks] of Object.entries(TREE)) { PYIDS.add(p); ks.forEach(x => PYIDS.add(x.id)); }
+for (const id of PYIDS) { const m = META(id); if (!m) continue; CARD_DEF[id] = [shortName(m.name), m.tells, m.formula]; DEF[id] = CARD_DEF[id]; if (MX[id]) MX[id].n = shortName(m.name); if (TREE[id]) LOGIC[id] = m.formula; }
+Object.assign(VS, { EPS: 'the bottom of guidance', SALES: 'target', CHINV: 'normal', DIST: 'plan', SHARE: 'last year', PEN: 'last year', SAFQ: 'target', BEQ: 'last year', TTERMS: 'agreed terms', INV: 'target', DISTOSA: 'plan', POR: 'target' });
+
+/* ---------- the why on a card: the part that hurts most, in the parent's unit ---------- */
+const card0 = id => (MX[id] ? mkCard(id) : cardBase3(id));
+function whyFromParts(id, x) {
+  const p = partsOf(id); if (!p) return null;
+  const rows = Object.entries(p.eff).map(([k, v]) => ({ k, v, hurt: p.bad ? v : -v })).sort((a, b) => b.hurt - a.hurt), w = rows[0];
+  if (!w || w.hurt <= 0) return null;
+  const y = card0(w.k), nm = CARD_DEF[w.k][0];
+  return `${nm} ${p.bad ? `adds ${p.fmt(Math.abs(w.v)).replace(/^[+−]/, '')} to ${nounOf(id)}` : `takes ${p.fmt(Math.abs(w.v)).replace(/^[+−]/, '')} off ${nounOf(id)}`}${y.insight ? '. ' + dotEnd(y.insight) : '.'}`;
+}
+card = function (id) { const x = card0(id); if (CW !== K.CW) return x; if (x && x.sev !== 'good' && PARTS[id] && !['SAFQ', 'BEQ'].includes(id)) { const w = whyFromParts(id, x); if (w) x.insight = w; } return x; };
+// penetration-style values are already in points
+{ const ct = changeText; changeText = function (id, rk, prev, cur) { return MX[id] && MX[id].pctUnits ? sPts(cur - prev) : ct(id, rk, prev, cur); }; }
+
+/* ---------- panels: the L1 analysis each card opens, and the analysis under deeper metrics ---------- */
+Object.assign(PANEL, {
+  DISTOSA: () => { band('S2'); lead('DISTOSA'); }, TTERMS: () => { openCFO('F5'); lead('TTERMS'); }, INV: () => { band('O1'); lead('INV'); },
+  SAFQ: () => { openSAFQ(); lead('SAFQ'); }, PEN: PANEL.PEN, ROMI: () => { band('M2'); lead('ROMI'); }, CHINV: () => { band('S4'); lead('CHINV'); },
+});
+Object.assign(FULL, { DISTOSA: () => band('S2'), DIST: () => band('S2'), LOSTS: () => band('O2'), PRICEGAP: () => openTile('Sh6'), PCTPROMO: () => openCFO('F5'), INFREC: () => openCFO('F4'), DANC: () => PANEL.FCF(), WCMOV: () => PANEL.FCF(),
+  EPSG: () => openCFO('F6'), EPSM: () => openTile('Sh3'), BELOW: () => openCFO('F6'), PROMOSP: () => openCFO('F5'), TERMSP: () => openCFO('F2'), RETURNS: () => band('S4'), NEWBUY: () => PANEL.PEN(), LOSTBUY: () => PANEL.PEN(), CAMP: () => band('M2'),
+  SALES: () => band('S1'), RUNRATE: () => band('S1'), CHINV: () => band('S4'), DSTOCK: () => band('S4'), RSTOCK: () => band('S4'), VELO: () => band('S2'), COMPLY: () => openCFO('F5'), TTERMS: () => openCFO('F5'), DMG: () => band('O2'),
+  COGS: () => band('O3'), MATC: () => openCFO('F4'), CONVC: openCostLevel, LOGC: () => band('O3'), INV: () => band('O1'), HEALTHY: () => band('O1'), CPMU: () => openSAFQ(), SAFQ: () => openSAFQ(), SSG: () => openSSG(), ROMI: () => band('M2'), EPS: () => openCFO('F6') });
+Object.assign(BY, Object.fromEntries(Object.entries(MX).filter(([, m]) => m.by).map(([k, m]) => [k, m.by])), { OSG: 'kcbh', SHARE: 'kcb', ROMI: 'kcb' });
+
+/* ---------- reading a level: the metric, its parts, where, and the actions on it ---------- */
+const roleOwns = id => ownerOf(id) === state.role || (!ownerOf(id) && ROLE_CARDS[state.role].includes(id));
+const ownTag = id => { const o = ownerOf(id); return o && o !== state.role ? `shared, owned by ${ROLE_T[o]}` : ''; };
+const parentOf = id => { for (const [p, ks] of Object.entries(TREE)) if (ks.some(x => x.id === id)) return p; return null; };
+headBlock = function (id) {
+  const f = { ...PF }, st = drill.stack, last = st[st.length - 1], par = last && last.node !== id ? last.node : (st[st.length - 2] || {}).node;
+  const make = () => withF(f, () => { const x = card(id), g = gapOf(id, x), t = trendOf(id), key = issueKey(id, f), a = assignedFor(key);
+    return `<div class="nh s-${x.sev}" data-ikey="${esc(key)}"><div class="nh-fig"><span class="c-sig">${SEV[x.sev]}</span><span class="c-gap">${g && g.amt ? `<i>${g.arrow}</i><b class="num">${g.amt}</b><span>${esc(g.words)}</span>` : g ? `<b class="flat">${esc(g.words)}</b>` : `<b class="num">${x.value}</b>`}</span>${g ? nowLine(id, x) : `<span class="c-now">${x.delta || ''}</span>`}</div>
+      <div class="nh-tr">${t ? trendSvg(t, x.sev) : gapBar(id, x)}<small>${t ? esc(t.lab) : `Now against ${esc(VS[id] || compName())}`}</small></div>
+      <div class="nh-why"><b>Why</b> ${esc(x.insight || x.say)}<small>${esc(CARD_DEF[id][1])}</small></div>
+      <span class="ir-a">${a ? assignedChip(a) : assignBtn(id, f, x.sev === 'good')}</span></div>`; });
+  const x = withF(f, () => card(id)), m = META(id), k = par ? kindIn(par, id) : null, o = ownerOf(id);
+  const rel = par && k ? `${KIND_H[k] === 'Lever' ? 'A lever on' : k === 'lens' ? 'Read beside' : k === 'item' ? 'On the scorecard of' : k === 'mul' ? 'Multiplies into' : 'Adds up to'} ${lowFirst(CARD_DEF[par][0])}. ` : '';
+  return { h: m ? m.name : CARD_DEF[id][0], sub: `${rel}${o ? `Owned by ${ROLE_T[o]}. ` : ''}${scopeOf(f)}, ${x.per}. Source: ${x.prov}.`, wide: true, html: make(), make, src: x.prov };
+};
+// one row for a part, lever or scorecard item: what it does to the parent, then the card anatomy
+function pRow(o) {
+  const x = withF(o.f, () => card(o.id)), g = gapOf(o.id, x), key = issueKey(o.id, o.f), a = assignedFor(key), n = (NODE[o.id] || {}).kids || [], tag = [ownTag(o.id), n.length ? `${n.length} below` : ''].filter(Boolean).join(', ');
+  const eff = o.eff == null ? '' : `<span class="ir-e ${(o.bad ? o.eff > 0 : o.eff < 0) ? 'neg' : o.eff === 0 ? '' : 'pos'}" title="What this does to ${esc(o.parentName)}">${esc(o.fmt(o.eff))}</span>`;
+  return `<div class="ir s-${x.sev} ${o.eff != null ? 'has-e' : ''}" data-ikey="${esc(key)}"><button class="ir-main" data-node-go="${o.id}" title="Open ${esc(CARD_DEF[o.id][0])}">
+      <span class="ir-s">${SEV[x.sev]}</span>
+      <span class="ir-n" data-def="${o.id}">${esc(CARD_DEF[o.id][0])}${tag ? `<small>${esc(tag)}</small>` : ''}</span>${eff}
+      <span class="ir-g">${gapWords(g) || `<b class="num">${x.value}</b>`}</span>
+      <span class="ir-now">${g ? nowLine(o.id, x) : ''}</span>
+      <span class="ir-why">${esc(x.insight || '')}</span><i class="ir-go" aria-hidden="true">→</i></button>
+    <span class="ir-a">${a ? assignedChip(a) : assignBtn(o.id, o.f, x.sev === 'good')}</span></div>`;
+}
+// the walk from comparison to actual, one step per part
+const walkHtml = (id, p) => `<div class="walk" aria-label="How the parts add up"><span class="wk-end"><small>${esc(p.startL || compLab())}</small><b class="num">${p.sv(p.start)}</b></span>${Object.entries(p.eff).map(([k, v]) => `<i aria-hidden="true">${v >= 0 ? '+' : MINUS}</i><button class="wk-p ${(p.bad ? v > 0 : v < 0) ? 'neg' : 'pos'}" data-node-go="${k}" data-def="${k}"><small>${esc(CARD_DEF[k][0])}</small><b class="num">${esc(p.fmt(v).replace(/^[+−]/, ''))}</b></button>`).join('')}<i aria-hidden="true">=</i><span class="wk-end now"><small>${esc(p.endL || 'Now')}</small><b class="num">${p.sv(p.end)}</b></span></div>`;
+driversBlock = function (id) {
+  const ks = TREE[id]; if (!ks || !ks.length) return null;
+  const f = { ...PF }, name = CARD_DEF[id][0];
+  const make = () => withF(f, () => {
+    const p = partsOf(id), parts = ks.filter(x => ['add', 'mul', 'item'].includes(x.k)), levers = ks.filter(x => x.k === 'lever'), lens = ks.filter(x => x.k === 'lens');
+    const prow = parts.map(x => ({ id: x.id, x: card(x.id), eff: p && p.eff[x.id] != null ? p.eff[x.id] : null })).sort((a, b) => a.eff != null && b.eff != null ? (p.bad ? b.eff - a.eff : a.eff - b.eff) : SEV_RANK[a.x.sev] - SEV_RANK[b.x.sev]);
+    const lrow = rankRows(levers.map(x => ({ id: x.id, x: card(x.id) })));
+    const kind = parts.length ? parts[0].k : null;
+    return `${p && parts.length ? walkHtml(id, p) : ''}
+      ${parts.length ? `<h4 class="ir-h">${kind === 'item' ? 'On the scorecard' : kind === 'mul' ? 'Multiplies to ' + lowFirst(name) : 'Adds up to ' + lowFirst(name)}${p ? `<span>What each does to ${esc(lowFirst(name))}</span>` : ''}</h4><div class="ir-list">${prow.map(r => pRow({ id: r.id, f, eff: r.eff, fmt: p ? p.fmt : null, bad: p && p.bad, parentName: lowFirst(name) })).join('')}</div>` : ''}
+      ${levers.length ? `<h4 class="ir-h">Levers<span>What can be pulled, and who owns it</span></h4><div class="ir-list">${lrow.map(r => pRow({ id: r.id, f })).join('')}</div>` : ''}
+      ${lens.length ? `<p class="ir-lens"><span>Read it with</span>${lens.map(z => { const y = card(z.id); return `<button class="lens s-${y.sev}" data-node-go="${z.id}" data-def="${z.id}">${esc(CARD_DEF[z.id][0])} <b class="num">${y.value}</b></button>`; }).join('')}</p>` : ''}`;
+  });
+  const ps = ks.filter(x => x.k !== 'lens' && x.k !== 'lever'), k = ps.length ? ps[0].k : 'lever';
+  return { h: k === 'item' ? `${name}: the scorecard` : k === 'lever' ? `What moves ${lowFirst(name)}` : `What makes up ${lowFirst(name)}`, sub: `${LOGIC[id] || ''} Open any row to go one level down.`.trim(), wide: true, html: make(), make, src: 'Same filters and period as this panel' };
+};
+// where it is off: country, category, brand and channel, worst first; a row filters the whole view
+const DIMS = { c: ['country', f => countriesOf(f).filter(c => has({ ...f, c: [c] })).map(c => [{ c: [c] }, K.CMAP[c].name])],
+  k: ['category', f => [...new Set(brandsOf(f).map(b => K.BMAP[b].cat))].map(cat => [{ b: brandsOf(f).filter(b => K.BMAP[b].cat === cat) }, cat])],
+  b: ['brand', f => brandsOf(f).filter(b => has({ ...f, b: [b] })).map(b => [{ b: [b] }, K.BMAP[b].name])],
+  h: ['channel', f => channelsOf(f).map(ch => [{ ch: [ch] }, K.CHMAP[ch].name])] };
+whereBlock = function (id) {
+  const by = BY[id] || ''; if (!by) return null;
+  const f = { ...PF }, order = ['c', 'k', 'b', 'h'].filter(d => by.includes(d));
+  const make = () => order.map(dim => {
+    const keys = DIMS[dim][1](f); if (keys.length < 2) return '';
+    const rows = rankRows(keys.map(([o, label]) => { const ff = { ...f, ...o }; return { f: ff, o, label, x: withF(ff, () => card(id)) }; }).filter(r => r.x && r.x.raw != null));
+    if (rows.length < 2) return '';
+    return `<h4 class="ir-h">By ${DIMS[dim][0]}</h4><div class="ir-list">${rows.map(r => issueRow({ id, f: r.f, label: r.label, where: r.o })).join('')}</div>`;
+  }).join('');
+  const html = make(); if (!html) return null;
+  const l1 = Object.values(L1SPEC[id] || {})[0];
+  return { h: `Where ${lowFirst(CARD_DEF[id][0])} is off`, sub: `Worst first${l1 ? `. The cut for this metric: ${l1.where.toLowerCase().replace(/ · /g, ', ')}` : ''}. Open a row to see this whole view for that place.`, wide: true, html, make, src: srcFor(id) };
+};
+// actions: the next step the spec suggests, and every open action on this metric or anything under it
+const CLS_NODES = { competitor: ['SHARE', 'SSG', 'PRICEGAP', 'ESOV', 'PEN', 'LOSTBUY', 'OSG', 'OVG'], buying: ['TRADE', 'PROMOSP', 'TPR', 'PCTPROMO', 'TTERMS', 'PMX'], cost: ['COGS', 'MATC', 'ICI', 'GM', 'PRC', 'INFREC', 'OM', 'PMX', 'EPSM'],
+  supply: ['POR', 'CFR', 'OTD', 'LOSTS', 'SOTIF', 'FA', 'OSG', 'OVG', 'RISK'], market: ['OSG', 'CATG', 'SHARE'], opportunity: ['OSG', 'PEN', 'NEWBUY', 'SSG', 'OVG'], loading: ['CHINV', 'DSTOCK', 'DSO', 'WCMOV', 'FCFC', 'RETURNS'], volume: ['SALES', 'OVG'] };
+const ACT_NODES = a => a.node ? [a.node] : a.key ? [a.key.split('|')[0]] : /^head\|/.test(a.id) ? ['SALES', 'RUNRATE', 'DIST', 'DISTOSA'] : /^risk\|/.test(a.id) ? ['INV', 'RISK', 'POR'] : a.id === 'guidance' ? ['EPS', 'EPSM', 'OM'] : /^camp\|/.test(a.id) ? ['ROMI', 'ROAS', 'CAMP', 'AMS'] : CLS_NODES[a.cls] || [];
+const subtree = (id, d = 0, s = new Set()) => { s.add(id); if (d < 3) (TREE[id] || []).forEach(x => subtree(x.id, d + 1, s)); return s; };
+const PEOPLE_BY = [['Head of Revenue Growth', 'RGM'], ['Procurement', 'PROC'], ['UK sales', 'UK_SALES'], ['Chief Sales Officer', 'CSO'], ['CFO', 'CFO'], ['CMO', 'CMO'], ['COO', 'COO'], ['CEO', 'CEO']];
+function suggestedFor(id) {
+  const spec = L1SPEC[id]; let ch = spec && (spec[state.role] || Object.values(spec)[0]);
+  if (!ch) for (const r of PY.ROLES) for (const l of PY.ROLE[r].tree) if (!ch && l.chain.some(([s, t]) => (s === 'T2' || s === 'T3') && META(id) && t.toLowerCase().includes(shortName(META(id).name).toLowerCase().split(' ')[0]))) ch = l;
+  if (!ch) return null; const act = (ch.chain.find(c => c[0] === 'Action') || [])[1], iss = (ch.chain.find(c => c[0] === 'Issue') || [])[1]; if (!act) return null;
+  const [who, what] = act.includes(':') ? [act.slice(0, act.indexOf(':')), act.slice(act.indexOf(':') + 1).trim()] : ['', act];
+  const pk = (PEOPLE_BY.find(([w]) => who.includes(w)) || [])[1];
+  return { who, what: what.charAt(0).toUpperCase() + what.slice(1), issue: iss, poc: pk ? K.PEOPLE[pk] : null };
+}
+function actionsBlock(id) {
+  const f = { ...PF };
+  const make = () => {
+    const S = subtree(id), inScope = a => !f.c || !a.f || !a.f.c || a.f.c.some(c => f.c.includes(c));
+    const list = actionsList().filter(a => a.status !== 'Done' && inScope(a) && ACT_NODES(a).some(n => S.has(n)));
+    const sg = suggestedFor(id), words = t => new Set(t.toLowerCase().match(/[a-z]{5,}/g) || []), done = sg && list.some(a => { const A = words(a.title), B = [...words(sg.what)]; return B.filter(w => A.has(w)).length >= 2; });
+    const row = a => `<div class="pa-row"><i class="dot ${a.status.replace(' ', '-').toLowerCase()}" aria-hidden="true"></i><span class="pa-t"><b>${esc(a.title.split(/;/)[0].replace(/\.$/, ''))}</b><small>${esc(a.issue || '')}</small></span><span class="pa-d num ${a.overdue ? 'od' : ''}">Due ${fmtD(a.due)}${a.overdue ? ', ' + odDays(a) : ''}</span><span class="pa-o">${esc(ownerRole(a.poc))}</span><span class="pa-s">${a.status}</span><span class="pa-b">${actionCta(a)}<button class="btn sm quiet" data-goact="${esc(a.id)}">Open</button></span></div>`;
+    return `${sg && !done ? `<div class="pa-sug"><span class="pa-k">Suggested next step</span><p><b>${esc(sg.what)}</b>${sg.who ? `<small>Owner: ${esc(sg.who)}${sg.issue ? `. For: ${esc(lowFirst(sg.issue))}` : ''}</small>` : ''}</p><button class="btn sm cta" data-assign-sug="${esc(JSON.stringify({ id, f, title: sg.what, poc: sg.poc }))}">Assign this</button></div>` : ''}
+      ${list.length ? `<div class="pa-list">${list.map(row).join('')}</div>` : `<p class="empty">No open actions on ${esc(lowFirst(CARD_DEF[id][0]))} or anything under it yet.</p>`}
+      <p class="pa-new"><button class="link" data-assign-issue="${esc(JSON.stringify({ id, f }))}">+ Assign a new action on ${esc(lowFirst(CARD_DEF[id][0]))}</button></p>`;
+  };
+  return { h: `Actions on ${lowFirst(CARD_DEF[id][0])}`, sub: 'Open actions on this metric and everything under it, with owner and due date. Changes here show in My actions.', wide: true, html: make(), make, src: 'My actions' };
+}
+// a panel headline: the card's sentence, then the reason, without saying the same thing twice
+const headline = x => { const say = x.say || '', ins = x.insight || '', k = t => t.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 6).join(' ');
+  return ins && k(ins) === k(say) ? dotEnd(ins) : `${say} ${ins ? dotEnd(ins) : ''}`.trim(); };
+const levelBlocks = id => [headBlock(id), driversBlock(id), whereBlock(id), actionsBlock(id)].filter(Boolean);
+openNodeRaw = function (id) {
+  const step = STEP.cur, x = card(id), say = headline(x);
+  const pre = levelBlocks(id), n0 = drill.stack.length;
+  if (FULL[id]) {
+    drill.pushNext = true; try { FULL[id](); } catch (e) { }
+    const lv = drill.stack[drill.stack.length - 1];
+    if (drill.stack.length === n0 + 1 && !drill.stack.slice(0, -1).some(l => l.title === lv.title)) {
+      Object.assign(lv, { crumb: CARD_DEF[id][0], node: id, step: lv.step || step, title: say }); lv.blocks = lv.blocks.filter(b => !/^What (adds up to|moves|makes up)/.test(b.h || ''));
+      extendTop({ pre, insight: say }); return;
+    }
+    drill.stack = drill.stack.slice(0, n0);
+  }
+  drill.pushNext = true; openLevel({ crumb: CARD_DEF[id][0], node: id, step, title: say, insight: say, blocks: pre });
+};
+openCard = function (id, f, keep) { openCardBase(id, f, keep); const lv = drill.stack[0]; if (!lv) return; lv.node = id; lv.blocks = lv.blocks.filter(b => !/^What (adds up to|moves|makes up)/.test(b.h || '')); extendTop({ pre: levelBlocks(id), insight: headline(card(id)) }); };
+
+// Ask: a metric that is a home card somewhere opens as that card, not as a part of another tree
+{ const base = findPath; findPath = function (id) { return Object.values(ROLE_CARDS).some(l => l.includes(id)) ? [id] : base(id); }; }
+
+/* ---------- header scope: country, category, brand and channel for the home page; a card opened from home keeps it ---------- */
+{ const base = openCard; openCard = function (id, f, keep) { return base(id, f || (Object.keys(HF).length ? { ...HF } : f), keep); }; }
+function scopeHtml() {
+  const cat = catOf(HF.b), opt = (v, t, on) => `<option value="${esc(v)}" ${on ? 'selected' : ''}>${esc(t)}</option>`;
+  const sel = (k, opts) => `<label class="fsel ${opts.some(o => o[2]) ? 'set' : ''}"><select data-hf="${k}">${opts.map(o => opt(...o)).join('')}</select></label>`;
+  return `<span class="plab">Scope</span><div class="hf-grid">
+    ${sel('c', [['', 'All countries', !HF.c]].concat(K.COUNTRIES.map(c => [c.id, c.name, !!HF.c && HF.c[0] === c.id])))}
+    ${sel('k', [['', 'All categories', !cat]].concat(K.CATS.map(c => [c, c, cat === c])))}
+    ${sel('b', [['', cat ? `All ${cat.toLowerCase()} brands` : 'All brands', !HF.b || !!cat]].concat(K.BRANDS.filter(b => !cat || b.cat === cat).map(b => [b.id, b.name, !!HF.b && !cat && HF.b[0] === b.id])))}
+    ${sel('ch', [['', 'All channels', !HF.ch]].concat(K.CHANNELS.map(c => [c.id, c.name, !!HF.ch && HF.ch[0] === c.id])))}
+  </div>${Object.keys(HF).length ? '<button class="link" data-hf-reset>Back to the whole company</button>' : ''}`;
+}
+{ const base = syncControls; syncControls = function () {
+  base();
+  const cmpL = ({ T: 'Plan', E: 'Latest estimate', L: 'Last year', M: 'Last month' })[state.comp];
+  $('#period-lab').innerHTML = `<span class="fl"><span class="fl-k">Period</span><b class="fl-v">${esc(win().label)}</b></span><span class="fl"><span class="fl-k">Compared with</span><b class="fl-v">${esc(cmpL)}</b></span><span class="fl"><span class="fl-k">Year</span><b class="fl-v">${state.year === 'FISCAL' ? 'Fiscal' : 'Calendar'}</b></span><span class="fl"><span class="fl-k">Scope</span><b class="fl-v ${Object.keys(HF).length ? 'on' : ''}">${esc(scopeOf(HF))}</b></span>`;
+  let box = $('#f-scope'); if (!box) { box = document.createElement('div'); box.id = 'f-scope'; box.className = 'hf'; $('#period-desc').before(box); }
+  box.innerHTML = scopeHtml();
+}; }
+const setHF = nf => { HF = nf; closePanel(); syncControls(); renderHome(); };
+document.addEventListener('change', e => { const s = e.target.closest('[data-hf]'); if (!s) return; e.stopImmediatePropagation(); const k = s.dataset.hf, nf = { ...HF };
+  if (k === 'k') { if (s.value) nf.b = K.BRANDS.filter(b => b.cat === s.value).map(b => b.id); else delete nf.b; }
+  else if (s.value) nf[k] = [s.value]; else if (k === 'b' && catOf(HF.b)) { /* keep the category */ } else delete nf[k];
+  setHF(nf); }, true);
+document.addEventListener('click', e => { if (e.target.closest('[data-hf-reset]')) { e.stopImmediatePropagation(); setHF({}); } }, true);
+
+/* ---------- Teams alerts on a saved view: the user sets what counts as a change (illustrative, nothing is sent) ---------- */
+const pctLike = (id, rk) => (rk === 'pts' || rk === 'bps') && !(MX[id] && MX[id].pctUnits);
+const toD = (id, rk, v) => v == null || !isFinite(v) ? '' : pctLike(id, rk) ? +(v * 100).toFixed(2) : rk === '$' ? +(v / 1e6).toFixed(1) : +(+v).toFixed(2);
+const fromD = (id, rk, v) => pctLike(id, rk) ? v / 100 : rk === '$' ? v * 1e6 : v;
+const unitD = (id, rk) => pctLike(id, rk) ? '%' : rk === '$' ? '$M' : rk === 'x' ? 'x' : rk === 'days' ? 'days' : rk === 'wks' ? 'weeks' : '';
+// an alert fires when the metric crosses a value, or leaves a range, that the user sets
+const RULES = [['below', 'It falls below'], ['above', 'It rises above'], ['range', 'It leaves the range']];
+function ruleOf(b, x) {
+  const def = x.rg > 0 ? 'below' : 'above', r = b.rule && RULES.some(([k]) => k === b.rule.k) ? b.rule : { k: def }, cv = toD(b.v.card, x.rk, x.craw), nv = toD(b.v.card, x.rk, x.raw);
+  const w = Math.max(.5, Math.abs(+cv || 0) * .1);
+  return { k: r.k, a: r.a != null ? r.a : r.k === 'range' ? +(cv - w).toFixed(2) : r.k === 'move' ? 1 : (cv !== '' ? cv : nv), b: r.b != null ? r.b : +(cv + w).toFixed(2) };
+}
+function ruleText(b, x, r) {
+  const u = unitD(b.v.card, x.rk), v = n => `${n}${u === '%' ? '%' : u ? ' ' + u : ''}`;
+  return r.k === 'status' ? 'its status changes (on track, at risk, off track)' : r.k === 'below' ? `it falls below ${v(r.a)}` : r.k === 'above' ? `it rises above ${v(r.a)}` : r.k === 'range' ? `it leaves ${v(r.a)} to ${v(r.b)}` : `it moves by more than ${v(r.a)} since the last check`;
+}
+function ruleHit(b, x, r) {
+  const n = toD(b.v.card, x.rk, x.raw), p = toD(b.v.card, x.rk, b.v0);
+  return r.k === 'status' ? b.sev0 && b.sev0 !== x.sev : r.k === 'below' ? n < r.a : r.k === 'above' ? n > r.a : r.k === 'range' ? n < r.a || n > r.b : Math.abs(n - p) > r.a;
+}
+{ const base = watchTile; watchTile = function (r, compact) {
+  const h = base(r, compact), b = r.b, x = r.x; if (!b.teams) return h;
+  const ru = ruleOf(b, x), u = unitD(b.v.card, x.rk), hit = ruleHit(b, x, ru);
+  const num = (k, val) => `<input type="number" step="any" class="al-n" data-bm-rv="${b.id}|${k}" value="${esc(String(val))}" aria-label="Value">`;
+  const ui = `<div class="pin-alert"><label class="al-l">Alert me when</label><select data-bm-rule="${b.id}">${RULES.map(([k, t]) => `<option value="${k}" ${k === ru.k ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    ${ru.k === 'status' ? '' : ru.k === 'range' ? `${num('a', ru.a)}<span class="al-u">to</span>${num('b', ru.b)}<span class="al-u">${esc(u)}</span>` : `${num('a', ru.a)}<span class="al-u">${esc(u)}</span>`}
+    <p class="al-p">Teams message if ${esc(lowFirst(CARD_DEF[b.v.card][0]))}, ${esc(b.scope)}, ${esc(ruleText(b, x, ru))}. <b class="${hit ? 'al-hit' : ''}">Now ${x.value}${hit ? ': this would alert today' : ': no alert today'}</b></p></div>`;
+  return h.replace(/<\/label><\/div>$/, '</label>' + ui + '</div>');
+}; }
+const reWatch = () => { if (!$('#modal').hidden && $('#modal .pin-col')) openWatchAll(); renderPins(); };
+document.addEventListener('change', e => {
+  const t = e.target.closest('[data-bm-teams]'); if (t) { setTimeout(reWatch, 0); return; }
+  const s = e.target.closest('[data-bm-rule]'); if (s) { const b = BM.find(x => x.id === s.dataset.bmRule); if (!b) return; b.rule = { k: s.value }; saveBM(); reWatch(); return; }
+  const n = e.target.closest('[data-bm-rv]'); if (n) { const [id, k] = n.dataset.bmRv.split('|'), b = BM.find(x => x.id === id), v = parseFloat(n.value); if (!b || !isFinite(v)) return; const x = cardIn(b.v), cur = ruleOf(b, x); b.rule = { ...cur, [k]: v }; saveBM(); reWatch(); }
+});
+{ const base = renderPins; renderPins = function () { base(); document.querySelectorAll('#pins .st-tm').forEach(el => { const b = BM.find(z => z.id === el.closest('[data-pin]').dataset.pin); if (!b) return; let x; try { x = cardIn(b.v); } catch (e) { return; } const ru = ruleOf(b, x), u = unitD(b.v.card, x.rk), uu = u === '%' ? '%' : u ? ' ' + u : ''; el.textContent = ru.k === 'status' ? 'Teams: status' : ru.k === 'range' ? `Teams: ${ru.a} to ${ru.b}${uu}` : ru.k === 'move' ? `Teams: moves ${ru.a}${uu}` : `Teams: ${ru.k} ${ru.a}${uu}`; el.title = `Microsoft Teams message when ${ruleText(b, x, ru)} (illustrative)`; }); }; }
+
+/* ---------- no personal names anywhere: actions and views saved in the browser before this change are rewritten to roles ---------- */
+{ const OLD = { 'Raj Patel': 'North & East India Sales Head', 'Neha Singh': 'West India Sales Head', 'Arun Kumar': 'South India Sales Head', 'Budi Santoso': 'Jakarta & West Java Sales Head', 'Siti Rahma': 'East Java Sales Head',
+    'Bob Smith': 'London & South Sales Head', 'James Hall': 'Midlands & North Sales Head', 'Rachel Green': 'US East Sales Head', 'Mike Davis': 'US Central Sales Head', 'Ana Lopez': 'US South & West Sales Head' };
+  const fix = v => typeof v !== 'string' ? v : v.replace(/^[A-Z][a-z]+ [A-Z][a-z]+, /, '').replace(new RegExp(Object.keys(OLD).join('|'), 'g'), m => 'the ' + OLD[m]);
+  let ch = false; const walk = o => { if (!o) return; for (const k of ['poc', 'title', 'issue', 'why', 'note']) if (typeof o[k] === 'string') { const n = fix(o[k]); if (n !== o[k]) { o[k] = n; ch = true; } } if (Array.isArray(o.chain)) o.chain = o.chain.map(x => { const n = fix(x); if (n !== x) ch = true; return n; }); };
+  NEWACTS.forEach(walk); Object.values(ACTS).forEach(walk); (BM || []).forEach(b => { if (b && typeof b.title === 'string') { const n = fix(b.title); if (n !== b.title) { b.title = n; ch = true; } } });
+  if (ch) { saveNew(); saveBM(); } }
+
+/* ---------- one definition on hover, everywhere: what it is, how to read it, owner, formula, levers and what it adds into ---------- */
+const relPhrase = { add: 'Adds up to', mul: 'Multiplies into', item: 'On the scorecard of', lens: 'Explains', lever: 'A lever on' };
+function metricTip(id) {
+  const m = META(id), d = DEF[id]; if (!m && !d) return null;
+  const name = m ? m.name : d[0], tells = m ? m.tells : d[1], formula = m ? m.formula : d[2], read = m ? m.read : '';
+  const home = Object.entries(ROLE_CARDS).filter(([, l]) => l.includes(id)).map(([r]) => ROLE_T[r]);
+  const ups = []; for (const [pid, ks] of Object.entries(TREE)) { const k = ks.find(x => x.id === id); if (k && CARD_DEF[pid]) ups.push(`${relPhrase[k.k]} ${lowFirst(CARD_DEF[pid][0])}`); }
+  const ks = TREE[id] || [], grp = t => ks.filter(x => t.includes(x.k)).map(x => lowFirst(CARD_DEF[x.id] ? CARD_DEF[x.id][0] : x.id));
+  const made = grp(['add', 'mul', 'item']), lev = grp(['lever']), lens = grp(['lens']);
+  const flow = [home.length ? `Home card for the ${home.join(' and ')}.` : '', ups.length ? ups.slice(0, 3).join('. ') + '.' : '',
+    made.length ? `Made of ${made.join(', ')}.` : '', lev.length ? `Levers: ${lev.join(', ')}.` : '', lens.length ? `Read with ${lens.join(', ')}.` : ''].filter(Boolean).join(' ');
+  const own = m && m.own && m.own.length ? `${ROLE_T[m.own[0]]}${m.own.length > 1 ? `; also used by ${m.own.slice(1).map(r => ROLE_T[r]).join(', ')}` : ''}` : '';
+  const sec = (k, v) => v ? `<div class="tt-k">${k}</div><p>${esc(v)}</p>` : '';
+  const addsInto = ups.slice(0, 3).join('. '), levers = [made.length ? `Made of ${made.join(', ')}.` : '', lev.length ? `Levers: ${lev.join(', ')}.` : ''].filter(Boolean).join(' ');
+  return `<div class="th">${esc(name)}</div>${sec('What it is', tells)}${sec('How to read it', read)}${sec('Owner', own)}${sec('Formula', formula)}${sec('Levers and adds into', [levers, addsInto ? addsInto + '.' : ''].filter(Boolean).join(' '))}`;
+}
+document.addEventListener('mouseover', e => {
+  const i = e.target.closest('[data-def]'); if (!i) return; const html = metricTip(i.dataset.def); if (!html) return; e.stopImmediatePropagation();
+  const tp = tip(); tp.innerHTML = html; tp.classList.add('rich'); tp.hidden = false;
+  const r = i.getBoundingClientRect(), h = tp.offsetHeight, w = tp.offsetWidth;
+  tp.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px'; tp.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+}, true);
+document.addEventListener('mouseout', e => { if (e.target.closest('[data-def]')) { const tp = tip(); tp.classList.remove('rich'); } });
+// deep-dive block headings and card reasons get the same definition on hover
+const NAME2ID = (() => { const o = {}; for (const id of new Set([...Object.keys(CARD_DEF)])) { o[CARD_DEF[id][0].toLowerCase()] = o[CARD_DEF[id][0].toLowerCase()] || id; const m = META(id); if (m) o[m.name.toLowerCase()] = id; } return o; })();
+const headId = t => { const x = t.trim().toLowerCase(), m = x.match(/^(?:what makes up |what moves |where |actions on )?(.+?)(?: is off|: the scorecard)?$/); return NAME2ID[x] || (m && NAME2ID[m[1]]) || null; };
+{ const base = paintBand; paintBand = function () { base(); document.querySelectorAll('#band-body .cc-h h3').forEach(h => { const id = headId(h.textContent); if (id) h.dataset.def = id; }); markSaved(); }; }
+{ const base = cardHtml; cardHtml = function (id, i) { return base(id, i).replace(/data-node="([A-Z0-9]+)\|([A-Z0-9]+)"([^>]*)>(<i class="k-r-d"[^>]*><\/i>)<span class="k-r-n">/g, (m0, a, b, rest, dot) => `data-node="${a}|${b}"${rest}>${dot}<span class="k-r-n" data-def="${b}">`); }; }
+
+/* ---------- bookmarks show when they are saved, and a second click removes them; each role sees only its own ---------- */
+const bmKey = v => JSON.stringify({ ...v, chart: v.chart ? v.chart.h : null });
+const chartOf = btn => { const cc = btn.closest('.cc'), all = [...document.querySelectorAll('#band-body .cc')]; return { i: all.indexOf(cc), h: (cc.querySelector('h3') || {}).textContent || '' }; };
+const savedFor = chart => { if (!OPEN) return null; const k = bmKey(getView(chart)); return BM.find(b => b.v.role === state.role && bmKey(b.v) === k) || null; };
+function markSaved(pop) {
+  const set = (btn, on) => { if (!btn) return; const was = btn.classList.contains('saved'); btn.classList.toggle('saved', on); btn.setAttribute('aria-pressed', on); btn.title = on ? 'Saved to your watchlist. Click to remove it.' : (btn.matches('[data-bookmark]') ? 'Add this view to my watchlist' : 'Add this chart to my watchlist'); if (on && !was && pop) { btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop'); } };
+  set($('#band-tools [data-bookmark]'), !!savedFor(null));
+  document.querySelectorAll('#band-body [data-bm-card]').forEach(b => set(b, !!savedFor(chartOf(b))));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-bookmark],[data-bm-card]'); if (!b || !OPEN) return;
+  const chart = b.matches('[data-bm-card]') ? chartOf(b) : null, have = savedFor(chart);
+  if (have) { e.stopImmediatePropagation(); BM = BM.filter(x => x !== have); saveBM(); renderPins(); markSaved(); toast('Removed from your watchlist.'); return; }
+  setTimeout(() => markSaved(true), 0);
+}, true);
+
+cardFor = function (cls) { const m = { CEO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'OSG', supply: 'OSG', loading: 'FCFC', cost: 'OM', buying: 'OM', volume: 'OSG' }, CFO: { cost: 'GM', buying: 'TRADE', loading: 'FCFC', supply: 'EPS', market: 'EPS', competitor: 'EPS', opportunity: 'EPS', volume: 'EPS' },
+  CMO: { competitor: 'SHARE', market: 'SHARE', opportunity: 'PEN', buying: 'ROMI', cost: 'SHARE', supply: 'SHARE', loading: 'SHARE', volume: 'PEN' }, CSO: { loading: 'CHINV', supply: 'DISTOSA', competitor: 'SALES', buying: 'TTERMS', cost: 'TTERMS', market: 'SALES', opportunity: 'SALES', volume: 'SALES' },
+  COO: { supply: 'POR', cost: 'COGS', buying: 'COGS', loading: 'INV', competitor: 'POR', market: 'POR', opportunity: 'INV', volume: 'POR' } }; return (m[state.role] || {})[cls] || ROLE_CARDS[state.role][0]; };
+
+/* ---------- the issue list shows the first five; the rest scroll inside the summary ---------- */
+function fitIssues() {
+  const ol = $('#summary .sum-list'), sub = $('#sum-sub');
+  if (sub) { const li0 = ol ? [...ol.children] : [], c = k => li0.filter(x => x.classList.contains('s-' + k)).length, parts = [[c('crit'), 'off track'], [c('warn'), 'at risk'], [c('opp'), c('opp') === 1 ? 'opportunity' : 'opportunities']].filter(x => x[0]);
+    sub.innerHTML = li0.length ? `<b>${li0.length} issue${li0.length === 1 ? '' : 's'}</b>: ${parts.map(([k, t]) => `${k} ${t}`).join(', ')}` : 'No issues'; }
+  if (!ol) return; const li = [...ol.children];
+  // the list fills the whole card, as tall as the metric cards beside it; anything that does not fit scrolls
+  const old = $('#summary .sum-more-n'); if (old) old.remove();
+  ol.style.maxHeight = '0px'; ol.classList.remove('scroll', 'at-end'); ol.style.removeProperty('--si-x');
+  const card = $('#summary .sum2'), cards = $('#cards'), cs = getComputedStyle(card), kids = [...card.children].filter(x => x !== ol && x.offsetParent), gap = parseFloat(cs.rowGap) || 0;
+  const rest = kids.reduce((h, x) => h + x.offsetHeight, 0) + gap * kids.length + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2, room = Math.max(240, cards.offsetHeight - rest);
+  ol.style.maxHeight = ''; if (ol.scrollHeight <= room + 2) { ol.style.height = ''; return; }
+  // stop at the last whole row, so no issue is cut in half at the scroll edge
+  // stop at the last whole row, then spread the space left over across the rows shown so the list reaches the card's foot
+  let fit = 0, n = 0; for (const li of ol.children) { if (fit + li.offsetHeight > room - 26) break; fit += li.offsetHeight; n++; }
+  const extra = n ? Math.min(14, Math.floor((room - 26 - fit) / n / 2)) : 0; ol.style.setProperty('--si-x', extra + 'px');
+  ol.style.maxHeight = Math.max(fit + extra * 2 * n, 160) + 'px'; ol.classList.add('scroll');
+  const hidden = () => li.filter(x => x.offsetTop + x.offsetHeight > ol.scrollTop + ol.clientHeight + 2).length;
+  ol.insertAdjacentHTML('afterend', `<button class="link sum-more-n" data-more-iss></button>`);
+  const upd = () => { const b = $('#summary .sum-more-n'); if (!b) return; const h = hidden(), end = h === 0; b.textContent = end ? 'Back to the top ↑' : `${h} more issue${h > 1 ? 's' : ''} below, scroll the list ↓`; ol.classList.toggle('at-end', end); };
+  ol.onscroll = upd; upd();
+}
+document.addEventListener('click', e => { if (!e.target.closest('[data-more-iss]')) return; const ol = $('#summary .sum-list'); if (!ol) return; const end = ol.scrollTop + ol.clientHeight >= ol.scrollHeight - 4; ol.scrollBy({ top: end ? -ol.scrollHeight : ol.clientHeight * .8, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
+{ const b1 = renderHome; renderHome = function () { b1(); fitIssues(); }; const b2 = renderSummaryOnly; renderSummaryOnly = function () { b2(); fitIssues(); }; }
+addEventListener('resize', () => fitIssues());
+
+/* ---------- the watchlist opens in place under its strip, not in a popup ---------- */
+let WATCH_OPEN = false;
+document.addEventListener('click', e => { if (!e.target.closest('[data-bm-all]')) return; e.stopImmediatePropagation(); WATCH_OPEN = !WATCH_OPEN; renderPins(); if (WATCH_OPEN) { const el = $('#pins-all'); el && el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); } }, true);
+{ const base = renderPins; renderPins = function () {
+  base(); const old = $('#pins-all'); if (old) old.remove();
+  const all = $('#pins [data-bm-all]'), rows = BM.filter(b => b.v.role === state.role).map(watchRow).filter(Boolean).sort((a, b) => b.rank - a.rank);
+  if (all) { all.textContent = WATCH_OPEN ? 'Hide the full watchlist' : `See all ${rows.length}`; all.setAttribute('aria-expanded', WATCH_OPEN); all.setAttribute('aria-controls', 'pins-all'); }
+  if (!WATCH_OPEN || !rows.length) return;
+  $('#pins').insertAdjacentHTML('afterend', `<section class="pins-all" id="pins-all" aria-label="Full watchlist"><div class="pa-h"><b>Your watchlist</b><button class="link pa-x" data-bm-all aria-controls="pins-all" aria-expanded="true">Collapse ↑</button></div><div class="pa-grid">${rows.map(r => watchTile(r)).join('')}</div></section>`);
+}; }
+
+/* ---------- shared lines in the summary: the Chief Sales Officer sees perfect order by key account (owned by the COO) ---------- */
+{ const base = summaryView; summaryView = function (ex) {
+  const h = base(ex); if (state.role !== 'CSO') return h;
+  // perfect order is owned by the COO but hits Sales' accounts, so it is one more issue in the list; it opens its own panel
+  const x = withF(HF, () => card('POR')), g = gapOf('POR', x), br = withF(HF, () => accountsData({ ...HF }, { ...win(), w0: CW - 3, w1: CW, wa: CW })).filter(a => a.otif < a.otifT);
+  if (x.sev === 'good') return h;
+  const li = `<li class="si s-${x.sev}"><button class="si-b" data-open="POR" title="Open perfect order rate"><span class="si-h"><span class="si-s">${SEV[x.sev]}</span><b>Perfect order rate</b></span><span class="si-gw">${g && g.amt ? `<span class="si-g">${gapHtml(g)}</span>` : ''}<span class="si-w">${br.length ? esc(`${br.map(a => a.name).join(' and ')} ${br.length > 1 ? 'are' : 'is'} below ${br.length > 1 ? 'their' : 'its'} delivery contract.`) : ''}</span></span><i class="si-go" aria-hidden="true">→</i></button></li>`;
+  return h.includes('<ol class="sum-list">') ? h.replace('</ol>', li + '</ol>') : h.replace('<div class="sum-foot2">', `<ol class="sum-list">${li}</ol><div class="sum-foot2">`);
+}; }
+
+/* ---------- assigning the suggested step, and opening an action from a deep dive ---------- */
+{ const base = assignIssue; assignIssue = function (o) { base(o);
+  // after saving, repaint the open level so its actions list shows the new action straight away
+  ['#ai-ok', '#ai-mail'].forEach(sel => { const b = $(sel); if (b) b.addEventListener('click', () => setTimeout(() => { if (OPEN && !$('#band').hidden) { const y = scrollY; paintBand(); scrollTo(0, y); } }, 0)); }); if (o.title) { const t = $('#ai-t'); if (t) t.value = o.title; } if (o.poc) { const s = $('#ai-o'); if (s) { if (![...s.options].some(op => op.value === o.poc)) s.insertAdjacentHTML('afterbegin', `<option value="${esc(o.poc)}">${esc(ownerRole(o.poc))}</option>`); s.value = o.poc; } } }; }
+document.addEventListener('click', e => {
+  const sg = e.target.closest('[data-assign-sug]'); if (sg) { e.stopImmediatePropagation(); assignIssue(JSON.parse(sg.dataset.assignSug)); return; }
+}, true);
+
+/* ---------- category filter in the panel, and category words in Ask ---------- */
+const catOf = b => b && b.length > 1 && new Set(b.map(x => K.BMAP[x].cat)).size === 1 && K.BRANDS.filter(x => x.cat === K.BMAP[b[0]].cat).length === b.length ? K.BMAP[b[0]].cat : null;
+{ const base = filterBar; filterBar = function () {
+  if (OPEN === 'ASK') return base();
+  const html = base(), cat = catOf(PF.b), opt = (v, t, on) => `<option value="${esc(v)}" ${on ? 'selected' : ''}>${esc(t)}</option>`;
+  const catSel = `<span class="plab">Category</span><label class="fsel ${cat ? 'set' : ''}"><span></span><select data-pf-cat>${opt('', 'All categories', !cat)}${K.CATS.map(c => opt(c, c, cat === c)).join('')}</select></label>`;
+  const brands = K.BRANDS.filter(b => !cat || b.cat === cat), bSel = `<span class="plab">Brand</span><label class="fsel ${PF.b && !cat ? 'set' : ''}"><span></span><select data-pf="b">${opt('', cat ? `All ${cat.toLowerCase()} brands` : 'All brands', !PF.b || !!cat)}${brands.map(b => opt(b.id, b.name, PF.b && !cat && PF.b[0] === b.id)).join('')}</select></label>`;
+  return html.replace(/<span class="plab">Brand<\/span><label class="fsel[^"]*"><span><\/span><select data-pf="b">[\s\S]*?<\/select><\/label>/, catSel + bSel);
+}; }
+document.addEventListener('change', e => {
+  const s = e.target.closest('[data-pf-cat]'); if (s) { e.stopImmediatePropagation(); const nf = { ...PF }; if (s.value) nf.b = K.BRANDS.filter(b => b.cat === s.value).map(b => b.id); else delete nf.b; reloadAt(nf); return; }
+  const b = e.target.closest('[data-pf="b"]'); if (b && !b.value && catOf(PF.b)) { e.stopImmediatePropagation(); reloadAt({ ...PF }); }
+}, true);
+{ const base = parseAsk; parseAsk = function (q) {
+  const cats = { Food: /\b(food|foods)\b/i, Beverages: /\b(beverages?|drinks)\b/i, 'Personal Care': /\bpersonal care\b/i }, hit = Object.keys(cats).find(c => cats[c].test(q));
+  const r = base(hit ? q.replace(cats[hit], ' ') : q); if (hit) { const bs = K.BRANDS.filter(b => b.cat === hit).map(b => b.id); r.f.b = r.f.b ? r.f.b.filter(b => bs.includes(b)) : bs; r.used.push(hit.toLowerCase()); } return r; }; }
+Object.assign(METRIC_WORDS, { DISTOSA: ['effective availability', 'distribution and availability', 'availability'], TTERMS: ['agreed terms', 'trade terms', 'terms', 'overspend'], INV: ['inventory days', 'days of inventory', 'inventory', 'stock days'], PRICEGAP: ['price index', 'price gap'],
+  PCTPROMO: ['volume on promotion', 'on deal'], NEWBUY: ['new buyers', 'trial'], LOSTBUY: ['lapsed buyers', 'lost buyers'], CAMP: ['campaign lift', 'campaign', 'campaigns'], RETURNS: ['returns provision', 'returns'], LOSTS: ['lost sales'], EPSM: ['margin change'], MATC: ['materials', 'packaging cost'], CONVC: ['conversion cost'], LOGC: ['freight', 'warehousing'], CPMU: ['complaints'], SAFQ: ['safety', 'quality'], PEN: ['household penetration', 'penetration', 'buyers', 'households'], BEQ: ['brand equity', 'brand health'], ROMI: ['marketing roi', 'marketing return', 'romi'], CHINV: ['sell-in', 'sell in', 'channel stock', 'weeks of cover', 'loading'], SALES: ['sales target', 'month to date', 'run rate'] });
+METRIC_WORDS.DIO = ['dio', 'own stock days'];   // "inventory days" is the COO's card now
+// saved views and actions from before the pyramid point at cards that moved
+// and the seeded views are valued again on the new definitions, so "since you saved it" compares like with like
+{ const MOVE = { FCF: 'FCFC', AP: 'ROMI', PENF: 'PEN', OTIF: 'POR', INVD: 'INV', QUAL: 'SAFQ' }; let ch = false;
+  (BM || []).forEach(b => { if (!b || !b.v) return; if (MOVE[b.v.card] && !PYIDS.has(b.v.card)) { b.v.card = MOVE[b.v.card]; b.v.path = []; ch = true; }
+    if (/^seed/.test(b.id)) { try { const x = asOf(1, () => cardIn(b.v)); b.v0 = x.raw; b.sev0 = x.sev; b.val0 = x.value; ch = true; } catch (e) { } } });
+  if (ch) saveBM(); }
 
 /* ---------- render ---------- */
 function renderHome() {
-  const P = win(), ex = withF({}, () => exceptions({}, P)); window.__ex = ex;
-  withF({}, () => buildActions(ex, {}, P));
+  const P = win(), ex = withF(HF, () => exceptions({ ...HF }, P)); window.__ex = ex;
+  withF(HF, () => buildActions(ex, { ...HF }, P));
   $('#summary').innerHTML = summaryView(ex);
   const ids = ROLE_CARDS[state.role];
   $('#cards').innerHTML = ids.map((id, i) => cardHtml(id, i)).join('');
+  const mxs = $('#mx-sub'); if (mxs) mxs.textContent = `${win().label}, ${compShort()}. Open a card to see what drives it.`;
   renderPins();
   $('#acts').innerHTML = actionsView();
   $('#act-sum').textContent = `${actionsList().filter(a => a.status !== 'Done').length} open, sorted by priority`;
@@ -2054,7 +2864,9 @@ function renderHome() {
 function syncControls() {
   $('#view-name').textContent = ROLES[state.role].label;
   ['period', 'comp'].forEach(k => { const b = $('#cust-' + k); if (b) b.hidden = true; });
-  const P = win(); $('#period-lab').textContent = `${P.label}, ${compShort()}`;
+  // the header names every filter in force, each value in its own chip, so nobody has to open the menu to know what they are looking at
+  const P = win(), cmpL = ({ T: 'Plan', E: 'Latest estimate', L: 'Last year', M: 'Last month' })[state.comp];
+  $('#period-lab').innerHTML = `<span class="fl"><span class="fl-k">Period</span><b class="fl-v">${esc(P.label)}</b></span><span class="fl"><span class="fl-k">Compared with</span><b class="fl-v">${esc(cmpL)}</b></span><span class="fl"><span class="fl-k">Year</span><b class="fl-v">${state.year === 'FISCAL' ? 'Fiscal' : 'Calendar'}</b></span><span class="fl"><span class="fl-k">Scope</span><b class="fl-v">Whole company</b></span>`;
   seg($('#f-period'), Object.entries(PERIODS).map(([k, v]) => [k, v.label]).concat([['CUSTOM', 'Custom']]), state.period, v => { if (v === 'CUSTOM') return toggleCustom('period'); state.period = v; if (!SHORT.includes(v) && state.comp === 'M') state.comp = 'T'; syncControls(); renderHome(); });
   seg($('#f-comp'), [['T', 'Plan'], ['E', 'Latest estimate'], ['L', 'Last year']].concat(SHORT.includes(state.period) ? [['M', 'Last month']] : []).concat([['CUSTOM', 'Custom']]), state.comp, v => { if (v === 'CUSTOM') return toggleCustom('comp'); state.comp = v; syncControls(); renderHome(); });
   seg($('#f-year'), [['CAL', 'Calendar'], ['FISCAL', 'Fiscal (April to March)']], state.year, v => { state.year = v; syncControls(); renderHome(); });
@@ -2071,7 +2883,7 @@ function toggleCustom(k) {
 }
 function seg(el, opts, cur, on) { el.innerHTML = opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === cur}"${v === 'CUSTOM' ? ' class="cust-b"' : ''}>${l}</button>`).join(''); el.onclick = e => { const b = e.target.closest('button'); if (b) on(b.dataset.v); }; }
 const SHORT = ['LW', 'MTD', 'LM', 'R4W'];
-const ROLE_INFO = { CEO: 'Sales growth, operating margin, cash conversion and perfect orders.', CFO: 'Sales growth, gross margin, operating margin and cash conversion.', CMO: 'Brand equity, sales growth and marketing spend.', CSO: 'Sales growth, market share, perfect orders and how fast customers pay.', COO: 'Perfect orders, gross margin, cash conversion and safety.' };
+const ROLE_INFO = { CEO: 'Organic sales growth, market share, operating margin and cash conversion.', CFO: 'Earnings per share against guidance, gross margin after trade, trade spend and cash conversion.', CMO: 'Market share, household penetration, brand equity and marketing return.', CSO: 'Sales against target, sell-in against sell-out, distribution and shelf availability, and trade spend against agreed terms.', COO: 'Perfect orders, cost per case, inventory days and safety and quality.' };
 function openPicker() { $('#picks').innerHTML = Object.entries(ROLES).map(([k, v]) => `<button class="pick ${k === state.role && state.chosen ? 'cur' : ''}" data-role="${k}"><b>${v.label}</b><span>${ROLE_INFO[k]}</span></button>`).join(''); $('#picker').hidden = false; ($('#picks .cur') || $('#picks .pick')).focus(); }
 function chooseRole(r) {
   $('#picker').hidden = true; if (r === state.role && state.chosen) return;
@@ -2089,6 +2901,7 @@ document.addEventListener('click', e => {
   if (!t.closest('#pf-wrap')) { PFOPEN = false; const pp = $('#pf-pop'); if (pp) { pp.hidden = true; $('#pf-btn').setAttribute('aria-expanded', 'false'); } }
   const g = (s) => t.closest(s);
   const ga = g('[data-goact]'); if (ga) { closeMenus(); const id = ga.dataset.goact; state.actFilter = 'Open'; if (id) { const list = actionsList().filter(a => a.status !== 'Done'), i = list.findIndex(a => a.id === id); state.actPage = Math.max(0, Math.floor(i / 5)); state.openAct = id; } $('#acts').innerHTML = actionsView(); const row = id ? [...document.querySelectorAll('#acts .arow-wrap')].find(r => r.querySelector(`[data-exp="${CSS.escape(id)}"]`)) : $('#acts'); (row || $('#acts')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (row && id) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); } return; }
+  if (g('[data-issues-all]')) { openModal('All issues', `<div class="issues-modal sum-rows">${window.__issueRows || ''}</div>`); return; }
   if (g('[data-demo]')) { demoStart(); return; }
   const im = g('[data-iss-more]'); if (im) { const hid = document.querySelector('#summary [data-more][hidden]'); document.querySelectorAll('#summary [data-more]').forEach(x => x.hidden = !hid); im.textContent = hid ? 'Show fewer' : `Show ${document.querySelectorAll('#summary [data-more]').length} more issues`; return; }
   if (g('[data-demo-next]')) { demoNext(); return; }
@@ -2110,7 +2923,7 @@ document.addEventListener('click', e => {
   if (g('[data-panel-action]')) { const lv = drill.stack[drill.stack.length - 1]; $('#acts').scrollIntoView({ behavior: 'smooth', block: 'start' }); newActionForm({ title: 'Follow up: ' + (lv.title || '').split(/[,;:]/)[0], issue: CARD_DEF[OPEN][0], why: lv.title, f: { ...PF } }); return; }
   const rg = g('[data-rgm]'); if (rg) { goDeeper(() => openRgm(rg.dataset.rgm)); return; }
   const ra = g('[data-rgm-action]'); if (ra) { const r = RGM[ra.dataset.rgmAction].alias ? RGM[RGM[ra.dataset.rgmAction].alias] : RGM[ra.dataset.rgmAction]; $('#acts').scrollIntoView({ behavior: 'smooth', block: 'start' }); newActionForm({ title: r.rows.find(x => /recommended/i.test(x[0])) ? 'Switch to: ' + r.rows.find(x => /recommended/i.test(x[0]))[0].replace(/ \(recommended\)/i, '') : r.title, issue: 'RGM check: ' + r.title, why: r.head, f: { ...PF } }); return; }
-  if (g('[data-pf-reset]')) { PF = {}; openCard(OPEN, {}); return; }
+  if (g('[data-pf-reset]')) { reloadAt({}); return; }
   const pin = g('[data-pin]'); if (pin) { const b = BM.find(x => x.id === pin.dataset.pin); if (b) { closeModal(); restoreView(b.v); } return; }
   const up = g('[data-unpin]'); if (up) { BM = BM.filter(x => x.id !== up.dataset.unpin); saveBM(); renderPins(); if (!$('#modal').hidden) openWatchAll(); toast('Removed from your watchlist'); return; }
   const af = g('[data-af]'); if (af) { state.actFilter = af.dataset.af; state.actPage = 0; $('#acts').innerHTML = actionsView(); return; }
@@ -2125,11 +2938,12 @@ document.addEventListener('click', e => {
   const m = g('[data-mail]'); if (m) { closeMenus(); mailModal(findAct(m.dataset.mail)); return; }
   const mt = g('[data-meet]'); if (mt) { closeMenus(); meetModal(findAct(mt.dataset.meet)); return; }
   const asg = g('[data-assign]'); if (asg) { closeMenus(); assignModal(findAct(asg.dataset.assign)); return; }
-  const see = g('[data-see]'); if (see) { closeMenus(); const a = findAct(see.dataset.see); openCard(cardFor((window.__ex.find(x => x.id === a.id) || { d: {} }).d.cls), a.f || {}); showBand(); return; }
+  const see = g('[data-see]'); if (see) { closeMenus(); const a = findAct(see.dataset.see); if (a && a.view) { restoreView(a.view); return; } openCard(cardFor((window.__ex.find(x => x.id === a.id) || { d: {} }).d.cls), a.f || {}); showBand(); return; }
+  const sd = g('[data-send]'); if (sd) { closeModal(); toast(`Email to ${sd.dataset.send} sent (simulated: this prototype sends nothing)`); return; }
   const cp = g('[data-copy]'); if (cp) { const txt = decodeURIComponent(cp.dataset.copy); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copied')).catch(() => toast('Select the text and copy it')); return; }
   if (g('[data-close]') || t.id === 'modal') { closeModal(); return; }
 });
-document.addEventListener('change', e => { const s = e.target.closest('[data-pf]'); if (s) { const k = s.dataset.pf; if (s.value) PF[k] = [s.value]; else delete PF[k]; openCard(OPEN, PF); } });
+document.addEventListener('change', e => { const s = e.target.closest('[data-pf]'); if (s) { const k = s.dataset.pf, nf = { ...PF }; if (s.value) nf[k] = [s.value]; else delete nf[k]; reloadAt(nf); } });
 document.addEventListener('submit', e => { if (e.target.id === 'ask-panel') { e.preventDefault(); runAsk($('#ask-panel-in').value, true); } if (e.target.id === 'ask-global') { e.preventDefault(); runAsk($('#ask-global-in').value, false); $('#ask-global-in').blur(); } });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (!$('#coach').hidden) demoExit(); else if (document.querySelector('.menu')) closeMenus(); else if (!$('#picker').hidden && state.chosen) $('#picker').hidden = true; else if (!$('#band').hidden) closePanel(); }
@@ -2141,12 +2955,26 @@ function renderSummaryOnly() { $('#summary').innerHTML = summaryView(window.__ex
 
 /* ---------- boot ---------- */
 let stored = null; try { stored = localStorage.getItem('pulse-role'); } catch (e) { }
-const hm = /^#v=/.test(location.hash) ? null : (location.hash || '').slice(1).toUpperCase().match(/^(CEO|CFO|CMO|CSO|COO)(?:-([A-Z]+))?$/);
-if (hm) stored = hm[1];
+// readable links: #CFO opens a role, #CFO-GM a card, #COO/actions a section of the home page, #demo the guided demo
+const hm = /^#v=/.test(location.hash) ? null : (location.hash || '').slice(1).toUpperCase().match(/^(?:(CEO|CFO|CMO|CSO|COO)(?:-([A-Z]+))?)?(?:\/?(SUMMARY|METRICS|WATCHLIST|ACTIONS|ASK|FILTERS|DEMO))?$/);
+if (hm && hm[1]) stored = hm[1];
+if (hm && hm[3] && !stored) stored = 'CEO';
 if (stored && ROLES[stored]) { state.role = stored; state.period = ROLES[stored].period; state.chosen = true; }
 syncControls(); renderHome();
 if (hm && hm[2] && CARD_DEF[hm[2]] && ROLE_CARDS[state.role].includes(hm[2])) requestAnimationFrame(() => openCard(hm[2]));
 if (!state.chosen) openPicker();
 const vm = (location.hash || '').match(/^#v=([\w-]+)$/);
 if (vm) { try { restoreView(JSON.parse(b64.dec(vm[1]))); } catch (e) { toast('That link could not be opened'); } }
+if (hm && hm[3]) setTimeout(() => jumpTo(hm[3]), 350);
+// a link to a section scrolls there and rings it briefly, so the reader sees where they landed
+function jumpTo(sec) {
+  const ring = el => { if (!el) return; el.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); setTimeout(() => el.classList.remove('jump'), 2600); };
+  if (sec === 'SUMMARY') ring($('#summary .sum2') || $('#summary'));
+  else if (sec === 'METRICS') ring($('#cards'));
+  else if (sec === 'WATCHLIST') { WATCH_OPEN = true; renderPins(); ring($('#pins-all') || $('#pins')); }
+  else if (sec === 'ACTIONS') ring($('#acts'));
+  else if (sec === 'FILTERS') { $('#period-btn').click(); ring($('#period-pop')); }
+  else if (sec === 'ASK') { $('#ask-global-in').value = ASKD.q; runAsk(ASKD.q, false); }
+  else if (sec === 'DEMO') demoStart();
+}
 })();
