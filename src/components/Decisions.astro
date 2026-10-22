@@ -67,7 +67,7 @@ const decisions = [
 	{decisions.map((d) => (
 		<section class="d">
 			<header>
-				<h3>{d.title}</h3>
+				<h3 id={d.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}>{d.title}</h3>
 				<p class="why">{d.why}</p>
 			</header>
 			<div class="pair">
@@ -99,7 +99,7 @@ const decisions = [
 	}
 	.d { margin: 0 0 4.5em; }
 	.d header { max-width: 720px; }
-	.d h3 { margin: 0.4em 0 0.3em; }
+	.d h3 { margin: 0.4em 0 0.3em; scroll-margin-top: 1rem; }
 	.why { margin: 0 0 1.4em; color: rgb(var(--gray)); font-size: 0.95em; }
 	.pair {
 		display: grid;

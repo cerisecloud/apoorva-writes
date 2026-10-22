@@ -11,11 +11,11 @@ import Decisions from '../../components/Decisions.astro';
 	pubDate={new Date('October 17 2026')}
 	updatedDate={new Date('October 19 2026')}
 >
-	<h2>Problem statement</h2>
+	<h2 id="problem-statement">Problem statement</h2>
 	<p>Design an <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">executive dashboard</a> for a CPG company that enables leadership (C-suite) to understand business performance, diagnose underlying issues and decide what action to take.</p>
 	<p>The dashboard should be interactive and accommodate data cuts across <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">geography, channel, category, brands and more</a>. It must have internal data as well as data from external sources and should be a single page.</p>
 
-	<h2>Approach</h2>
+	<h2 id="approach">Approach</h2>
 	<p>First, we define our users: <a href="/experiments/executive-pulse/#CEO" target="_blank" rel="noopener">CEO</a>, <a href="/experiments/executive-pulse/#CFO" target="_blank" rel="noopener">CFO</a>, <a href="/experiments/executive-pulse/#CMO" target="_blank" rel="noopener">CMO</a>, <a href="/experiments/executive-pulse/#CSO" target="_blank" rel="noopener">CSO (sales)</a>, <a href="/experiments/executive-pulse/#COO" target="_blank" rel="noopener">COO</a>. For simplicity, CBO (Brand) and CMO are merged and COO also assumes manufacturing &amp; procurement responsibilities. I have excluded C-suite like legal, tech, HR. Next, let’s define the job-to-be-done (JTBD) for our users. There are 3 main jobs:</p>
 	<ol>
 		<li><strong>What is the data?</strong> Defining the key metrics that capture business performance and calculate their values. This has to be contextual to each user and their main responsibilities.</li>
@@ -23,23 +23,23 @@ import Decisions from '../../components/Decisions.astro';
 		<li><strong>What action to take?</strong> Suggest the best action to take next, identify who needs to take the action and enable users to take it.</li>
 	</ol>
 
-	<h2>Solution</h2>
+	<h2 id="solution">Solution</h2>
 	<p>Here’s how we will achieve each of the JTBDs.</p>
 
-	<h3>#1 What is the data</h3>
+	<h3 id="what-is-the-data">#1 What is the data</h3>
 	<p>While several metrics are available, CXOs’ time is limited. Hence, the real goal is to enable a T-shaped consumption for them for day to day use- A fast <strong><a href="/experiments/executive-pulse/#CEO/metrics" target="_blank" rel="noopener">broad view of parts of the business they manage</a></strong> and an <a href="/experiments/executive-pulse/#CFO-GM" target="_blank" rel="noopener">easy deep-dive in any area of their choice</a>. To enable this, we define a hierarchical set of parameters (L1 (4) &gt;&gt; L2 &gt;&gt; L3, see the <strong><a href="/experiments/executive-pulse/metric-pyramid.html" target="_blank" rel="noopener">metric pyramid</a></strong>) that cover any and all changes in their individual function. Eg- For a CEO, <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7fSwicGVyaW9kIjoiWVREIiwiY29tcCI6IlQiLCJ5ZWFyIjoiQ0FMIiwicGF0aCI6W10sImNoYXJ0IjpudWxsfQ" target="_blank" rel="noopener">Organic sales growth (L1) &gt; [[ Volume + Price/mix] (L2)] + ...</a> Lastly, for each of the metrics, we enable multiple views: <a href="/experiments/executive-pulse/#CEO/filters" target="_blank" rel="noopener">Against last year, against plan, target, etc.</a></p>
 	<p>All this data comes primarily from 3 sources, <a href="/experiments/executive-pulse/#CMO-SHARE" target="_blank" rel="noopener">external data from market tracking agencies</a>, internal past data and context from company data pipelines and internal forward-looking estimates/targets from <a href="/experiments/executive-pulse/#CFO-TRADE" target="_blank" rel="noopener">RGM/TPO tools</a>.</p>
 
-	<h3>#2 What does it mean?</h3>
+	<h3 id="what-does-it-mean">#2 What does it mean?</h3>
 	<p>A good insight goes beyond telling what’s good or bad, and <strong>explains WHY</strong> it is so. Eg- <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7ImMiOlsiSUQiXSwiYiI6WyJvcmNoYXJkIl19LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbeyJmbiI6Im9wZW5Ob2RlIiwiYXJncyI6WyJPVkciXX1dLCJjaGFydCI6bnVsbH0" target="_blank" rel="noopener">Organic Sales Growth for Orchard Juice is 3.5 pts behind plan in Indonesia</a>. But the real insight is: late inbound shipments mean we can’t supply enough, so fill rate is near 82% and we are losing sales even though shoppers want the product.</p>
 	<p>An <a href="/experiments/executive-pulse/#CMO/ask" target="_blank" rel="noopener">AI agent</a> will make this happen. Not just implemented AI in some sections. The agent will autonomously define the views, the metrics, etc. It will be told to balance stability with visibility. In this prototype, the agent is simulated with rules on synthetic data.</p>
 	<p>Issues/Insights here are intentionally designed to be presented in the <a href="/experiments/executive-pulse/#CEO/summary" target="_blank" rel="noopener">logical way the user approaches the data</a>, which is - Metric that is off &gt;&gt; by how much this metric is off &gt;&gt; Current value v/s Goal value (annual target/monthly target etc) &gt;&gt; the underlying reason why this is off.</p>
 
-	<h3>#3 What action to take?</h3>
+	<h3 id="what-action-to-take">#3 What action to take?</h3>
 	<p>The most crucial job of the dashboard is to enable the user to <a href="/experiments/executive-pulse/#COO/actions" target="_blank" rel="noopener">take action on the most burning issues</a> to fix them. This includes <strong>identifying the person responsible</strong> and being able to work with them until resolution. That’s why it is important to track the issue x action over time and also nudge the owner for action/updates. Eg- <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7ImMiOlsiSUQiXSwiYiI6WyJvcmNoYXJkIl19LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbeyJmbiI6Im9wZW5Ob2RlIiwiYXJncyI6WyJPVkciXX0seyJmbiI6Im9wZW5Ob2RlIiwiYXJncyI6WyJMT1NUUyJdfV0sImNoYXJ0IjpudWxsfQ" target="_blank" rel="noopener">Email Indonesia Supply Lead to expedite inbound shipments for Orchard Juice, Indonesia</a> to get fill rate back to 95% in 3 weeks.</p>
 	<p>To enable users most effectively the dashboard is integrated in very specific places with tools/products they use. Eg- <a href="/experiments/executive-pulse/#v=eyJyb2xlIjoiQ1NPIiwiY2FyZCI6IlNBTEVTIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJwYXRoIjpbXSwiY2hhcnQiOm51bGx9" target="_blank" rel="noopener">A CSO can recheck sales targets with new prices using the RGM product integrated into the flow.</a></p>
 
-	<h3>Usability enhancers</h3>
+	<h3 id="usability-enhancers">Usability enhancers</h3>
 	<p>Aside from viewing data and sending actions, users also need some enhanced actions to improve use.</p>
 	<ul>
 		<li><strong><a href="/experiments/executive-pulse/#CEO/watchlist" target="_blank" rel="noopener">Bookmarking</a></strong> Users can bookmark charts and analyses to revisit them or for regular tracking.</li>
@@ -52,19 +52,19 @@ import Decisions from '../../components/Decisions.astro';
 	<p>Based on these we <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">designed a dashboard</a> for these CXO users. The company in it, Northstar Consumer Goods, is fictional and all data is synthetic.</p>
 
 	<hr />
-	<h2>How I built it</h2>
+	<h2 id="how-i-built-it">How I built it</h2>
 	<p>Pulse went through three versions before this one. Scroll to see how the thinking changed, with the pyramid and the dashboard side by side.</p>
 	<BuildStory />
 
-	<h3>Watch it work</h3>
+	<h3 id="watch-it-work">Watch it work</h3>
 	<p>The live dashboard, running one CEO morning on its own. Hover to pause, or pick a step.</p>
 	<DemoReel />
 
-	<h2>Four decisions that shaped Pulse</h2>
+	<h2 id="four-decisions">Four decisions that shaped Pulse</h2>
 	<p>Each one is shown before and after. The numbers on the right match the notes underneath.</p>
 	<Decisions />
 
-	<h2>What I learned</h2>
+	<h2 id="what-i-learned">What I learned</h2>
 	<ol class="learn">
 		<li><strong>Understand your users to the depth of how they will use it.</strong> They are the ones who have to like what you build, so it should feel custom built for them. That only comes from spending the time to understand them.</li>
 		<li><strong>Structure before detail.</strong> A product manager is expected to go down to the smallest detail, and without a solid structure it gets overwhelming fast. Structure well, prioritise hard and decide how deep you want to go.</li>
@@ -72,7 +72,7 @@ import Decisions from '../../components/Decisions.astro';
 		<li><strong>Building skills with AI compounds.</strong> Writing reusable skills was not an incremental gain, it was exponential: every skill made the next round faster and better.</li>
 	</ol>
 
-	<h2>The skills I built</h2>
+	<h2 id="skills-i-built">The skills I built</h2>
 	<p>Both skills are available on my GitHub.</p>
 	<ul>
 		<li><strong><a href="https://github.com/cerisecloud/cpg-exec-dashboard-critic" target="_blank" rel="noopener">CPG executive critic</a>.</strong> It thinks like a CPG CEO, CFO, CMO, Chief Sales Officer or COO: their priorities, rhythms and decisions. It reviews any dashboard element by element, through that executive’s eyes.</li>
@@ -83,6 +83,7 @@ import Decisions from '../../components/Decisions.astro';
 </Layout>
 
 <style>
+	h2[id], h3[id] { scroll-margin-top: 1rem; }
 	.learn li { margin-bottom: 0.6em; }
 	.foot-note { font-size: 0.8em; color: rgb(var(--gray)); margin-top: 2em; }
 </style>
