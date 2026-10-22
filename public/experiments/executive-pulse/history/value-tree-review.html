@@ -1,0 +1,443 @@
+<meta charset="utf-8">
+<title>Pulse Value Trees</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --panel:#f6f7f9; --ink:#16191d; --ink-2:#4f5661; --muted:#6b7280; --line:#e3e6ea; --line-2:#c9ced5;
+  --accent:#1f5bd6; --accent-soft:#eaf0fc;
+  --crit:#b4231b; --crit-bg:#fbe8e6; --warn:#8a5a00; --warn-bg:#fcf1d6; --good:#1a7336; --good-bg:#e5f3ea;
+  --ceo:#334155; --cfo:#6d28d9; --cmo:#c0266d; --cso:#a15c07; --coo:#0e7490;
+  --node:#ffffff; --edge:#b7bec8; --dim:.22;
+  --display:"Archivo","IBM Plex Sans",system-ui,sans-serif; --text:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#111418; --panel:#181c21; --ink:#e7eaee; --ink-2:#b4bbc4; --muted:#8c949e; --line:#262c33; --line-2:#36404a;
+  --accent:#7aa2f7; --accent-soft:#1b2640; --crit:#f2867c; --crit-bg:#3a1d1a; --warn:#e6b450; --warn-bg:#352a12; --good:#7fd19b; --good-bg:#16301f;
+  --ceo:#a3b1c6; --cfo:#b18cff; --cmo:#f27db4; --cso:#e0a24a; --coo:#4fc3d9; --node:#171b20; --edge:#45505c;}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#111418; --panel:#181c21; --ink:#e7eaee; --ink-2:#b4bbc4; --muted:#8c949e; --line:#262c33; --line-2:#36404a;
+  --accent:#7aa2f7; --accent-soft:#1b2640; --crit:#f2867c; --crit-bg:#3a1d1a; --warn:#e6b450; --warn-bg:#352a12; --good:#7fd19b; --good-bg:#16301f;
+  --ceo:#a3b1c6; --cfo:#b18cff; --cmo:#f27db4; --cso:#e0a24a; --coo:#4fc3d9; --node:#171b20; --edge:#45505c;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--text);-webkit-font-smoothing:antialiased;padding-inline:20px;padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.012em;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.12}
+h2{font-size:24px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line)}
+h3{font-size:17px;font-family:var(--text);font-weight:600;letter-spacing:0}
+p{margin:0}
+.lede{max-width:72ch;color:var(--ink-2);font-size:16px;margin-top:12px}
+header.top{padding-block:40px 8px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:18px;font-size:13.5px}
+nav.toc a{color:var(--accent);text-decoration:none}nav.toc a:hover{text-decoration:underline}
+.stack{display:grid;gap:14px;margin-top:16px}
+.muted{color:var(--muted)}
+code,.id{font:500 12.5px var(--mono);color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 11.5px/1 var(--text);border-radius:999px;padding:4px 9px;white-space:nowrap}
+.p1{background:var(--crit-bg);color:var(--crit)}.p2{background:var(--warn-bg);color:var(--warn)}.ok{background:var(--good-bg);color:var(--good)}
+.r{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:1px}
+.r.CEO{background:var(--ceo)}.r.CFO{background:var(--cfo)}.r.CMO{background:var(--cmo)}.r.CSO{background:var(--cso)}.r.COO{background:var(--coo)}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;margin-top:20px}
+.verdict .big{font-size:18px;line-height:1.5}
+.answers{display:grid;gap:10px}
+.ans{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:14px}
+.ans b{font-weight:600}
+
+/* flow strip */
+.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin-top:18px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.step{padding:14px 14px 16px;border-right:1px solid var(--line);background:var(--bg);position:relative}
+.step:last-child{border-right:0}
+.step .t{font:600 12px/1 var(--mono);color:var(--accent);letter-spacing:.04em}
+.step h3{margin:8px 0 4px;font-size:15px}
+.step p{font-size:13px;color:var(--ink-2);line-height:1.5}
+.step .ex{margin-top:8px;font-size:12.5px;color:var(--ink);background:var(--panel);border-radius:6px;padding:6px 8px;line-height:1.45}
+.lensrow{margin-top:10px;font-size:13.5px;color:var(--ink-2);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.cadence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+.cad{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.cad h3{font-size:15px}.cad .when{font-size:12.5px;color:var(--muted)}
+.cad ul{margin:8px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink-2);display:grid;gap:4px}
+
+/* findings */
+.find{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.find .n{font:700 22px/1 var(--display);color:var(--muted)}
+.find h3{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.find .ev,.find .fx{grid-column:2;font-size:14px;color:var(--ink-2);max-width:92ch}
+.find .fx{color:var(--ink)}.find .fx b,.find .ev b{font-weight:600;color:var(--ink)}
+
+/* role cards */
+.roles{display:grid;gap:18px;margin-top:16px}
+.role{border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:grid;gap:12px;border-left:4px solid var(--rc)}
+.role.CEO{--rc:var(--ceo)}.role.CFO{--rc:var(--cfo)}.role.CMO{--rc:var(--cmo)}.role.CSO{--rc:var(--cso)}.role.COO{--rc:var(--coo)}
+.role-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.role-h h3{font-family:var(--display);font-size:20px}
+.role .job{font-size:14px;color:var(--ink-2);max-width:90ch}
+.l1s{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.l1s h4{margin:0 0 6px;font:600 12px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.l1s ol{margin:0;padding-left:20px;display:grid;gap:5px;font-size:14px}
+.l1s li span{color:var(--muted)}
+.tag{font:600 10.5px/1 var(--text);letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:3px 6px;margin-left:6px;vertical-align:1px}
+.tag.bad{background:var(--crit-bg);color:var(--crit)}.tag.meh{background:var(--warn-bg);color:var(--warn)}.tag.fine{background:var(--good-bg);color:var(--good)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+
+/* diagram */
+.dg-bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:16px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;padding:2px;gap:2px}
+.seg button{border:0;background:none;font:500 13px var(--text);color:var(--ink-2);padding:6px 11px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2);margin-top:10px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.lg-solid{width:22px;border-top:2px solid var(--edge)}.lg-dash{width:22px;border-top:2px dashed var(--edge)}
+.lg-home{width:12px;height:12px;border-radius:3px;border:2px solid var(--ink)}
+.lg-flag{width:12px;height:12px;border-radius:50%;background:var(--crit)}
+.lg-issue{width:12px;height:12px;border-radius:3px;background:var(--crit-bg);border:1px solid var(--crit)}
+.dg{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;margin-top:14px;align-items:start}
+.canvas{border:1px solid var(--line);border-radius:12px;overflow:auto;background:var(--panel);max-height:78vh}
+.canvas svg{display:block}
+.cols text{font:600 11px var(--mono);fill:var(--muted);letter-spacing:.05em}
+.edge{fill:none;stroke:var(--edge);stroke-width:1.5}
+.edge.lens{stroke-dasharray:5 4}
+.edge.where{stroke-dasharray:2 3}
+.nd{cursor:pointer}
+.nd rect.b{fill:var(--node);stroke:var(--line-2);stroke-width:1}
+.nd.lens rect.b{fill:var(--panel);stroke-dasharray:4 3}
+.nd.ref rect.b{fill:var(--panel)}
+.nd.where rect.b{fill:var(--panel);stroke:var(--line)}
+.nd text.nm{font:600 12.5px var(--text);fill:var(--ink)}
+.nd text.sb{font:400 11px var(--text);fill:var(--ink-2)}
+.nd.where text.nm{font:500 11.5px var(--text);fill:var(--ink-2)}
+.nd:hover rect.b,.nd:focus-visible rect.b{stroke:var(--accent);stroke-width:2}
+.nd.sel rect.b{stroke:var(--accent);stroke-width:2.5}
+.nd.flag rect.b{stroke:var(--crit);stroke-width:1.5}
+.nd .home{fill:none;stroke-width:2.5}
+.nd.dim,.edge.dim{opacity:var(--dim)}
+.nd circle.own{stroke:var(--node);stroke-width:1.5}
+.side{border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:sticky;top:12px;background:var(--bg);font-size:13.5px}
+.side h3{font-family:var(--display);font-size:18px}
+.side .lv{font:500 11.5px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.side dl{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;margin:12px 0 0}
+.side dt{color:var(--muted);font-size:12.5px}.side dd{margin:0}
+.side .note{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:13px}
+.side .note.bad{background:var(--crit-bg);color:var(--crit)}.side .note.iss{background:var(--panel);color:var(--ink)}
+.own-list{display:flex;flex-wrap:wrap;gap:6px}
+.own-list .chip{background:var(--panel);color:var(--ink)}
+.charts td:first-child{font-weight:600;white-space:nowrap}
+footer{margin-top:56px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:860px){
+  .verdict,.l1s,.cadence{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}.step{border-bottom:1px solid var(--line)}
+  .dg{grid-template-columns:1fr}.side{position:static}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Pulse · branch pulse-next · review of 19 Oct</p>
+  <h1>Pulse value trees: what each executive needs, and where the flow breaks</h1>
+  <p class="lede">A review of the core metrics and drill-downs for the CEO, CFO, CMO, Chief Sales Officer and COO in the branched dashboard, judged as each of those executives would use it. It ends with the corrected trees as a node diagram that shows who owns what and where the roles meet. All numbers are the synthetic figures Pulse shows on data to 11 Oct.</p>
+  <nav class="toc" aria-label="Sections"><a href="#verdict">Verdict</a><a href="#flow">How executives expect the information</a><a href="#wrong">Where the flow goes wrong</a><a href="#roles">Role by role</a><a href="#charts">Charts</a><a href="#diagram">Node diagram</a><a href="#rebuild">Rebuild order</a></nav>
+</header>
+
+<h2 id="verdict">Verdict</h2>
+<div class="verdict">
+  <p class="big">The home page answers "are we on track?" well, but the trees underneath do not answer "why, where and who" the way an executive asks it. Three different kinds of relationship are drawn as one ("adds up to", "explains", and "is a symptom of"), a few branches are wrong in accounting terms, and each role's four cards do not match that role's job. The fix is not more charts. It is one disciplined path from metric to driver to lever to place to action, with shared metrics owned explicitly.</p>
+  <div class="answers">
+    <div class="ans"><span class="chip p2">Partly</span><span><b>Is the main dashboard making sense?</b> The summary and cards read cleanly. The role choices behind them are off for four of five roles.</span></div>
+    <div class="ans"><span class="chip p1">No</span><span><b>Is the value tree correct?</b> Sums are mixed with context, and three branches break accounting rules.</span></div>
+    <div class="ans"><span class="chip p2">Mostly</span><span><b>Do the charts make sense?</b> Individually yes. Together, each panel shows two or three decompositions of the same number that do not reconcile.</span></div>
+    <div class="ans"><span class="chip p1">Broken</span><span><b>Does the flow hold?</b> Issues and actions are not placed on the tree, and the side panel changes the main panel underneath you.</span></div>
+  </div>
+</div>
+
+<h2 id="flow">How executives expect the information</h2>
+<p class="lede">Every executive carries the same mental path, at their own altitude. T1 is their home card. Each step down must reconcile with the step above in the same unit, and the last step is always a person and a date.</p>
+<div class="flow" role="list">
+  <div class="step" role="listitem"><span class="t">T1</span><h3>Core metric</h3><p>Status, gap to plan in its unit, trend. Four per role.</p><div class="ex">Adjusted operating margin 17.2%, 12 bps behind plan</div></div>
+  <div class="step" role="listitem"><span class="t">T2</span><h3>Components</h3><p>The parts that add up to T1, shown as one bridge. Biggest bar pre-selected.</p><div class="ex">Gross margin −90 bps, overheads +94 bps, A&amp;P −12 bps</div></div>
+  <div class="step" role="listitem"><span class="t">T3</span><h3>Levers</h3><p>What can be pulled to move that component, each with an owner.</p><div class="ex">Cost per case +1.2%: oats +18%, only 40% hedged</div></div>
+  <div class="step" role="listitem"><span class="t">T4</span><h3>Where</h3><p>The slice that carries the gap, ranked by $ impact: brand, market, channel, customer, site or SKU.</p><div class="ex">Sunrise Oats, all markets, $17.7M margin gap</div></div>
+  <div class="step" role="listitem"><span class="t">Issue</span><h3>Cause</h3><p>One sentence of cause, with what it is worth for the year.</p><div class="ex">Price increase stuck at delayed retailers, $25.6M for the year</div></div>
+  <div class="step" role="listitem"><span class="t">Action</span><h3>Owner and date</h3><p>Who acts, by when, and the state of it.</p><div class="ex">Head of Revenue Growth, finish the price increase, due 9 Oct, overdue</div></div>
+</div>
+<p class="lensrow"><span class="chip ok">Lenses, not components</span> Market share, category growth, brand health, competitor price and sell-in against sell-out explain a gap. They sit beside the tree as context and never inside a sum.</p>
+<div class="cadence">
+  <div class="cad"><h3>The 30-second glance</h3><p class="when">Between meetings, often on a phone</p><ul><li>Four T1 statuses and the one sentence that ties the worst one to its biggest T2 driver and its $.</li><li>No scrolling to reach the cards.</li></ul></div>
+  <div class="cad"><h3>The working session</h3><p class="when">Weekly business review, monthly close</p><ul><li>Open T1, see one bridge whose bars are the T2s, click the biggest bar.</li><li>T3 levers and the T4 "where" table in the same unit; the breadcrumb T1 › T2 › T3 › T4 stays on screen.</li></ul></div>
+  <div class="cad"><h3>The high-stakes moment</h3><p class="when">Board pack, retailer escalation</p><ul><li>The issue with its path, its $ and its owner, ready to copy or export.</li><li>Every number reconciles with the CFO's version of it.</li></ul></div>
+</div>
+
+<h2 id="wrong">Where the flow goes wrong</h2>
+<div class="stack" style="gap:0">
+  <div class="find"><span class="n">1</span><h3>Sums are mixed with explanations <span class="chip p1">P1 · trust</span></h3>
+    <p class="ev">Under Organic sales growth the block is titled "What adds up to organic sales growth". Volume 2.9% and price/mix 1.6% do add up to 4.6%. Market share and brand equity sit in the same row as if they were part of the sum. The CFO's cash cycle puts order documentation accuracy next to inventory, receivable and payable days.</p>
+    <p class="fx"><b>Fix:</b> every panel gets two zones. "How it adds up" holds only components that reconcile, drawn as one bridge in the T1's unit. "What explains it" holds lenses such as share, category growth, brand health and competitor price.</p></div>
+  <div class="find"><span class="n">2</span><h3>Three branches break accounting rules <span class="chip p1">P1 · trust</span></h3>
+    <p class="ev">The COO's gross margin lists <b>distribution expenses</b>, which sit below gross margin (the CEO tree rightly puts them under operating margin). The CEO's gross margin lists <b>injury rate and recalls</b> as drivers. The CFO's gross margin has <b>no price, mix or trade</b>, the levers that explain most of the −90 bps and the whole revenue growth story, even though the gross-to-net walk sits in the same panel.</p>
+    <p class="fx"><b>Fix:</b> gross margin = price realization and trade (gross-to-net) + mix + cost per case, and cost per case = materials and hedging + conversion (OEE) + inbound freight − productivity savings. Safety and quality become their own branch.</p></div>
+  <div class="find"><span class="n">3</span><h3>The four cards do not match each role's job <span class="chip p1">P1 · decision</span></h3>
+    <p class="ev">The CEO gets perfect order rate, an operations measure, but no market share card and no earnings card. The CFO has lost earnings per share against guidance. The CMO has no market share card and judges growth on shipments again. The CSO's main levers (sales against the incentive target, trade spend, key accounts, channel stock) are two or three clicks down, while days sales outstanding is a home card. The COO gets gross margin, which mostly moves on price and trade he does not control, instead of cost per case and inventory.</p>
+    <p class="fx"><b>Fix:</b> the proposed cards per role below, chosen from each role's responsibilities, with shared metrics marked as shared rather than copied.</p></div>
+  <div class="find"><span class="n">4</span><h3>Two or three decompositions per panel, none reconciled <span class="chip p1">P1 · trust</span></h3>
+    <p class="ev">Organic sales growth shows tiles in points (volume, price/mix) above a waterfall in dollars with a different split (volume, mix, price, trade). Gross margin shows tiles (input cost, savings, recalls), a gross-to-net walk, a gross-to-net table, a plan-to-actual bridge and a cost-per-case bridge: five views of one number and none of them match the tiles. Operating margin's tiles (gross margin, A&amp;P, distribution, overheads) sit above a contribution margin bridge that leaves overheads out.</p>
+    <p class="fx"><b>Fix:</b> one bridge per T1 whose bars are the T2 nodes, in the T1's unit. Clicking a bar opens that T2. Supporting views move down to the node they belong to.</p></div>
+  <div class="find"><span class="n">5</span><h3>"Where" is not a level <span class="chip p1">P1 · decision</span></h3>
+    <p class="ev">The place a gap lives shows up as a country list in the side panel, as contributor bars, or as a table, depending on the panel. Picking a country in the side panel filters the main panel behind it.</p>
+    <p class="fx"><b>Fix:</b> every T3 ends in the same ranked "where" table: brand, market and channel for commercial levers; key account for sales; plant, warehouse or SKU-location for supply. Columns are $ gap, gap in the T1's unit and owner. Each row opens its issue.</p></div>
+  <div class="find"><span class="n">6</span><h3>Issues and actions float free of the tree <span class="chip p1">P1 · flow</span></h3>
+    <p class="ev">A summary row such as "Sunrise Oats in all markets, rising input costs" does not say which metric path it belongs to. Its "See analysis" link opens a panel that depends on the role: for the CSO, a cost issue opens sales growth.</p>
+    <p class="fx"><b>Fix:</b> every issue carries its path, for example "Adjusted operating margin › Gross margin › Cost per case › Input cost › Sunrise Oats, all markets", and clicking it opens that exact node with the action attached.</p></div>
+  <div class="find"><span class="n">7</span><h3>Two drill models in one panel <span class="chip p2">P2 · friction</span></h3>
+    <p class="ev">Tiles open a side panel; charts drill in place with breadcrumbs; "Open the full analysis" swaps the main panel while the side panel stays open. The executive loses track of where they are.</p>
+    <p class="fx"><b>Fix:</b> one path model. The panel shows T1 › T2 › T3 › T4 as one breadcrumb and swaps in place. The side panel is kept for definitions only.</p></div>
+  <div class="find"><span class="n">8</span><h3>Averages hide the tail, and some statuses mislead <span class="chip p2">P2 · trust</span></h3>
+    <p class="ev">Brand equity reads "in line with last year" while Bolt Brew consideration in the UK fell 4.2 points, a significant move. Category growth shows "on track, ▲" when the category outgrowing us means we lose share. Input cost inflation is judged against a 0% budget.</p>
+    <p class="fx"><b>Fix:</b> a T1's status takes its worst material child ("1 of 24 brand-markets off track"). Category growth becomes "share gap". Budgets include the inflation already planned.</p></div>
+  <div class="find"><span class="n">9</span><h3>Every role gets the same panel <span class="chip p2">P2 · altitude</span></h3>
+    <p class="ev">The CMO's growth panel ends with weekly sales needed for the rest of the year, a CEO and sales question. The CSO's share panel carries brand health, a marketing view.</p>
+    <p class="fx"><b>Fix:</b> the node stays the same; the role decides which supporting blocks show.</p></div>
+  <div class="find"><span class="n">10</span><h3>The same problem shows twice on home <span class="chip p2">P2 · space</span></h3>
+    <p class="ev">Off-track core metrics appear as summary rows and again as cards a few hundred pixels below.</p>
+    <p class="fx"><b>Fix:</b> summary rows are for causes found below T1 (issues with a path and an owner). Cards carry T1 status.</p></div>
+</div>
+
+<h2 id="roles">Role by role</h2>
+<p class="lede">Each role: the job in one line, today's home cards with a verdict, the proposed four, and how the three standard moments went. "Shared" means another role owns the number and this role sees it, never a copy with a different definition.</p>
+<div class="roles" id="role-list"></div>
+
+<h2 id="charts">Charts: what to keep and where it belongs</h2>
+<div class="tbl"><table class="charts"><thead><tr><th>Panel</th><th>Chart</th><th>Verdict</th><th>Move it to</th></tr></thead><tbody>
+<tr><td>Organic sales growth</td><td>Growth, last year to actual (waterfall, $)</td><td><span class="tag meh">Re-unit</span> Right chart, wrong unit and split. It disagrees with the tiles above it.</td><td>T2 bridge in points: volume, price realization, mix, trade</td></tr>
+<tr><td></td><td>What is adding to growth and taking away (bars by brand and country)</td><td><span class="tag fine">Keep</span> This is a good T4 "where" view.</td><td>"Where" table under each T2</td></tr>
+<tr><td></td><td>Weekly sales needed for the rest of the year</td><td><span class="tag fine">Keep</span> Useful forward view.</td><td>CEO and CSO only</td></tr>
+<tr><td>Gross margin</td><td>Gross-to-net walk and table</td><td><span class="tag fine">Keep</span> The best revenue-growth view in the product.</td><td>Price realization and trade (T2), CFO and CSO</td></tr>
+<tr><td></td><td>Gross margin, plan to actual (bridge)</td><td><span class="tag fine">Make primary</span> Its bars should be the T2 nodes.</td><td>Gross margin T2 bridge</td></tr>
+<tr><td></td><td>Cost per case, plan to actual</td><td><span class="tag meh">Move</span> A COO lever, not a CFO headline.</td><td>Cost per case node (COO home card)</td></tr>
+<tr><td>Operating margin</td><td>Company profit and loss (table)</td><td><span class="tag fine">Keep</span> For the CFO.</td><td>CFO, under earnings</td></tr>
+<tr><td></td><td>Contribution margin bridge</td><td><span class="tag bad">Replace</span> Leaves out overheads, so it cannot explain operating margin.</td><td>Operating margin bridge: gross margin, A&amp;P, distribution, overheads</td></tr>
+<tr><td>Free cash flow</td><td>Cash plan to actual (waterfall)</td><td><span class="tag fine">Keep</span> Reconciles in dollars.</td><td>Primary bridge for cash</td></tr>
+<tr><td></td><td>Where cash is tied up (table)</td><td><span class="tag fine">Keep</span> A good T4.</td><td>Under working capital</td></tr>
+<tr><td>Perfect order</td><td>Lost sales, by account, why orders failed, fill rate by country</td><td><span class="tag fine">Keep</span> Coherent and actionable.</td><td>Failure reasons as T3, accounts as T4</td></tr>
+<tr><td>Market share</td><td>Our growth against the market; share by brand and country</td><td><span class="tag fine">Keep</span> Category context done right.</td><td>CMO and CEO home; CSO sees the account cut</td></tr>
+<tr><td></td><td>Share of voice; brand health</td><td><span class="tag meh">Move</span> Marketing lenses in a sales panel.</td><td>CMO, brand equity node</td></tr>
+<tr><td>Brand equity</td><td>Biggest moves in consideration</td><td><span class="tag meh">Fix status</span> Shows the right rows, but the card says "in line".</td><td>Status from the worst significant mover</td></tr>
+<tr><td>A&amp;P</td><td>Phasing, return by brand and media, live campaigns, where to move money</td><td><span class="tag fine">Keep</span> "Where to move money" is the standout.</td><td>CMO, with the CFO shared</td></tr>
+<tr><td>Days sales outstanding</td><td>By country, slowest payers</td><td><span class="tag meh">Demote</span> Sound content at the wrong altitude.</td><td>T3 under working capital, shared CSO and CFO</td></tr>
+<tr><td>Injury rate</td><td>Safety, then complaints, holds and suppliers</td><td><span class="tag meh">Split</span> Safety and quality are mixed with supplier risk.</td><td>Safety and quality branch; suppliers under case fill</td></tr>
+</tbody></table></div>
+
+<h2 id="diagram">Node diagram</h2>
+<p class="lede">Proposed shows one company tree. Each executive's home cards sit at a different level of it, which is the point: the CEO lives near the top, the functions lower down, and the shared nodes are where they meet. Current shows each role's tree as built in pulse-next, with the problems marked. Click any node for its owners, rule and issues.</p>
+<div class="dg-bar">
+  <div class="seg" role="group" aria-label="Which tree"><button id="v-prop" aria-pressed="true">Proposed</button><button id="v-cur" aria-pressed="false">Current (pulse-next)</button></div>
+  <div class="seg" role="group" aria-label="Highlight a role" id="role-seg"></div>
+</div>
+<div class="legend">
+  <span><i class="lg-solid"></i>adds up to</span><span><i class="lg-dash"></i>explains (lens)</span><span><i class="lg-home"></i>home card for the selected role</span><span><i class="lg-issue"></i>a planted issue sits here</span><span><i class="lg-flag"></i>problem in the current tree</span>
+  <span><span class="r CEO"></span> CEO</span><span><span class="r CFO"></span> CFO</span><span><span class="r CMO"></span> CMO</span><span><span class="r CSO"></span> CSO</span><span><span class="r COO"></span> COO</span><span class="muted">the large dot owns it, small dots contribute</span>
+</div>
+<div class="dg"><div class="canvas" id="canvas"></div><aside class="side" id="side" aria-live="polite"></aside></div>
+
+<h2 id="rebuild">Rebuild order</h2>
+<div class="tbl"><table><thead><tr><th>#</th><th>Change</th><th>Why first</th></tr></thead><tbody>
+<tr><td>1</td><td>Correct the trees: separate components from lenses, fix gross margin and cash, add safety and quality as its own branch.</td><td>Every later screen inherits these. Wrong sums lose the CFO at once.</td></tr>
+<tr><td>2</td><td>Swap the home cards to the proposed four per role, with shared metrics marked.</td><td>This is what each executive sees first.</td></tr>
+<tr><td>3</td><td>One bridge per T1 whose bars are the T2s; one ranked "where" table under each T3.</td><td>Makes the drill reconcile and gives every gap a place.</td></tr>
+<tr><td>4</td><td>Give every issue its path and open it at that node; drop core-metric repeats from the summary.</td><td>Connects the summary, the tree and the actions into one thread.</td></tr>
+<tr><td>5</td><td>One drill model with a single breadcrumb; side panel for definitions only.</td><td>Removes the "where am I" moments.</td></tr>
+</tbody></table></div>
+
+<footer>Northstar Consumer Goods is fictional and every figure is synthetic. Values are as Pulse shows them on data to 11 Oct 2026. Personas and definitions follow the CPG executive references used for the earlier reviews.</footer>
+</div>
+
+<script>
+(() => {
+const ROLES = ['CEO', 'CFO', 'CMO', 'CSO', 'COO'];
+const COLOR = r => getComputedStyle(document.documentElement).getPropertyValue('--' + r.toLowerCase()).trim();
+
+/* ---------------- role reviews ---------------- */
+const REV = [
+  { r: 'CEO', job: 'Owns the whole P&L and the equity story: are we growing ahead of our categories, profitably, with cash, and will we hit the year?',
+    cur: [['Organic sales growth', 'fine', 'right'], ['Adjusted operating margin', 'fine', 'right'], ['Free cash flow conversion', 'fine', 'right'], ['Perfect order rate', 'bad', 'an operations measure at CEO altitude']],
+    prop: [['Organic sales growth', 'volume against price/mix, with share as the lens'], ['Market share against category', 'growing ahead of the market is the CEO\'s first question'], ['Adjusted operating margin', 'the bridge to plan'], ['Free cash flow conversion', 'with earnings against guidance as the strip above the cards']],
+    sc: [['"On track for the year, and what needs me?"', 'Yes', 'The summary and cards answer it in seconds.'], ['"Are we growing ahead of the category, and where are we losing?"', 'Partly', 'Share is a tile under growth, mixed into a sum it is not part of.'], ['"Board tomorrow: what is the earnings gap made of?"', 'Partly', 'Earnings is only a summary row; its walk sits under the CFO.']] },
+  { r: 'CFO', job: 'Owns financial truth: earnings against guidance, the margin walk, gross-to-net and trade, cash and working capital.',
+    cur: [['Organic sales growth', 'fine', 'right'], ['Gross margin', 'bad', 'tree has no price, mix or trade'], ['Adjusted operating margin', 'meh', 'duplicates gross margin one level up'], ['Free cash flow conversion', 'fine', 'right, but cash cycle mixes in order documentation']],
+    prop: [['Earnings per share against guidance', 'the walk from plan: growth, margin, overheads, below the line'], ['Organic sales growth', 'with price/mix and gross-to-net as the CFO cut'], ['Gross margin after trade', 'price and trade, mix, cost per case'], ['Free cash flow conversion', 'working capital days and capital spending']],
+    sc: [['"Where will we land against guidance?"', 'Partly', 'No earnings card; it appears as a summary row only.'], ['"Why is gross margin 90 bps below plan?"', 'Partly', 'Five decompositions in one panel, and the tiles leave out price and trade.'], ['"Can I put this in the board pack?"', 'Partly', 'Numbers reconcile in the bridge but not across the tiles.']] },
+  { r: 'CMO', job: 'Owns brand health and demand: share by brand and market, buyers and frequency, and whether marketing money works.',
+    cur: [['Brand equity', 'meh', 'average hides Bolt Brew UK'], ['Organic sales growth', 'bad', 'shipments, not what shoppers buy'], ['A&P % of net sales', 'fine', 'right, with good returns views']],
+    prop: [['Market share against category', 'by brand and market, worst first'], ['Shopper sales growth', 'sell-out, broken into buyers and buying rate'], ['Brand equity', 'status from the worst significant mover'], ['A&P return', 'spend against budget and return by brand and media']],
+    sc: [['"Which brands are gaining or losing share?"', 'Partly', 'Share is a tile two levels down under shipments.'], ['"Losing buyers or buying less?"', 'Yes', 'Penetration, buying rate and repeat are there as L3s.'], ['"Defend A&P to the CFO"', 'Yes', 'Return by brand and media and "where to move money" do the job.']] },
+  { r: 'CSO', job: 'Owns the number and the customer: sales against the incentive target, trade spend, distribution and execution, and sell-in against sell-out.',
+    cur: [['Organic sales growth', 'meh', 'right family, wrong comparison: not the sales target'], ['Value market share', 'fine', 'shared with the CMO'], ['Perfect order rate', 'meh', 'shared with the COO, fine as a shared card'], ['Days sales outstanding', 'bad', 'a finance measure as a home card']],
+    prop: [['Net sales against sales target', 'month to date by region, sales head and key account'], ['Price realization and trade return', 'gross-to-net by account, promotion return by event'], ['Distribution and on-shelf availability', 'reach, listings and the shelf'], ['Sell-in against sell-out', 'channel weeks of stock, with collections as a lever']],
+    sc: [['"Where am I against target this month, and who is behind?"', 'Partly', 'The run rate and sales heads sit inside the growth panel, not on the card.'], ['"Which promotions paid back?"', 'Partly', 'Trade is an L3 inside price/mix, two clicks and a side panel away.'], ['"Prep for the FreshMart review"', 'Partly', 'The key-account table exists but is buried in the growth panel.']] },
+  { r: 'COO', job: 'Owns supply end to end: service and lost sales, cost per case and savings, inventory and the 13-week risk, safety and quality.',
+    cur: [['Perfect order rate', 'fine', 'right'], ['Gross margin', 'bad', 'mostly price and trade; includes distribution by mistake'], ['Free cash flow conversion', 'meh', 'the COO owns inventory days, not cash conversion'], ['Total recordable incident rate', 'fine', 'right, though quality and suppliers are mixed in']],
+    prop: [['Perfect order and lost sales', 'on time, in full, damage, paperwork, and $ lost'], ['Cost per case and savings', 'materials and hedging, conversion, freight, savings'], ['Inventory and 13-week supply risk', 'days of stock, items at risk, forecast accuracy'], ['Safety and quality', 'injury rate first, then complaints, holds and recalls']],
+    sc: [['"Are we serving customers, and what runs out?"', 'Yes', 'Perfect order and its failure reasons are clear.'], ['"Are the plants and savings on plan?"', 'Partly', 'OEE and savings sit under gross margin with price and trade.'], ['"Supply review: what is at risk in 13 weeks?"', 'Partly', 'Forecast accuracy is an L3 under case fill; there is no inventory card.']] },
+];
+const tagOf = { fine: ['fine', 'Right'], meh: ['meh', 'Rethink'], bad: ['bad', 'Wrong'] };
+document.getElementById('role-list').innerHTML = REV.map(x => `<article class="role ${x.r}"><div class="role-h"><h3>${x.r}</h3><span class="muted" style="font-size:13px">${x.cur.filter(c => c[1] !== 'fine').length} of ${x.cur.length} home cards need to change</span></div>
+  <p class="job">${x.job}</p>
+  <div class="l1s"><div><h4>Home cards today</h4><ol>${x.cur.map(c => `<li>${c[0]}<span class="tag ${tagOf[c[1]][0]}">${tagOf[c[1]][1]}</span> <span>${c[2]}</span></li>`).join('')}</ol></div>
+    <div><h4>Proposed home cards</h4><ol>${x.prop.map(c => `<li>${c[0]} <span>· ${c[1]}</span></li>`).join('')}</ol></div></div>
+  <div class="tbl"><table><thead><tr><th>Moment</th><th>Got the answer?</th><th>Where it broke</th></tr></thead><tbody>${x.sc.map(s => `<tr><td>${s[0]}</td><td><span class="chip ${s[1] === 'Yes' ? 'ok' : 'p2'}">${s[1]}</span></td><td>${s[2]}</td></tr>`).join('')}</tbody></table></div></article>`).join('');
+
+/* ---------------- proposed company tree ----------------
+   k: kind (core | lens | ref | where), o: owners (first owns, others contribute), h: home card for roles, v: value shown in Pulse,
+   rule: how it adds up, iss: planted issue that sits here, now: where it lives in pulse-next */
+const W = (name, sub) => ({ k: 'where', n: name, s: sub });
+const P = [
+  { n: 'Earnings per share against guidance', o: ['CFO', 'CEO'], h: ['CFO'], v: '$3.05 against guidance $3.10 to $3.20', rule: 'Plan earnings + growth contribution + operating margin change + below the line (interest, tax, share count).', iss: 'Outlook is $0.05 below the bottom of guidance; the CFO is preparing a board decision.', now: 'A summary row and a CEO strip. Not a card for the CFO.', c: [
+    { n: 'Organic sales growth', o: ['CEO', 'CSO', 'CMO', 'CFO'], h: ['CEO'], v: '4.6%, 0.4 pts behind plan', rule: 'Volume growth + price/mix. Each in points of growth so they add to the total.', now: 'L1 for CEO, CFO, CSO and CMO, with share and brand equity wrongly in its sum.', c: [
+      { n: 'Volume growth', o: ['CSO', 'CMO', 'COO'], v: '2.9%, 0.3 pts ahead of plan', rule: 'Buyers × buying rate, plus distribution gained, minus sales lost to supply.', c: [
+        { n: 'Household penetration and buying rate', o: ['CMO'], h: ['CMO'], v: 'Penetration 16.1%, buying rate 7.4 trips a year', rule: 'Losing buyers is a brand problem; buying less often is a price or occasion problem.', iss: 'Bolt Brew UK lost 0.9M buyers to Volt Coffee.', c: [W('Brand × market', 'consumer panel')] },
+        { n: 'Distribution and on-shelf availability', o: ['CSO', 'COO'], h: ['CSO'], v: 'Weighted distribution 64.9%, shelf availability 93.1%', rule: 'Stores that stock us × how often the product is actually on the shelf.', iss: 'Reach behind in North India and Jakarta.', c: [W('Region × key account', 'retail audit')] },
+        { n: 'Sales lost to supply', o: ['COO', 'CSO'], v: '$11.0M lost in 4 weeks', rule: 'Ordered but not delivered, at net price.', iss: 'Orchard Juice Indonesia fill rate near 82%.', ref: 'Case fill rate', c: [W('Customer × SKU', 'order system')] } ] },
+      { n: 'Price/mix', o: ['CFO', 'CSO', 'CMO'], v: '1.6%, 0.7 pts behind plan', rule: 'Price realization + mix − change in trade rate. The revenue growth management levers.', c: [
+        { n: 'Price realization', o: ['CSO', 'CFO'], h: ['CSO'], v: 'Realized +2.9% against +3.3% planned', rule: 'List price changes that actually stuck at the shelf, after discounts.', iss: 'The oats price increase is stuck at delayed UK and US retailers.', c: [W('Account × brand', 'ERP pricing')] },
+        { n: 'Trade spend and promotion return', o: ['CSO', 'CFO', 'CMO'], h: ['CSO'], v: 'Trade 15.7% of gross sales; promotions return 0.90x', rule: 'Trade rate by account; extra margin ÷ cost for each promotion.', iss: 'Crunch Chips USA growth bought with deep promotions, 0.55x.', c: [W('Account × event', 'RGM tool')] },
+        { n: 'Mix', o: ['CMO', 'CSO'], v: 'Takes about 1.3 pts off', rule: 'Net sales per case not explained by price: pack, product and channel mix.', c: [W('Brand × channel', 'ERP')] } ] } ] },
+    { n: 'Adjusted operating margin', o: ['CEO', 'CFO'], h: ['CEO'], v: '17.2%, 12 bps behind plan', rule: 'Gross margin − A&P − distribution − overheads, each as % of net sales, in bps.', now: 'L1 for CEO and CFO; its panel bridge leaves overheads out.', c: [
+      { n: 'Gross margin after trade', o: ['CFO', 'COO', 'CSO'], h: ['CFO'], v: '51.3%, 90 bps behind plan', rule: 'Price realization and trade + mix + cost per case. This is where commercial and supply meet.', now: 'L1 for CFO and COO; trees leave out price and trade, and the COO\'s includes distribution by mistake.', c: [
+        { k: 'ref', n: 'Price and trade (see price/mix)', o: ['CSO', 'CFO'], v: 'Same levers as under growth', rule: 'One node in two trees: what we charge drives both growth and margin.' },
+        { n: 'Cost per case', o: ['COO', 'CFO'], h: ['COO'], v: '$8.81, 1.2% over plan', rule: 'Materials + packaging + conversion + inbound freight, per standard case.', c: [
+          { n: 'Input costs and hedging', o: ['COO', 'CFO'], v: 'Oats +18% against budget, 40% hedged', rule: 'Price against the budget that already includes planned inflation.', iss: 'Oat cost spike; inflation recovery about 53%.', c: [W('Commodity × supplier', 'procurement')] },
+          { n: 'Conversion and plant efficiency', o: ['COO'], v: 'OEE 71.8%, 2.7 pts behind target', rule: 'Availability × performance × quality, and fixed cost spread over volume.', c: [W('Plant × line', 'manufacturing system')] },
+          { n: 'Productivity savings', o: ['COO', 'CFO'], v: '$29.0M against $37.0M plan', rule: 'Delivered against plan by lever.', c: [W('Lever', 'programme office')] } ] } ] },
+      { n: 'A&P and its return', o: ['CMO', 'CFO'], h: ['CMO'], v: '9.5% of net sales; returns 1.61x', rule: 'Spend against budget, and extra margin per $1 by brand and media.', iss: 'Bolt Up TV campaign lifting 3% against 8% planned.', c: [W('Brand × media × campaign', 'marketing mix model')] },
+      { n: 'Distribution cost', o: ['COO'], v: '6.0% of net sales, 5 bps above plan', rule: 'Warehousing, freight and handling ÷ net sales.', c: [W('Country × lane', 'logistics')] },
+      { n: 'Overheads', o: ['CFO'], v: '18.6% of net sales, 94 bps below plan', rule: 'Corporate centre, sales organisation and support functions.', c: [W('Function', 'ERP')] } ] },
+    { n: 'Below the line', o: ['CFO'], v: 'Interest, tax, share count', rule: 'Interest and tax at plan rates; share count fixed.', c: [W('Line item', 'FP&A')] } ] },
+  { n: 'Free cash flow conversion', o: ['CFO', 'COO', 'CSO'], h: ['CEO', 'CFO'], v: '82.4%, 7.6 pts behind the 90% target', rule: 'Free cash flow ÷ net earnings: operating profit, working capital and capital spending decide it.', iss: 'India distributors are holding more of our stock on credit.', now: 'L1 for CEO, CFO and COO; the COO only owns the inventory part.', c: [
+    { n: 'Working capital days', o: ['CFO', 'COO', 'CSO'], v: 'Cash cycle 26.6 days, 15.6 above target', rule: 'Inventory days + receivable days − payable days.', c: [
+      { n: 'Receivable days', o: ['CSO', 'CFO'], v: '40.6 days against 36', rule: 'How long customers take to pay. Sales owns the push into the channel that causes it.', iss: 'India general trade pays slowest since the distributor push.', c: [W('Customer × country', 'ERP')] },
+      { n: 'Inventory days and obsolete stock', o: ['COO', 'CFO'], h: ['COO'], v: 'Warehouse cover against 25 days', rule: 'Stock ÷ daily cost of sales, plus excess and obsolete.', c: [W('Warehouse × SKU', 'supply planner')] },
+      { n: 'Payable days', o: ['CFO', 'COO'], v: 'Against supplier terms', rule: 'How long we take to pay suppliers.', c: [W('Supplier', 'ERP')] } ] },
+    { n: 'Capital spending and return', o: ['CFO', 'COO'], v: '3.2% of net sales, 30 bps below plan', rule: 'Spend against plan; return above the cost of capital.', c: [W('Project × plant', 'capex register')] } ] },
+  { n: 'Perfect order rate', o: ['COO', 'CSO'], h: ['COO'], v: '89.1%, 1.9 pts behind target', rule: 'On time × in full × damage free × correct paperwork.', iss: 'FreshMart and HyperValue below their delivery contracts.', now: 'L1 for CEO, CSO and COO. Right for the COO, shared for the CSO, too low for the CEO.', c: [
+    { n: 'On-time delivery', o: ['COO'], v: '95.8%', rule: 'Late deliveries start with carriers or slow order handling.', c: [W('Carrier × lane', 'transport system')] },
+    { n: 'Case fill rate', o: ['COO', 'CSO'], v: '95.7%, 1.3 pts behind target', rule: 'Short shipments start with a poor forecast or a late supplier.', c: [
+      { n: 'Forecast accuracy and bias', o: ['CSO', 'COO'], v: 'Indonesia 71%, forecasts 12% too high', rule: '1 − weighted error at SKU × country, one-month lag. Sales and supply own it together in S&OP.', c: [W('SKU × country', 'demand planning')] },
+      { n: '13-week supply risk', o: ['COO'], h: ['COO'], v: '7 items run short; Sunrise Oats USA new from 6 Dec', rule: 'Projected days of cover below replenishment time, with confirmed recovery plans.', iss: 'Indonesia port delays; Glow India thin before Diwali.', c: [W('SKU × warehouse × week', 'supply planner')] },
+      { n: 'Supplier delivery', o: ['COO'], v: 'Java Fruit Processing 81%', rule: 'Supplier on time in full.', c: [W('Supplier × input', 'procurement')] } ] },
+    { n: 'Damage-free and paperwork', o: ['COO', 'CFO'], v: '99.1% and 98.0%', rule: 'Damage happens in handling; invoice errors delay payment.', c: [W('Warehouse × customer', 'order system')] } ] },
+  { n: 'Safety and quality', o: ['COO'], h: ['COO'], v: 'Injury rate 0.42 against 0.50', rule: 'Injury rate first; then complaints, holds and recalls. A licence to operate, not a margin lever.', now: 'Injury rate is a COO card, but recalls and injuries also sit under gross margin.', c: [
+    { n: 'Injury rate', o: ['COO'], v: '0.42 per million hours', rule: 'Lost-time injuries ÷ hours worked.', c: [W('Site', 'safety system')] },
+    { n: 'Complaints, holds and recalls', o: ['COO', 'CMO'], v: '3.1 complaints per million units', rule: 'Consumer complaints, quality holds and recalls.', c: [W('Product × plant', 'quality system')] } ] },
+];
+const LENSES = [
+  { at: 'Organic sales growth', n: 'Market share against category', o: ['CMO', 'CSO', 'CEO'], h: ['CMO', 'CEO'], v: '11.9%, 0.1 pts behind last year; category +5.5% against our +4.8%', rule: 'Explains growth: our growth minus category growth. Not part of the sum.', iss: 'Volt Coffee cut its UK convenience price 12%; Bolt Brew lost 2.4 share points.', now: 'An L2 tile inside the growth sum; a CSO card.' },
+  { at: 'Organic sales growth', n: 'Sell-in against sell-out', o: ['CSO', 'CFO'], h: ['CSO'], v: 'India general trade holds 5.3 weeks against 3.5 normal', rule: 'Shipments against what shoppers buy. Shows growth that will come back.', iss: 'Distributor push in India general trade.', now: 'Hidden behind shelf availability and inventory days.' },
+  { at: 'Volume growth', n: 'Brand equity', o: ['CMO'], h: ['CMO'], v: 'Bolt Brew UK consideration −4.2 pts, significant', rule: 'Awareness, consideration and preference move before buyers do.', now: 'CMO card whose average hides the worst mover.' },
+  { at: 'Market share against category', n: 'Shopper sales growth', o: ['CMO'], h: ['CMO'], v: 'Shoppers +4.8% against category +5.5%', rule: 'Retail sales value against last year. The CMO\'s growth number.', now: 'Folded behind volume and category growth.' },
+];
+// attach lenses as children marked k:lens
+function findNode(list, name) { for (const n of list) { if (n.n === name) return n; if (n.c) { const r = findNode(n.c, name); if (r) return r; } } return null; }
+LENSES.forEach(l => { const p = findNode(P, l.at) || findNode(LENSES, l.at); if (!p) return; (p.c = p.c || []).push({ ...l, k: 'lens' }); });
+
+/* ---------------- current trees (pulse-next TREE) with problems ---------------- */
+const NM = { OSG: 'Organic sales growth', OVG: 'Organic volume growth', PEN: 'Household penetration', BUY: 'Buying rate', REP: 'Repeat rate', PMX: 'Price/mix', PRC: 'Pricing', MIX: 'Mix', TRADE: 'Trade spend', TPR: 'Trade promotion ROI', SHARE: 'Value market share', CATG: 'Category growth', DIST: 'Weighted distribution', OSA: 'On-shelf availability', BEQ: 'Brand equity', AWR: 'Unaided awareness', CONS: 'Brand consideration', INNO: 'Innovation rate', OM: 'Adjusted operating margin', GM: 'Gross margin', ICI: 'Input cost inflation', OEE: 'Plant efficiency (OEE)', RCL: 'Product recalls', TRIR: 'Injury rate (TRIR)', AMS: 'A&P % of net sales', ROMI: 'Marketing ROI', ROAS: 'Return on ad spend', ESOV: 'Excess share of voice', DEX: 'Distribution expenses', LCPC: 'Logistics cost per case', OHD: 'Overheads', PRODS: 'Productivity savings', FCFC: 'Free cash flow conversion', CCC: 'Cash conversion cycle', DIO: 'Inventory days', DSO: 'Receivable days (DSO)', DPO: 'Payable days', EO: 'Excess and obsolete stock', CAPEX: 'Capital spending', ROIC: 'Return on invested capital', POR: 'Perfect order rate', OTD: 'On-time delivery', COTD: 'Carrier on time', OFCT: 'Order cycle time', CFR: 'Case fill rate', FA: 'Forecast accuracy', SOTIF: 'Supplier on time in full', DFD: 'Damage-free delivery', ODA: 'Order documentation accuracy' };
+const TREE = {
+  CEO: [['OSG', [['OVG', ['PEN', 'BUY', 'REP']], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']], ['SHARE', ['CATG', 'DIST', 'OSA']], ['BEQ', ['AWR', 'CONS', 'INNO']]]], ['OM', [['GM', ['ICI', 'OEE', 'RCL', 'TRIR']], ['AMS', ['ROMI', 'ROAS', 'ESOV']], ['DEX', ['LCPC']], ['OHD', ['PRODS']]]], ['FCFC', [['CCC', ['DIO', 'DSO', 'DPO', 'EO']], ['CAPEX', ['ROIC']]]], ['POR', [['OTD', ['COTD', 'OFCT']], ['CFR', ['FA', 'SOTIF']], ['DFD', []], ['ODA', []]]]],
+  CFO: [['OSG', [['OVG', []], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']]]], ['GM', [['ICI', []], ['PRODS', []], ['RCL', []]]], ['OM', [['AMS', ['ROMI']], ['DEX', []], ['OHD', []]]], ['FCFC', [['CCC', ['DIO', 'DSO', 'DPO', 'ODA']], ['CAPEX', ['ROIC']]]]],
+  CMO: [['BEQ', [['AWR', []], ['CONS', []], ['INNO', []]]], ['OSG', [['OVG', ['PEN', 'BUY', 'REP']], ['PMX', ['MIX', 'PRC']], ['SHARE', ['CATG']]]], ['AMS', [['ROMI', []], ['ROAS', []], ['ESOV', []]]]],
+  CSO: [['OSG', [['OVG', ['PEN', 'BUY']], ['PMX', ['PRC', 'MIX', 'TRADE', 'TPR']]]], ['SHARE', [['CATG', []], ['DIST', []], ['OSA', []]]], ['POR', [['OTD', []], ['CFR', ['FA']], ['ODA', []]]], ['DSO', []]],
+  COO: [['POR', [['OTD', ['COTD', 'OFCT']], ['CFR', ['FA', 'SOTIF']], ['DFD', []], ['ODA', []]]], ['GM', [['ICI', []], ['OEE', []], ['DEX', ['LCPC']], ['RCL', []]]], ['FCFC', [['CCC', ['DIO', 'DPO', 'EO']], ['CAPEX', ['ROIC']]]], ['TRIR', []]],
+};
+// problems keyed by role and path (L1, L1/L2 or L1/L2/L3)
+const FLAG = {
+  CEO: { 'POR': 'An operations measure at CEO altitude. The CEO needs market share against category here.', 'OSG/SHARE': 'Not part of the growth sum. Share explains growth; show it as a lens.', 'OSG/BEQ': 'Not part of the growth sum. Brand equity explains volume; show it as a lens.', 'OM/GM/TRIR': 'Injury rate does not drive gross margin.', 'OM/GM/RCL': 'Recalls are a quality branch, not a gross margin driver.', 'OM/GM': 'Tree has no price, mix or trade, which explain most of the gap.' },
+  CFO: { 'GM': 'No price, mix or trade under gross margin: the revenue growth levers are missing.', 'GM/RCL': 'Recalls are not a gross margin component.', 'FCFC/CCC/ODA': 'Not a component of the cash cycle (inventory + receivable − payable days).', 'OM': 'Gross margin is one of its parts but sits beside it as a separate card.' },
+  CMO: { 'OSG': 'Shipments (sell-in). The CMO is judged on what shoppers buy.', 'OSG/SHARE': 'The CMO\'s first metric, demoted to a tile under shipments.', 'BEQ': 'Average says "in line"; Bolt Brew UK consideration fell 4.2 pts.' },
+  CSO: { 'DSO': 'A finance measure as a home card. Belongs under working capital, shared.', 'OSG/PMX/TRADE': 'The CSO\'s biggest lever, three levels down in a side panel.', 'OSG': 'Judged against plan, not the sales target the team is paid on.' },
+  COO: { 'GM': 'Mostly moves on price and trade, which the COO does not control. Use cost per case.', 'GM/DEX': 'Distribution expenses sit below gross margin. Accounting error.', 'FCFC': 'The COO owns inventory days, not cash conversion.', 'TRIR': 'Panel mixes complaints, holds and supplier risk into safety.' },
+};
+const MISSING = { CEO: ['Market share against category', 'Earnings against guidance'], CFO: ['Earnings per share against guidance'], CMO: ['Market share as a card', 'Shopper sales growth'], CSO: ['Net sales against sales target', 'Sell-in against sell-out'], COO: ['Cost per case', 'Inventory and 13-week risk'] };
+
+/* ---------------- layout + render ---------------- */
+const NW = 210, NH = 52, WH = 30, CG = 46, VG = 10, PAD = 24, TOP = 40;
+const S = { view: 'prop', role: 'All', sel: null };
+function toNodes(view, role) {
+  if (view === 'prop') return P;
+  const r = role === 'All' ? 'CEO' : role;
+  return TREE[r].map(([l1, kids]) => ({ id: l1, n: NM[l1], path: l1, flag: FLAG[r][l1], c: kids.map(([l2, l3s]) => ({ id: l2, n: NM[l2], path: l1 + '/' + l2, flag: FLAG[r][l1 + '/' + l2], c: l3s.map(l3 => ({ id: l3, n: NM[l3], path: l1 + '/' + l2 + '/' + l3, flag: FLAG[r][l1 + '/' + l2 + '/' + l3] })) })) }));
+}
+function layout(roots) {
+  const out = [], edges = []; let y = TOP; let maxD = 0;
+  function place(n, d, parent) {
+    const h = n.k === 'where' ? WH : NH; maxD = Math.max(maxD, d);
+    const node = { ...n, d, x: PAD + d * (NW + CG), h };
+    if (n.c && n.c.length) { const kids = n.c.map(k => place(k, d + 1, node)); node.y = (kids[0].y + kids[kids.length - 1].y + kids[kids.length - 1].h - h) / 2; kids.forEach(k => edges.push({ a: node, b: k })); }
+    else { node.y = y; y += h + VG; }
+    out.push(node); return node;
+  }
+  roots.forEach(r => { place(r, 0, null); y += 18; });
+  return { nodes: out, edges, w: PAD * 2 + (maxD + 1) * (NW + CG) - CG, h: y + PAD };
+}
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function wrap(t, max) { const w = String(t).split(' '), lines = []; let cur = ''; for (const x of w) { if ((cur + ' ' + x).trim().length > max) { lines.push(cur.trim()); cur = x; } else cur += ' ' + x; } if (cur.trim()) lines.push(cur.trim()); return lines.slice(0, 2); }
+function render() {
+  const roots = toNodes(S.view, S.role), L = layout(roots), role = S.role;
+  const rel = n => role === 'All' || S.view === 'cur' || !n.o || n.o.includes(role) || n.k === 'where';
+  const cols = S.view === 'prop' ? ['OUTCOME', 'LEVEL 2', 'LEVEL 3', 'LEVEL 4', 'LEVEL 5', 'LEVEL 6'] : ['T1 · HOME CARD', 'T2', 'T3'];
+  let svg = `<svg width="${L.w}" height="${L.h}" viewBox="0 0 ${L.w} ${L.h}" role="img" aria-label="Metric tree"><g class="cols">${cols.slice(0, Math.round((L.w - PAD * 2 + CG) / (NW + CG))).map((c, i) => `<text x="${PAD + i * (NW + CG)}" y="22">${c}</text>`).join('')}</g>`;
+  L.edges.forEach(e => { const x1 = e.a.x + NW, y1 = e.a.y + e.a.h / 2, x2 = e.b.x, y2 = e.b.y + e.b.h / 2, mx = (x1 + x2) / 2; const dim = !(rel(e.a) && rel(e.b));
+    svg += `<path class="edge ${e.b.k === 'lens' ? 'lens' : e.b.k === 'where' ? 'where' : ''} ${dim ? 'dim' : ''}" d="M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}"/>`; });
+  L.nodes.forEach((n, i) => { const dim = !rel(n), home = S.view === 'prop' && role !== 'All' && n.h && n.h.includes(role);
+    const key = S.view + ':' + (n.path || n.n); n._key = key;
+    const lines = wrap(n.n, n.k === 'where' ? 30 : 27), sub = S.view === 'prop' ? (n.k === 'where' ? n.s : n.k === 'lens' ? 'explains' : n.k === 'ref' ? 'same node as under growth' : '') : (n.flag ? 'problem' : '');
+    svg += `<g class="nd ${n.k || ''} ${n.flag ? 'flag' : ''} ${dim ? 'dim' : ''} ${S.sel === key ? 'sel' : ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(n.n)}" transform="translate(${n.x},${n.y})">
+      <rect class="b" width="${NW}" height="${n.h}" rx="${n.k === 'where' ? 15 : 8}"/>`;
+    if (home) svg += `<rect class="home" x="-4" y="-4" width="${NW + 8}" height="${n.h + 8}" rx="11" style="stroke:${COLOR(role)}"/>`;
+    if (n.k === 'where') svg += `<text class="nm" x="14" y="19">${esc(lines[0])}</text>`;
+    else { svg += `<text class="nm" x="12" y="${lines.length > 1 ? 19 : 22}">${esc(lines[0])}</text>${lines[1] ? `<text class="nm" x="12" y="34">${esc(lines[1])}</text>` : ''}`;
+      if (sub && lines.length < 2) svg += `<text class="sb" x="12" y="39">${esc(sub)}</text>`; }
+    if (n.o && S.view === 'prop') n.o.forEach((r, j) => { svg += `<circle class="own" cx="${NW - 12 - j * 12}" cy="12" r="${j ? 4 : 5.5}" style="fill:${COLOR(r)}"/>`; });
+    if (n.iss && S.view === 'prop') svg += `<rect x="${NW - 18}" y="${n.h - 16}" width="10" height="10" rx="2" style="fill:var(--crit-bg);stroke:var(--crit)"/>`;
+    if (n.flag) svg += `<circle cx="${NW - 10}" cy="10" r="6" style="fill:var(--crit)"/><text x="${NW - 12.5}" y="13.5" style="font:700 9px var(--text);fill:var(--node)">!</text>`;
+    svg += `</g>`; });
+  svg += '</svg>';
+  const cv = document.getElementById('canvas'); cv.innerHTML = svg; cv._nodes = L.nodes;
+  side(L.nodes.find(n => n._key === S.sel) || null);
+}
+function owners(n) { if (!n.o) return ''; return `<div class="own-list">${n.o.map((r, j) => `<span class="chip"><span class="r ${r}"></span>${r} ${j ? 'contributes' : 'owns'}</span>`).join('')}</div>`; }
+function side(n) {
+  const el = document.getElementById('side');
+  if (!n) {
+    if (S.view === 'cur') { const r = S.role === 'All' ? 'CEO' : S.role, f = FLAG[r]; el.innerHTML = `<p class="lv">Current tree · ${r}</p><h3>${Object.keys(f).length} problems in this tree</h3><ul style="padding-left:18px;margin:10px 0 0;display:grid;gap:6px">${Object.entries(f).map(([p, t]) => `<li><b>${esc(p.split('/').map(k => NM[k]).join(' › '))}</b>: ${esc(t)}</li>`).join('')}</ul><div class="note bad">Missing as home cards: ${esc(MISSING[r].join('; '))}.</div><p class="muted" style="margin-top:10px">Pick a role above to see its tree. Click a node for detail.</p>`; }
+    else el.innerHTML = `<p class="lv">How to read it</p><h3>One company tree, five owners</h3><p style="margin-top:8px">Dots on a node show who owns it (the large dot) and who contributes. Pick a role above to fade everything that role does not touch and ring its four home cards.</p><p style="margin-top:8px">Dashed links are lenses: they explain a number but are not part of its sum. Rounded grey pills at the right are the "where" level each lever ends in.</p><p class="muted" style="margin-top:10px">Click any node for its rule, owners and the issues that sit there.</p>`;
+    return; }
+  if (S.view === 'cur') { el.innerHTML = `<p class="lv">Current · ${S.role === 'All' ? 'CEO' : S.role} · ${n.path.split('/').length === 1 ? 'T1 home card' : 'T' + n.path.split('/').length}</p><h3>${esc(n.n)}</h3><p class="muted" style="margin-top:4px">${esc(n.path.split('/').map(k => NM[k]).join(' › '))}</p>${n.flag ? `<div class="note bad">${esc(n.flag)}</div>` : '<div class="note iss">No problem found at this node.</div>'}`; return; }
+  const lvl = n.k === 'where' ? 'Where (T4)' : n.k === 'lens' ? 'Lens' : n.k === 'ref' ? 'Shared node' : 'Level ' + (n.d + 1);
+  el.innerHTML = `<p class="lv">${lvl}</p><h3>${esc(n.n)}</h3>${n.k === 'where' ? `<p style="margin-top:8px">The slice a gap is ranked by at this point, from ${esc(n.s)}. Each row opens its issue and action.</p>` : `
+    ${owners(n)}
+    <dl>${n.v ? `<dt>In Pulse now</dt><dd>${esc(n.v)}</dd>` : ''}<dt>${n.k === 'lens' ? 'Why a lens' : 'How it adds up'}</dt><dd>${esc(n.rule)}</dd>${n.h ? `<dt>Home card for</dt><dd>${n.h.map(r => `<span class="r ${r}"></span> ${r}`).join('&nbsp; ')}</dd>` : ''}${n.now ? `<dt>In pulse-next</dt><dd>${esc(n.now)}</dd>` : ''}</dl>
+    ${n.iss ? `<div class="note iss"><b>Issue here:</b> ${esc(n.iss)}</div>` : ''}`}`;
+}
+// controls
+const seg = document.getElementById('role-seg');
+function drawRoleSeg() { const opts = S.view === 'prop' ? ['All', ...ROLES] : ROLES; if (S.view === 'cur' && S.role === 'All') S.role = 'CEO'; seg.innerHTML = opts.map(r => `<button data-role="${r}" aria-pressed="${S.role === r}">${r === 'All' ? 'All roles' : r}</button>`).join(''); }
+seg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.role = b.dataset.role; S.sel = null; drawRoleSeg(); render(); try { localStorage.setItem('vt-role', S.role); } catch (err) {} });
+function setView(v) { S.view = v; S.sel = null; document.getElementById('v-prop').setAttribute('aria-pressed', v === 'prop'); document.getElementById('v-cur').setAttribute('aria-pressed', v === 'cur'); drawRoleSeg(); render(); }
+document.getElementById('v-prop').onclick = () => setView('prop');
+document.getElementById('v-cur').onclick = () => setView('cur');
+const cv = document.getElementById('canvas');
+function pick(g) { const n = cv._nodes[+g.dataset.i]; S.sel = n._key; render(); }
+cv.addEventListener('click', e => { const g = e.target.closest('.nd'); if (g) pick(g); });
+cv.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { const g = e.target.closest('.nd'); if (g) { e.preventDefault(); pick(g); } } });
+try { const r = localStorage.getItem('vt-role'); if (r && (r === 'All' || ROLES.includes(r))) S.role = r; } catch (err) {}
+drawRoleSeg(); render();
+})();
+</script>

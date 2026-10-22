@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPG Metric Pyramid</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1d1d1b; --muted:#66655f; --line:#e2dfd6;
+  --c1:#1f5fbf; --c2:#b4531d; --c3:#1c7a4f; --c4:#7a3fa0;
+  --c1t:#e6eefb; --c2t:#fbeee5; --c3t:#e3f3ea; --c4t:#f0e8f6;
+  --chip:#efede6; --ok:#1c7a4f; --okt:#e3f3ea; --mid:#8a5a00; --midt:#fdf1d6; --lo:#a3321f; --lot:#fbe6e2;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141413; --card:#1d1d1b; --ink:#efede6; --muted:#a3a198; --line:#33322e;
+    --c1:#7ba7ee; --c2:#e6935e; --c3:#5fcb97; --c4:#c192e0;
+    --c1t:#1b2740; --c2t:#3a2519; --c3t:#173326; --c4t:#2c1f38;
+    --chip:#2a2926; --ok:#5fcb97; --okt:#173326; --mid:#e8b84a; --midt:#3a2d10; --lo:#ee8f7e; --lot:#3d1f1a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 20px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:0 0 28px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px}
+.rule b{display:block;margin-bottom:2px}
+h2{font-size:18px;margin:32px 0 10px}
+.toolbar{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--muted)}
+a{color:var(--c1)}
+
+/* pyramid overview */
+.pyr{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;gap:8px}
+.pyr a{text-decoration:none;color:inherit}
+.p1{border-radius:10px;padding:12px;font-weight:700;font-size:15px;color:#fff;line-height:1.25}
+.p2{border-radius:8px;padding:7px 9px;font-weight:600;font-size:13px;line-height:1.25}
+.p3{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 4px}
+.p3 span{background:var(--chip);border-radius:6px;padding:2px 7px;font-size:11.5px;color:var(--muted);line-height:1.3}
+.k1 .p1{background:var(--c1)} .k1 .p2{background:var(--c1t);color:var(--c1)}
+.k2 .p1{background:var(--c2)} .k2 .p2{background:var(--c2t);color:var(--c2)}
+.k3 .p1{background:var(--c3)} .k3 .p2{background:var(--c3t);color:var(--c3)}
+.k4 .p1{background:var(--c4)} .k4 .p2{background:var(--c4t);color:var(--c4)}
+.lvl{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin:0 0 8px;flex-wrap:wrap}
+.lvl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* detail */
+details.l1{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 16px;overflow:hidden;border-left-width:6px}
+details.l1.k1{border-left-color:var(--c1)} details.l1.k2{border-left-color:var(--c2)}
+details.l1.k3{border-left-color:var(--c3)} details.l1.k4{border-left-color:var(--c4)}
+details.l1>summary{list-style:none;cursor:pointer;padding:14px 16px;font-size:18px;font-weight:700}
+details>summary::-webkit-details-marker{display:none}
+details.l1>summary:before,details.l2>summary:before{content:"\25B8";display:inline-block;width:1.1em;color:var(--muted);transition:transform .15s}
+details[open]>summary:before{transform:rotate(90deg)}
+.body{padding:0 16px 16px}
+.lvltag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:8px}
+.metric{padding:2px 0 8px}
+.metric .nm{font-weight:700}
+.row{display:grid;grid-template-columns:92px 1fr;gap:2px 10px;margin:5px 0;font-size:14px}
+.row .lab{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.own{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:1px 9px;font-size:12.5px}
+.chip.pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.logic{background:var(--chip);border-radius:8px;padding:8px 11px;font-size:13px;margin:8px 0 10px;color:var(--muted)}
+.logic b{color:var(--ink)}
+details.l2{border-top:1px solid var(--line);margin-top:10px;padding-top:6px}
+details.l2>summary{list-style:none;cursor:pointer;font-weight:700;font-size:16px;padding:6px 0}
+.l3grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px;margin-top:8px}
+.l3{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.tag.id{background:var(--c3t);color:var(--c3)} .tag.drv{background:var(--c2t);color:var(--c2)}
+.ev{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 9px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.ev.co{background:var(--okt);color:var(--ok)} .ev.ind{background:var(--midt);color:var(--mid)} .ev.pr{background:var(--lot);color:var(--lo)}
+
+/* evidence block */
+details.src{margin:8px 0 2px;font-size:13px}
+details.src>summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600}
+details.src>summary:hover{color:var(--ink)}
+.srcbody{padding:6px 0 2px}
+.srcbody .note{margin:0 0 8px;color:var(--ink)}
+.names{width:100%;border-collapse:collapse;font-size:12.5px;margin:0 0 8px;background:transparent;border:0}
+.names td{padding:2px 8px 2px 0;border:0;vertical-align:top}
+.names td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+ul.srcs{margin:0;padding-left:18px} ul.srcs li{margin:3px 0}
+ul.srcs .q{color:var(--muted)}
+
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.tabs button{font-size:14px;font-weight:600;padding:7px 18px}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.blurb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;margin:0 0 6px}
+td.cv{text-align:center;white-space:nowrap;color:var(--muted)} td.cv.pri{color:var(--ink);font-weight:700}
+#cov td,#cov th{padding:5px 8px;font-size:13px}
+ul.notes{margin:0;padding-left:18px} ul.notes li{margin:4px 0}
+
+@media (max-width:820px){
+  .pyr{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CPG Metric Pyramid</h1>
+  <p class="sub">One master tree for the CEO, re-cut into a tree per executive for the COO, CFO, CSO and CMO. Every tree keeps the rule: at most 4 metrics at L1, at most 4 under each parent at L2 and L3. Every metric carries the names CPG companies actually use and the sources behind them.</p>
+
+  <div class="rules">
+    <div class="rule"><b>Researched, not remembered</b>The first draft was written from memory. This version was checked against company earnings releases, 10-Ks, proxies, Nielsen/Circana/Kantar material and the SCOR standard. Names that failed the check were changed or dropped.</div>
+    <div class="rule"><b>Three evidence grades</b><span class="ev co" style="margin-left:0">Company-reported</span> a named CPG company uses the term. <span class="ev ind" style="margin-left:0">Industry standard</span> a data provider, standards body or consultancy uses it, no company report found. <span class="ev pr" style="margin-left:0">Practitioner term</span> weakest: little CPG-specific evidence.</div>
+    <div class="rule"><b>Two kinds of link</b><span class="tag id" style="margin-left:0">Identity</span> the maths ties child to parent. <span class="tag drv" style="margin-left:0">Driver</span> a known cause, not arithmetic. Open "Names and sources" under any metric to see how companies label it.</div>
+  </div>
+
+  <h2>Pick an executive</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="blurb" id="blurb"></div>
+
+  <h2>The pyramid at a glance</h2>
+  <div class="lvl"><span><i style="background:var(--ink)"></i>L1 (top)</span><span><i style="background:var(--muted)"></i>L2 (boxes)</span><span><i style="background:var(--chip);border:1px solid var(--line)"></i>L3 (small chips)</span><span id="count"></span></div>
+  <div class="pyr" id="pyr"></div>
+
+  <h2>Full definitions, names and sources</h2>
+  <div class="toolbar"><button id="expand">Expand all</button><button id="collapse">Collapse L2 and L3</button><button id="srcopen">Open all sources</button><button id="srcclose">Close all sources</button></div>
+  <div id="tree"></div>
+
+  <h2>Coverage: which tree shows each metric</h2>
+  <p class="sub" id="covsum" style="margin:0 0 10px"></p>
+  <div style="overflow-x:auto"><table id="cov"><thead></thead><tbody></tbody></table></div>
+
+  <h2>What changed from the first draft</h2>
+  <table id="chg"><thead><tr><th>First draft</th><th>Now</th><th>Why</th></tr></thead><tbody></tbody></table>
+
+  <h2>Who owns what</h2>
+  <table id="own"><thead><tr><th>Executive</th><th>Primary owner of</th><th>Also owns</th></tr></thead><tbody></tbody></table>
+
+  <h2>Scope and evidence limits</h2>
+  <ul class="notes">
+    <li><b>Metrics tell you what, cuts tell you where.</b> Slice every metric by region, brand or category, channel and key customer. Those are filters, not extra metrics.</li>
+    <li><b>Deliberately outside this audience:</b> people and culture, R&amp;D pipeline, IT, legal and compliance, sustainability, financing structure and M&amp;A.</li>
+    <li><b>Operational KPIs are rarely in 10-Ks.</b> A full-text search of 19 US CPG 10-Ks found no "OTIF", "perfect order" or "SLOB". They show up in proxy statements (incentive metrics), results releases and investor decks, so supply-chain evidence here is thinner than the financial evidence.</li>
+    <li><b>Kraft Heinz switched</b> from OTIF (2022 proxy) to case fill rate (2023 proxy) as its service incentive metric, so even one company has not settled on one term. Retailer OTIF targets (Walmart, Target, Kroger) change often, so none is hard-coded here.</li>
+    <li><b>Perfect Order vs OTIF.</b> Retailers fine OTIF. Perfect Order (SCOR) adds damage-free and documentation accuracy. If you prefer OTIF at L1, drop the last two L2 boxes under Perfect Order Rate.</li>
+    <li><b>Source quality.</b> P&amp;G share and category quotes come from a third-party earnings-call transcript, not P&amp;G's site. Some pages were blocked from automated fetch (Kantar definition pages, ASQ, McKinsey cost-to-serve, retailer supplier portals). Retailer figures come from secondary explainers. SCOR definition text is members-only, so only metric codes and names were confirmed. Several evidence dates are old: Unilever's on-shelf availability KPI is from its 2010 annual report, and the unsaleables benchmark is from 2000.</li>
+    <li><b>Companies not fully covered:</b> Mars (private), AB InBev (release blocked), Danone's annual report (partial), Reckitt, Henkel and L'Oréal on operations metrics.</li>
+    <li>L1 figures are meant on an underlying basis: before one-offs such as restructuring and impairments, and excluding FX and M&amp;A for growth.</li>
+  </ul>
+</div>
+
+<script>
+const co="co", ind="ind", pr="pr";
+const EVL = {co:"Company-reported", ind:"Industry standard", pr:"Practitioner term"};
+// Source helper: S(label, url, wording)
+const S = (l,u,q) => ({l,u,q});
+
+// Frequently used primary documents
+const U = {
+  pgRel:"https://s204.q4cdn.com/332108499/files/doc_financials/2026/q4/FY2526-Q4-AMJ-Press-Release.pdf",
+  unRes:"https://data.fca.org.uk/artefacts/NSM/RNS/b82e96e8-7680-4ddf-8c41-f0bb2a051dd5.html",
+  neApm:"https://www.nestle.com/sites/default/files/2026-07/nestle-group-alternative-performance-measures-july-2026-en.pdf",
+  neFy:"https://www.nestle-mena.com/en/media/pressreleases/allpressreleases/full-year-results-2025-strategic-update",
+  peRel:"https://investors.pepsico.com/docs/pepsico-5v9wci20/media/Files/investors/q4-2025-earnings-release.pdf",
+  mdRel:"https://www.sec.gov/Archives/edgar/data/1103982/000162828026005016/mdlzearningsreleasecontent.htm",
+  clRel:"https://www.sec.gov/Archives/edgar/data/21665/000002166526000003/a4q2025pressreleasetables.htm",
+  kcRel:"https://www.sec.gov/Archives/edgar/data/55785/000162828026003514/kmb2025q48kex-991.htm",
+  rbRel:"https://www.rns-pdf.londonstockexchange.com/rns/3964V_1-2026-3-4.pdf",
+  daRel:"https://mfn.se/all/a/danone/danone-2025-another-year-of-strong-delivery-f04b0d91",
+  khRel:"https://www.sec.gov/Archives/edgar/data/1637459/000163745926000006/ex991-erq42025.htm",
+  gmRel:"https://www.sec.gov/Archives/edgar/data/0000040704/000162828026046337/a20260701ex99.htm",
+  heRel:"https://www.henkel.com/resource/blob/2131958/7fb58d3f20a36a39f34671b9ae959bec/data/2026-03-11-henkel-news-release-geschaeftsjahr-2025-en.pdf",
+  loRel:"https://www.loreal-finance.com/eng/press-release/2025-annual-results",
+  pgAR24:"https://www.sec.gov/Archives/edgar/data/80424/000119312524205698/d662202dars.pdf",
+  clK25:"https://www.sec.gov/Archives/edgar/data/21665/000002166526000006/cl-20251231.htm",
+  scor:"https://www.ascm.org/globalassets/documents--files/corporate-transformation/scor-ds-digital-guide_final.pdf",
+  niqTree:"https://nielseniq.com/wp-content/uploads/sites/4/2022/05/Panel-data-decision-tree.pdf",
+  khProx23:"https://www.sec.gov/Archives/edgar/data/1637459/000110465923036287/tm2230899d2_def14a.htm"
+};
+
+const T = [
+{ n:"Organic Sales Growth", v:co, own:["CEO","CSO","CMO"],
+  def:"Growth in net sales excluding foreign exchange, acquisitions and divestitures. (Net sales this period − net sales a year ago, restated for FX and M&A) ÷ net sales a year ago × 100. Many companies also strip out hyperinflation effects and a 53rd week.",
+  desc:"The whole top line. How fast the business is growing like for like.",
+  logic:"<b>How it rolls up (exact):</b> Organic sales growth = Organic volume growth + Price/Mix. This is the split Diageo states outright. Value market share change and brand equity explain the market-side why.",
+  vnote:"Every large CPG reports this, each under its own label. 'Organic' here means 'without acquisitions and currency effects', not 'without advertising'. Unilever, Reckitt, Danone and L'Oréal say 'underlying' or 'like-for-like' instead.",
+  names:[["P&G","Organic sales growth"],["Colgate","Organic sales growth"],["Henkel","Organic sales growth"],["Unilever","Underlying sales growth (USG)"],["Nestlé","Organic growth (OG)"],["PepsiCo","Organic revenue performance"],["Coca-Cola","Organic revenues"],["Mondelez","Organic net revenue"],["Kimberly-Clark","Organic sales"],["Kraft Heinz","Organic net sales"],["General Mills","Organic net sales"],["Diageo","Organic net sales"],["Reckitt","Like-for-like net revenue"],["Danone","Like-for-like sales"],["L'Oréal","Like-for-like"]],
+  src:[S("P&G, Q4 FY26 earnings release",U.pgRel,"organic sales exclude FX, acquisitions and divestitures"),
+       S("Unilever, FY2025 results",U.unRes,"underlying sales growth strips acquisitions, disposals, currency"),
+       S("Nestlé, Alternative Performance Measures, Jul 2026",U.neApm,"organic growth = constant scope and currency"),
+       S("PepsiCo, Q4 2025 release",U.peRel,"organic revenue performance"),
+       S("Mondelez, FY2025 release",U.mdRel,"Organic Net Revenue"),
+       S("Colgate, Q4 2025 release",U.clRel,"organic sales growth"),
+       S("Kimberly-Clark, Q4 2025 release",U.kcRel,"organic sales"),
+       S("Kraft Heinz, Q4 2025 release",U.khRel,"Organic Net Sales"),
+       S("General Mills, FY2026 release",U.gmRel,"organic net sales"),
+       S("Reckitt, FY2025 results",U.rbRel,"like-for-like net revenue"),
+       S("Danone, FY2025 results",U.daRel,"like-for-like sales"),
+       S("Henkel, FY2025 news release",U.heRel,"organic sales growth"),
+       S("L'Oréal, 2025 annual results",U.loRel,"like-for-like")],
+  kids:[
+  { n:"Organic Volume Growth", kind:"id", v:co, own:["CSO","CMO"],
+    def:"Growth in units (tonnes, litres or cases) excluding FX and M&A. (Volume this period ÷ volume a year ago) − 1. Unilever (UVG) and Nestlé (RIG) include mix in this number. P&G, PepsiCo, Colgate and Diageo do not.",
+    desc:"How many more or fewer units the company sells, before price and mix.",
+    logic:"<b>How it rolls up:</b> Consumer volume = Households × Penetration × Buying rate (NielsenIQ). Repeat rate sits behind buying rate.",
+    vnote:"Standard CPG split of growth. The label and what is included differ by company, so state which version you use.",
+    names:[["P&G","Organic volume"],["PepsiCo","Organic volume"],["Colgate","Organic volume"],["Diageo","Organic volume"],["Unilever","Underlying volume growth (UVG), includes mix"],["Nestlé","Real internal growth (RIG), includes mix"],["Mondelez / Kraft Heinz / Danone","Volume/mix"],["Kimberly-Clark / Reckitt / Henkel","Volume"],["Coca-Cola","Unit case volume, concentrate sales"]],
+    src:[S("P&G, Q4 FY26 release",U.pgRel,"organic volume"),S("Unilever, FY2025 results",U.unRes,"underlying volume growth"),S("Nestlé APM, Jul 2026",U.neApm,"real internal growth"),S("Mondelez, FY2025 release",U.mdRel,"Vol/Mix"),S("Kraft Heinz, Q4 2025 release",U.khRel,"volume/mix")],
+    kids:[
+    { n:"Household Penetration", kind:"drv", v:co, own:["CMO","CSO"],
+      def:"% of households that bought the brand at least once in the period. Brand-buying households ÷ total households × 100. NielsenIQ and Circana both define it this way. Ehrenberg-Bass uses a base of category buyers, so state your base.",
+      desc:"How many buyers the brand has. The main lever of volume growth.",
+      vnote:"Named in CPG company reports and in both data-provider glossaries.",
+      names:[["Colgate","household penetration (reviewed with market share)"],["General Mills","household penetration vs leading branded competitor"],["Conagra","household penetration"],["NielsenIQ","penetration"],["Circana","penetration"]],
+      src:[S("Colgate, FY2025 10-K",U.clK25,"review market share, household penetration"),S("General Mills, Sep 2020 exhibit","https://www.sec.gov/Archives/edgar/data/40704/000156459020044308/gis-ex99_24.htm","grew household penetration faster than the leading branded competitor"),S("Conagra, Q4 FY21 call (fool.com transcript)","https://www.fool.com/earnings/call-transcripts/2021/07/13/conagra-brands-inc-cag-q4-2021-earnings-call-trans/","increase in household penetration across our portfolio"),S("Circana CPG Dictionary: Penetration","https://www.circana.com/liquid-data-go/cpg-dictionary/penetration","Percentage of households that buy in a period"),S("NielsenIQ, Panel data decision tree (2022)",U.niqTree,"% of households that purchased the item at least once")] },
+    { n:"Buying Rate", kind:"drv", v:ind, own:["CMO","CSO"],
+      def:"Average volume (or spend) bought per buying household in the period. Brand volume ÷ brand-buying households. NielsenIQ: buying rate = purchase frequency × purchase size.",
+      desc:"How much each buyer buys. Together with penetration it gives volume.",
+      vnote:"Replaces the first draft's 'Category Buy Rate', which is not a standard term. 'Buying rate' is the Circana and NielsenIQ name.",
+      names:[["Circana","buying rate"],["NielsenIQ","buying rate (also oz per buyer)"],["Ehrenberg-Bass","purchase frequency"]],
+      src:[S("Circana CPG Dictionary: Buying Rate","https://www.circana.com/liquid-data-go/cpg-dictionary/buying-rate","Average spend or units purchased per buying household"),S("NielsenIQ, Panel data decision tree (2022)",U.niqTree,"avg volume purchased by buying households; frequency times size"),S("Nielsen, Understanding Consumers (2011 deck)","https://www.bls.gov/cex/research_papers/pdf/understanding-consumers-the-nielsen-perspective.pdf","Volume = Penetration x Buying rate")] },
+    { n:"Repeat Rate", kind:"drv", v:co, own:["CMO"],
+      def:"% of brand buyers who bought it two or more times in the period. Households with 2+ purchases ÷ brand-buying households × 100.",
+      desc:"Loyalty and product satisfaction. Whether buyers come back.",
+      vnote:"Conagra cites it next to household penetration. Circana and NielsenIQ define it. Ehrenberg-Bass warns repeat is largely an outcome of brand size.",
+      names:[["Conagra","repeat rates"],["Circana","repeat"],["NielsenIQ","% repeat (2+ time buyers)"]],
+      src:[S("Conagra, Q4 FY21 call (fool.com transcript)","https://www.fool.com/earnings/call-transcripts/2021/07/13/conagra-brands-inc-cag-q4-2021-earnings-call-trans/","household penetration and repeat rates"),S("Circana CPG Dictionary: Consumer Panel","https://www.circana.com/liquid-data-go/cpg-dictionary/consumer-panel","Repeat = HHs with 2+ purchases / buyers"),S("NielsenIQ, Panel data decision tree (2022)",U.niqTree,"% of buyers that repeatedly bought a product")] }
+  ]},
+  { n:"Price/Mix", kind:"id", v:co, own:["CSO","CFO","CMO"],
+    def:"Organic sales growth minus organic volume growth. Equal to the % change in net sales per unit, excluding FX and M&A. This follows Diageo, Coca-Cola, Reckitt and General Mills. Unilever, Nestlé, Danone, Mondelez and Kraft Heinz put mix with volume and report price alone.",
+    desc:"How much of growth comes from what we charge and what we sell, not from selling more units. Net of trade spend.",
+    logic:"<b>How it rolls up:</b> Price/Mix = Pricing + Mix. Trade spend and promotion ROI explain what moves net price, because sales are recorded net of trade spend.",
+    vnote:"Two camps. Some report 'price/mix' together, others report price and put mix inside volume. Pick one and say so.",
+    names:[["Diageo","price/mix"],["Coca-Cola","price/mix"],["Reckitt","price/mix"],["General Mills","organic price/mix"],["P&G","price and mix, separate columns"],["PepsiCo","effective net pricing"],["Kimberly-Clark","net price; mix/other"],["Unilever","underlying price growth (UPG), excludes mix"],["Nestlé","pricing"],["Danone","price; volume/mix"],["Mondelez","pricing; vol/mix"],["Kraft Heinz","price; volume/mix"]],
+    src:[S("P&G, Q4 FY26 release",U.pgRel,"Price and Mix columns in net sales drivers"),S("Reckitt, FY2025 results",U.rbRel,"price/mix"),S("General Mills, FY2026 release",U.gmRel,"organic price/mix"),S("PepsiCo, Q4 2025 release",U.peRel,"effective net pricing"),S("Kimberly-Clark, Q4 2025 release",U.kcRel,"net price; mix/other"),S("Unilever, FY2025 results",U.unRes,"underlying price growth"),S("Nestlé APM, Jul 2026",U.neApm,"pricing"),S("Mondelez, FY2025 release",U.mdRel,"pricing; vol/mix"),S("Kraft Heinz, Q4 2025 release",U.khRel,"price; volume/mix")],
+    kids:[
+    { n:"Pricing", kind:"id", v:co, own:["CSO","CMO"],
+      def:"Contribution to organic growth from changes in net price on comparable items, after discounts and promotions. Nestlé computes it at SKU level as the residual after real internal growth. PepsiCo's version is 'effective net pricing': discrete pricing actions net of sales incentives.",
+      desc:"Price increases that actually stuck at the shelf.",
+      vnote:"Replaces the first draft's 'Net Price Realization', which no company release uses.",
+      names:[["Nestlé","pricing"],["Colgate","pricing"],["Mondelez","pricing"],["PepsiCo","effective net pricing"],["Unilever","underlying price growth"]],
+      src:[S("Nestlé APM, Jul 2026",U.neApm,"pricing"),S("PepsiCo, Q4 2025 release",U.peRel,"effective net pricing"),S("Mondelez, FY2025 release",U.mdRel,"pricing"),S("BCG, Net revenue management (2017)","https://www.bcg.com/publications/2017/consumer-products-pricing-how-net-revenue-management-boosts-top-bottom-line.aspx","uses 'price realization' only")] },
+    { n:"Mix", kind:"id", v:co, own:["CMO","CSO"],
+      def:"Change in net sales per unit caused by a shift in what is sold (premium vs value, pack size, channel). Standard price-volume-mix split: it is the part of net-price change that list price and discounts do not explain.",
+      desc:"Premiumisation or trading down inside the portfolio and across channels.",
+      vnote:"Only P&G and Kimberly-Clark print mix as its own column. Everyone else folds it into price/mix or volume/mix.",
+      names:[["P&G","mix"],["Kimberly-Clark","mix/other"]],
+      src:[S("P&G, Q4 FY26 release",U.pgRel,"Mix column; unfavorable product mix effect on margin"),S("Kimberly-Clark, Q4 2025 release",U.kcRel,"mix/other"),S("Simon-Kucher, Four levers for active mix management (2025)","https://www.simon-kucher.com/de/node/8446","mix is the residual list price and discounts do not explain")] },
+    { n:"Trade Spend % of Gross Sales", kind:"drv", v:ind, own:["CSO","CFO"],
+      def:"Share of gross sales given back to customers as discounts, promotions and rebates. (Gross sales − net sales) ÷ gross sales × 100. Often called gross-to-net or the trade rate.",
+      desc:"Trade terms and promotion cost. A rising figure is price leaking out through the back door.",
+      vnote:"Replaces 'Gross-to-Net Deduction %'. Companies only say sales are recorded net of trade spend and do not print the ratio. BCG's 'trade rate' is the consultancy name.",
+      names:[["BCG","trade spending, trade rates (vs gross revenues)"],["P&G","sales recorded net of trade promotion spending"]],
+      src:[S("BCG, Paying for Performance: Trade Spending (2012)","https://web-assets.bcg.com/img-src/BCG%20Paying%20for%20Performance%20Sep%202012_tcm9-102069.pdf","trade rates varied by up to 20 percentage points between channels"),S("P&G, FY2024 annual report",U.pgAR24,"sales are recorded net of trade promotion spending")] },
+    { n:"Trade Promotion ROI", kind:"drv", v:ind, own:["CSO","CFO"],
+      def:"Return on promotion spend. NielsenIQ's published form is sales-based: incremental sales per dollar of discount, with $1 or more meaning the promotion breaks even. A profit-based form, (incremental gross profit − promotion cost) ÷ promotion cost, is also widely used.",
+      desc:"Whether promotions create real extra volume or just subsidise sales that would have happened anyway.",
+      vnote:"NielsenIQ calls it trade promotion efficiency. Nielsen found in 2014 that roughly three quarters of promotions do not break even. No company report prints a figure.",
+      names:[["NielsenIQ","trade (promotional) efficiency; promotional ROI"]],
+      src:[S("NielsenIQ, 3 Useful Metrics for Trade Promotion Spend (2022)","https://nielseniq.com/global/en/insights/education/2022/3-useful-metrics-to-optimize-your-cpg-trade-promotion-spend","incremental sales per dollar of discount"),S("FoodNavigator on Nielsen (2014)","https://www.foodnavigator.com/Article/2014/10/09/Three-quarters-of-CPG-promotions-don-t-break-even-Nielsen/","three-quarters of promotions don't break even")] }
+  ]},
+  { n:"Value Market Share Change", kind:"drv", v:co, own:["CSO","CMO"],
+    def:"Change in the company's value share of its categories versus a year ago, in basis points. Value share = company retail sales value ÷ total category retail sales value × 100. Colgate defines share as % of the dollar value of sales, mainly from Nielsen data.",
+    desc:"Whether we are winning or losing against competitors in the categories we play in.",
+    logic:"<b>How it rolls up:</b> Share change ≈ our growth − category growth. Distribution and shelf availability show how much of the gap is reach.",
+    vnote:"Value share is the headline CPG companies report, usually as a change in basis points. Volume share is secondary. Unilever and Nestlé also report the share of businesses gaining or holding share.",
+    names:[["P&G","value and volume share, in bps"],["Coca-Cola","gained value share"],["Colgate","market share (value, mainly Nielsen)"],["Unilever","gaining value market share; Competitiveness % businesses winning"],["Nestlé","gained or maintained share in close to 60% of businesses"]],
+    src:[S("Coca-Cola, Q3 2025 results","https://www.coca-colacompany.com/media-center/coca-cola-reports-third-quarter-2025-results","gained value share in total NARTD beverages"),S("Colgate, FY2025 10-K",U.clK25,"share = percentage of the dollar value of sales"),S("Unilever, H1 2023 results (FCA RNS)","https://data.fca.org.uk/artefacts/NSM/RNS/4846173.html","gaining value market share"),S("Nestlé, 9M 2016 sales","https://www.nestle-mena.com/en/media/pr/nine-month-sales-2016","gained or maintained market share in close to 60% of businesses"),S("P&G, Q4 FY26 call (allmind transcript, third party)","https://allmind.ai/earnings/event/2933776","value and volume share, bps")],
+    kids:[
+    { n:"Category Growth", kind:"drv", v:co, own:["CMO","CSO"],
+      def:"% change in total category retail sales (all brands) in the defined market versus last year, from retail measurement data. CPGs quote it mostly in value and sometimes in volume.",
+      desc:"Market tailwind or headwind. Separates growth the market gave us from growth we earned.",
+      vnote:"Replaces 'Category Volume Growth' and the two category penetration and buy-rate metrics, which are not reported terms.",
+      names:[["P&G","category growth; underlying market growth"],["Colgate","category growth rates"],["Mondelez","category value growth"]],
+      src:[S("P&G, Q4 FY26 call (allmind transcript, third party)","https://allmind.ai/earnings/event/2933776","category growth at current levels, which is 2%"),S("Colgate, FY2025 10-K",U.clK25,"lower than expected category growth rates"),S("Mondelez, Q3 2024 call (MarketBeat)","https://www.marketbeat.com/earnings/reports/2024-10-29-mondelez-international-inc-stock/","solid category value growth in biscuits and chocolate")] },
+    { n:"Weighted Distribution (%ACV)", kind:"drv", v:ind, own:["CSO"],
+      def:"% of total store sales value (All Commodity Value) that passes through stores carrying the brand. Σ total sales of stores carrying the brand ÷ Σ total sales of all stores × 100. Weighted by all-commodity store sales, not category sales. The category-weighted version is called PCV.",
+      desc:"Presence in the market, weighted by store size. Covers listings and route-to-market.",
+      vnote:"First draft had the weighting wrong (it described PCV). Defined by NielsenIQ, Circana and MASB, not found in a company report. TDP (total distribution points) is the sum across items.",
+      names:[["NielsenIQ","ACV weighted distribution; PCV weighted distribution"],["Circana","weighted distribution; TDP"]],
+      src:[S("NielsenIQ, Distribution by the Numbers (2023)","https://develop.nielseniq.com/global/en/wp-content/uploads/sites/4/2021/02/Distribution-by-the-Numbers.pdf","percentage of total store turnover a product is sold in"),S("Circana CPG Dictionary: Weighted Distribution","https://www.circana.com/liquid-data-go/cpg-dictionary/weighted-distribution","ACV of stores carrying the product / total ACV x 100"),S("MASB, Product Category Volume","https://marketing-dictionary.org/p/product-category-volume","weighted by store sales within the category")] },
+    { n:"On-Shelf Availability (OSA)", kind:"drv", v:co, own:["CSO","COO"],
+      def:"% of time (or store checks) the product is physically on shelf and buyable. Checks with product on shelf ÷ total checks × 100. The mirror of the out-of-stock rate. ECR defines it qualitatively and lists many measurement methods.",
+      desc:"Whether being listed actually turns into being findable. Catches store execution and supply gaps.",
+      vnote:"Unilever reported it as a KPI (92% in 2010). That is the most recent company use found, so the evidence is dated.",
+      names:[["Unilever","on-shelf availability (OSA)"],["ECR Community","on-shelf availability; out-of-stock"]],
+      src:[S("Unilever, Annual Report 2010 (6-K)","https://www.sec.gov/Archives/edgar/data/0000217410/000095012311021976/u10659e6vk.htm","right product on the right shelf at the right time"),S("ECR Community, OSA","https://www.ecr-community.org/osa/","availability of product for sale in the place the shopper expects")] }
+  ]},
+  { n:"Brand Equity (Meaningful, Different, Salient)", kind:"drv", v:ind, own:["CMO"],
+    def:"Composite from a continuous brand-tracking study built on salience, meaning and difference (Kantar's Meaningful, Different, Salient framework, branded 'Brand Power'). The formula is the tracking vendor's. BrandZ 'Brand Contribution' is the share of a brand's financial value driven by brand equity.",
+    desc:"Health of the brand in consumers' minds. A leading indicator: it moves before penetration and share do.",
+    logic:"<b>How it rolls up:</b> Awareness feeds consideration, which feeds purchase. Innovation keeps the brand relevant. Weakness here shows up later in penetration and share.",
+    vnote:"No CPG company publishes a brand equity score. They track it internally and publish proxies: P&G reports how many of its top 50 category-country pairs held or grew share, Unilever reports Power Brands growth.",
+    names:[["Kantar","Brand Power (MDS); Brand Contribution (BrandZ)"],["Circana","perceptual plus behavioral equity"],["NielsenIQ","brand equity"]],
+    src:[S("Kantar, Why and how should you measure brand equity (2021)","https://www.kantar.com/inspiration/brands/why-and-how-should-you-measure-brand-equity","Brand Power, a surrogate for long-term sales"),S("Kantar BrandZ methodology","https://www.kantar.com/campaigns/brandz/methodology","Brand Contribution"),S("Circana, How to measure, track and improve brand equity (2026)","https://www.circana.com/post/how-to-accurately-measure-track-and-improve-your-brand-equity","sits at the intersection of perception and behavior")],
+    kids:[
+    { n:"Unaided Brand Awareness", kind:"drv", v:ind, own:["CMO"],
+      def:"% of target consumers who name the brand without being prompted. Respondents naming the brand ÷ total respondents × 100. State the base (all respondents or category buyers).",
+      desc:"Mental availability. Whether people think of the brand when they think of the category.",
+      vnote:"Also called spontaneous awareness or unaided recall. NielsenIQ frames the same idea as mental availability.",
+      names:[["Kantar","unaided awareness"],["Quirks glossary","spontaneous awareness (synonym unaided recall)"],["NielsenIQ","mental availability"]],
+      src:[S("Kantar, Choosing the right metrics for brand growth (2025)","https://www.kantar.com/north-america/inspiration/research-services/choosing-the-right-metrics-for-brand-growth-pf","how readily consumers recall your brand without prompting"),S("Quirks, spontaneous awareness","https://www.quirks.com/glossary/spontaneous-awareness","lists unaided awareness as a synonym")] },
+    { n:"Brand Consideration", kind:"drv", v:ind, own:["CMO"],
+      def:"% of respondents who would consider buying the brand, reported as top-box or top-2-box on a 'definitely or probably consider' scale. Kantar describes it as whether the brand is on the consumer's shortlist.",
+      desc:"Whether awareness converts into willingness to buy.",
+      vnote:"First draft used a conditional ratio over aware consumers, which is really the awareness-to-consideration conversion. Kantar reports it on all respondents.",
+      names:[["Kantar","consideration; conversion (awareness to consideration)"]],
+      src:[S("Kantar, Choosing the right metrics for brand growth (2025)","https://www.kantar.com/north-america/inspiration/research-services/choosing-the-right-metrics-for-brand-growth-pf","tracks whether the brand is on a consumer's shortlist")] },
+    { n:"Innovation Rate", kind:"drv", v:co, own:["CMO","CEO"],
+      def:"% of net sales from products launched (or renovated) in the last 3 years. Net sales of products launched within 36 months ÷ total net sales × 100. Say whether renovation counts. The window is a company choice.",
+      desc:"Whether the portfolio is being renewed. A low figure means an ageing portfolio.",
+      vnote:"Henkel reports an 'innovation rate' and Nestlé has reported the share of sales from products introduced or renovated in the last 3 years. Do not call it 'Vitality Index': NielsenIQ BASES uses 'innovation vitality' for a different measure.",
+      names:[["Henkel","innovation rate"],["Nestlé","% of sales from products introduced or renovated in last 3 years"],["NielsenIQ BASES","innovation vitality (different measure)"]],
+      src:[S("Henkel, Investor Factsheet (2018)","https://www.henkel.com/blob/831436/0eaa4ebb01a6473471926f4fa18eced7/data/2018-08-16-henkel-investor-factsheet-english.pdf","Innovation rate ~40%"),S("Food Ingredients First, Nestlé FY2016 results","https://www.foodingredientsfirst.com/news/nestl%C3%A9-targets-2-4-percent-growth-as-company-reports-profit-loss.html","30% of sales from products introduced or renovated in the last 3 years"),S("The Grocer, NIQ on innovation (2023)","https://www.thegrocer.co.uk/comment-and-opinion/we-must-stop-our-success-or-failure-mindset-on-innovation/680653.article","NIQ innovation vitality is a different measure")] }
+  ]}
+]},
+
+{ n:"Adjusted Operating Margin", v:co, own:["CFO","CEO","COO"],
+  def:"Operating profit before one-off items (restructuring, impairments, acquisition costs) ÷ net sales × 100. The qualifier differs by company and the exclusion lists differ too.",
+  desc:"Profitability of the business after the cost of making, marketing, selling and running it.",
+  logic:"<b>How it rolls up (exact):</b> Operating margin = Gross margin % − Advertising &amp; marketing % − Distribution expenses % − Overheads %.",
+  vnote:"Every company reports it, each with its own qualifier. 'Adjusted' is the neutral label. Unilever's 'underlying operating margin' is the closest to the first draft.",
+  names:[["P&G","core operating margin"],["Unilever","underlying operating margin (UOM)"],["Nestlé","UTOP margin (underlying trading operating profit)"],["PepsiCo","core operating profit margin"],["Coca-Cola","comparable operating margin"],["Mondelez","adjusted operating income margin"],["Colgate","operating profit margin, non-GAAP (Base Business)"],["Diageo","organic operating margin"],["Reckitt","adjusted operating margin"],["Danone","recurring operating margin"],["General Mills","adjusted operating profit margin"],["Henkel","adjusted return on sales"],["L'Oréal","operating margin"]],
+  src:[S("P&G, Q4 FY26 release",U.pgRel,"core operating margin"),S("Unilever, FY2025 results",U.unRes,"UOP divided by turnover"),S("Nestlé APM, Jul 2026",U.neApm,"underlying trading operating profit"),S("PepsiCo, Q4 2025 release",U.peRel,"core operating profit"),S("Mondelez, FY2025 release",U.mdRel,"Adjusted Operating Income margin"),S("Colgate, Q4 2025 release",U.clRel,"operating profit margin, non-GAAP"),S("Reckitt, FY2025 results",U.rbRel,"adjusted operating margin"),S("Danone, FY2025 results",U.daRel,"recurring operating margin"),S("General Mills, FY2026 release",U.gmRel,"adjusted operating profit margin"),S("Henkel, FY2025 news release",U.heRel,"adjusted return on sales"),S("L'Oréal, 2025 annual results",U.loRel,"operating margin")],
+  kids:[
+  { n:"Gross Margin %", kind:"id", v:co, own:["COO","CSO","CFO"],
+    def:"(Net sales − cost of goods sold) ÷ net sales × 100. Which costs sit in COGS differs by company (for example distribution).",
+    desc:"Profit left after materials, manufacturing and quality failures. Cost side is below. The price side lives under Price/Mix.",
+    logic:"<b>How it rolls up:</b> Indicators for the COGS buckets: materials (input cost inflation), plant productivity (OEE), failures (recalls) and plant safety as the operating guardrail.",
+    vnote:"Reported by almost every large CPG.",
+    names:[["P&G","core gross margin"],["PepsiCo","core gross profit"],["Unilever","gross margin"],["Nestlé","gross profit margin"],["Mondelez","gross profit margin (reported and adjusted)"],["Colgate","gross profit margin (non-GAAP)"],["Kimberly-Clark","adjusted gross margin"],["Kraft Heinz","adjusted gross profit margin"],["General Mills","adjusted gross margin"],["Reckitt","gross margin"],["L'Oréal","gross margin"]],
+    src:[S("Unilever, FY2025 results",U.unRes,"gross margin"),S("Nestlé, FY2025 results",U.neFy,"gross profit margin"),S("Kraft Heinz, Q4 2025 release",U.khRel,"Adjusted Gross Profit Margin"),S("General Mills, FY2026 release",U.gmRel,"adjusted gross margin"),S("Kimberly-Clark, Q4 2025 release",U.kcRel,"adjusted gross margin"),S("Reckitt, FY2025 results",U.rbRel,"gross margin")],
+    kids:[
+    { n:"Input Cost Inflation", kind:"drv", v:co, own:["COO","CFO"],
+      def:"% change in the cost of raw and packaging materials versus a year ago or versus plan, weighted by usage. Companies guide it as a % of COGS (General Mills: 4 to 5 percent input cost inflation).",
+      desc:"Raw and packaging material cost against plan. Covers commodity inflation and procurement performance.",
+      vnote:"Replaces 'Purchase Price Variance', which is a plant-level standard-cost term that appears in none of ten CPG filings searched. PPV remains the procurement-accounting name: (actual price − standard price) × quantity.",
+      names:[["General Mills","input cost inflation"],["Nestlé","commodity inflation; procurement savings"]],
+      src:[S("General Mills, FY2026 10-K","https://www.sec.gov/Archives/edgar/data/40704/000162828026046466/gis-20260531.htm","forecast for 4 to 5 percent input cost inflation"),S("Nestlé, FY2025 results",U.neFy,"commodity inflation in coffee and cocoa"),S("Hyperbots, Purchase Price Variance","https://hyperbots.com/glossary/purchase-price-variance","(Actual Price - Standard Price) x Quantity Purchased")] },
+    { n:"Overall Equipment Effectiveness (OEE)", kind:"drv", v:ind, own:["COO"],
+      def:"Availability × Performance × Quality. Availability = run time ÷ planned production time. Performance = (ideal cycle time × total count) ÷ run time. Quality = good count ÷ total count.",
+      desc:"How productively the plants use their lines. Covers downtime, speed losses and yield.",
+      vnote:"Formula is standard. CPG executives cite OEE gains (Unilever, Mondelez) but it did not appear in the filings searched, so it is rated industry standard.",
+      names:[["Unilever","OEE (average improvement of 11% cited by its chief product supply officer)"],["Mondelez","OEE (improved 3-5% at integrated digital factory)"]],
+      src:[S("Vorne, Calculating OEE","https://oee.com/calculating-oee/","OEE = Availability x Performance x Quality"),S("Food & Drink Technology, Unilever manufacturing (25 Jul 2025)","","average improvement of 11% in OEE (no link captured)"),S("Rockwell Automation, Mondelez integrated digital factory","","OEE improved by 3-5% (no link captured)")] },
+    { n:"Product Recalls (count and cost)", kind:"drv", v:pr, own:["COO","CFO"],
+      def:"Number of product recalls in the period and their cost. A rate form used by practitioners is consumer complaints per million units: complaints ÷ units sold × 1,000,000.",
+      desc:"Where quality failures become public and costly. Recalls also surface in COGS and in brand equity.",
+      vnote:"Replaces 'Cost of Poor Quality', which no CPG company reports and which I had defined too broadly. Recalls are the only quality figure companies disclose, and as a cost or a risk factor, not a standard rate. Complaints per million units appears only on practitioner forums.",
+      names:[["Colgate","product recall costs (disclosed in 10-K)"]],
+      src:[S("Colgate, FY2025 10-K",U.clK25,"product recall costs")] },
+    { n:"Total Recordable Incident Rate (TRIR)", kind:"drv", v:co, own:["COO","CEO"],
+      def:"(Number of recordable injuries and illnesses × 200,000) ÷ total hours worked. 200,000 is the OSHA base of 100 full-time employees for a year.",
+      desc:"Workplace safety across plants and warehouses. Lost-time incidents also cut OEE availability.",
+      vnote:"The headline term at Kraft Heinz and Colgate. Others use variants (Unilever TRFR, Coca-Cola LTIR, Diageo LTAFR and TRAFR, Mondelez TIR and LTIFR). Bases differ, so figures are not comparable without normalising. Sits under Gross Margin only for lack of a better slot.",
+      names:[["Kraft Heinz","Total Recordable Incident Rate (TRIR)"],["Colgate","Total Recordable Incident Rate (TRIR)"],["Unilever","Total Recordable Frequency Rate (TRFR)"],["Coca-Cola","Lost-Time Incident Rate (LTIR)"],["Diageo","LTAFR and TRAFR"],["Mondelez","Total Incident Rate (TIR); LTIFR"]],
+      src:[S("BLS, How to compute incidence rates","https://www.bls.gov/iif/overview/compute-nonfatal-incidence-rates.htm","(Number of injuries and illnesses X 200,000) / Employee hours worked"),S("Kraft Heinz, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/1637459/000163745925000011/khc-20241228.htm","Total Recordable Incident Rate ('TRIR')"),S("Unilever, 2025 Form 20-F","https://www.sec.gov/Archives/edgar/data/217410/000021741026000007/ul-20251231.htm","Total Recordable Frequency Rate (TRFR)")] }
+  ]},
+  { n:"Advertising & Marketing % of Net Sales", kind:"id", v:co, own:["CMO","CFO"],
+    def:"Advertising and marketing spend ÷ net sales × 100. Trade promotion is excluded because it sits inside net sales. Check each company's definition before benchmarking.",
+    desc:"How much is spent on building brands, and whether the spend is paying off.",
+    logic:"<b>How it rolls up:</b> The level of spend is this L2. The L3s test whether the spend is efficient and big enough.",
+    vnote:"Companies report the concept under different names and few print the ratio. L'Oréal's is much higher because it includes promotion and the beauty category, so do not compare it to food or home care.",
+    names:[["Unilever","brand and marketing investment (BMI), 16.1% of turnover"],["L'Oréal","advertising and promotion expenses, % of sales"],["Nestlé","advertising and marketing spending as % of sales"],["Diageo","marketing spend as % of net sales; reinvestment rate"],["P&G","marketing spending as % of net sales"],["Colgate","advertising (dollars only)"]],
+    src:[S("Unilever, FY2025 results",U.unRes,"brand and marketing investment"),S("L'Oréal, 2025 annual results",U.loRel,"advertising and promotion expenses"),S("Nestlé via Storyboard18","https://www.storyboard18.com/brand-marketing/nestle-ups-marketing-investment-targets-9-of-sales-on-advertising-by-2025-56775.htm","advertising and marketing spending as % of sales"),S("Marketing Week on Diageo","https://www.marketingweek.com/diageo-upped-marketing-billion/","marketing spend as a percentage of net sales"),S("P&G, FY2024 annual report",U.pgAR24,"marketing spending as a percentage of net sales")],
+    kids:[
+    { n:"Marketing ROI (Advertising ROI)", kind:"drv", v:co, own:["CMO","CFO"],
+      def:"(Incremental gross profit attributable to marketing − marketing spend) ÷ marketing spend. This is the Farris et al. 'ROMI' form. P&G reports 'advertising return on investment' without publishing its formula.",
+      desc:"Return on total marketing investment across media.",
+      vnote:"P&G states advertising ROI improved nearly 40% in North America over five years. PepsiCo runs an in-house 'ROI Engine'. Define incrementality and margin basis explicitly.",
+      names:[["P&G","advertising return on investment"],["PepsiCo","ROI of full-funnel marketing campaigns (ROI Engine)"],["Kantar / ANA","marketing ROI; ROMI"]],
+      src:[S("P&G, FY2024 annual report",U.pgAR24,"advertising return on investment has improved nearly 40%"),S("PepsiCo at ANA, 2022","https://www.ana.net/miccontent/show/id/er-2022-12-moc-dec22e-pepsico-middlegame","ROI of full funnel marketing campaigns"),S("Kantar, Return on marketing investments (2022)","https://www.kantar.com/north-america/inspiration/analytics/how-to-measure-and-improve-your-return-on-marketing-investments","")] },
+    { n:"Return on Ad Spend (ROAS)", kind:"drv", v:ind, own:["CMO","CSO"],
+      def:"Modelled retail sales revenue per dollar of ad spend, from a marketing mix model (Nielsen, Circana). Not click-attributed revenue.",
+      desc:"Efficiency of media and retail media spend.",
+      vnote:"Comes from measurement vendors and media planning, not from company reports.",
+      names:[["Nielsen","ROAS: retail sales revenue per dollar spent"],["Circana","ROAS from marketing mix models"]],
+      src:[S("Nielsen, TikTok CPG marketing mix case (2022)","https://www.nielsen.com/insights/2022/case-study-quantifying-the-impact-of-tiktok-advertising/1031030","Total ROAS $1.83 per ad dollar"),S("Circana, Sales effect outcomes in MMM (2023)","https://www.circana.com/post/adding-sales-effect-outcomes-to-marketing-mix-models-unlocks-insights","return on ad spend (ROAS)")] },
+    { n:"Excess Share of Voice (ESOV)", kind:"drv", v:ind, own:["CMO"],
+      def:"Share of voice − share of market. Share of voice = brand media spend ÷ total category media spend. Binet and Field's measure of whether spend is enough to grow share.",
+      desc:"Whether the brand outspends or underspends its market position.",
+      vnote:"Origin is the IPA (Binet and Field). No CPG company citation found. Nielsen (2009): a 10 point gap between voice and share goes with about 0.5% extra share growth.",
+      names:[["IPA","ESOV (excess share of voice)"]],
+      src:[S("IPA, The Long and the Short of It (2024)","https://ipa.co.uk/media/14463/long_and_short_of_it_presentation_final_030424.pdf","SOV above SOM: brands tend to grow"),S("Nielsen, Does share of voice matter (2009)","https://www.nielsen.com/insights/2009/budgeting-for-the-upturn-does-share-of-voice-matter","")] }
+  ]},
+  { n:"Distribution Expenses % of Net Sales", kind:"id", v:co, own:["COO","CSO","CFO"],
+    def:"Distribution expenses ÷ net sales × 100, as Nestlé reports it (8.2% in 2025). Most other CPGs do not split distribution out, so use the nearest disclosed line. Sales-force and other selling cost sits in Overheads.",
+    desc:"Cost of getting product from factory to customer.",
+    vnote:"Replaces 'Selling & Distribution Cost % (cost to serve)'. No large CPG reports that bundle. 'Cost to serve' is consultancy language and only Nestlé prints a distribution ratio.",
+    names:[["Nestlé","distribution expenses as a percentage of sales"],["Danone","selling expense line (not published as a ratio)"]],
+    src:[S("Nestlé, FY2025 results",U.neFy,"distribution expenses as a percentage of sales were 8.2%")],
+    kids:[
+    { n:"Logistics Cost per Case", kind:"drv", v:ind, own:["COO","CSO"],
+      def:"(Replenishment freight + distribution centre and warehouse operations + customer freight + overhead) ÷ cases shipped. This is the BCG and GMA benchmarking definition.",
+      desc:"Efficiency of the distribution network. Covers freight, DC cost and drop sizes.",
+      vnote:"BCG's CPG benchmark (30-plus companies, US, 2015-16 data) put the median at $1.58 per case. Not reported by companies in the documents found.",
+      names:[["BCG / GMA","cost per case"]],
+      src:[S("BCG, CPG Supply Chains: Preparing for Seismic Change (2018)","https://www.bcg.com/publications/2018/consumer-packaged-goods-supply-chains-preparing-seismic-change.aspx","cost per case includes replenishment freight, DC and warehouse operations, customer freight, and overhead")] }
+  ]},
+  { n:"Overheads % of Net Sales", kind:"id", v:co, own:["CFO","CEO"],
+    def:"Selling, general and administrative overheads, excluding advertising and marketing and distribution, ÷ net sales × 100. Unilever treats overheads as everything below gross profit apart from brand and marketing investment.",
+    desc:"The cost of running the corporate centre, the sales organisation and support functions.",
+    vnote:"'Overheads' is Unilever, Diageo and Danone language. Most others print SG&A % of sales, and SG&A often includes marketing (Colgate 38.3%, L'Oréal 18.8% with marketing separate), so SG&A figures are not comparable without removing marketing.",
+    names:[["Unilever","overheads"],["Diageo","overheads"],["Danone","overheads before reinvestments"],["P&G","core SG&A as % of sales"],["Colgate","SG&A as % of net sales, non-GAAP"],["L'Oréal","selling, general and administrative expenses"]],
+    src:[S("Unilever, FY2025 results",U.unRes,"overheads"),S("Danone, FY2025 results",U.daRel,"overheads before reinvestments"),S("L'Oréal, 2025 annual results",U.loRel,"selling, general and administrative expenses"),S("Colgate, Q4 2025 release",U.clRel,"SG&A as a percentage of net sales")],
+    kids:[
+    { n:"Productivity Savings", kind:"drv", v:co, own:["CFO","COO"],
+      def:"Cost savings delivered in the period, compared with the programme target. Savings delivered ÷ savings committed × 100. Covers both COGS and overheads. Companies report absolute savings or a margin effect in basis points.",
+      desc:"Whether the productivity programme is landing. Shortfalls surface later in margin.",
+      vnote:"Replaces 'Cost Savings Delivery vs Plan'. 'Productivity savings' is the standard term. Only Unilever (EUR 670m of an EUR 800m programme) and Nestlé (CHF 1.1bn, target CHF 3.0bn by 2027) publish both delivered and target.",
+      names:[["P&G","productivity savings (in bps of margin)"],["Unilever","productivity programme"],["Nestlé","Fuel for Growth cost savings"],["PepsiCo","productivity savings"]],
+      src:[S("Unilever, FY2025 results",U.unRes,"EUR 670m of EUR 800m delivered ahead of schedule"),S("Nestlé, FY2025 results",U.neFy,"Fuel for Growth cost savings of CHF 1.1 billion"),S("P&G, Q4 FY26 release",U.pgRel,"gross productivity savings in core operating margin")] }
+  ]}
+]},
+
+{ n:"Free Cash Flow Conversion", v:co, own:["CFO","CEO","COO"],
+  def:"How much of net earnings turns into free cash. Free cash flow ÷ net earnings × 100, where free cash flow = operating cash flow − capital expenditure. The denominator varies: P&G uses net earnings, PepsiCo uses core net income, Reckitt and General Mills use adjusted net income.",
+  desc:"Quality of profit. A business can be profitable and still run out of cash through stock, receivables or heavy capex.",
+  logic:"<b>How it rolls up:</b> FCF conversion = (Net earnings + D&amp;A − Increase in working capital − Capex) ÷ Net earnings. Working capital and capex are the two parts management controls.",
+  vnote:"Several companies use the exact term. P&G's is 'adjusted free cash flow productivity'. Nestlé, Coca-Cola, Mondelez, Colgate and Danone report absolute free cash flow only.",
+  names:[["P&G","adjusted free cash flow productivity"],["PepsiCo","free cash flow conversion"],["Reckitt","free cash flow conversion"],["General Mills","free cash flow conversion"],["Kraft Heinz","free cash flow conversion"],["Unilever","cash conversion"],["Diageo","operating cash conversion (different measure)"]],
+  src:[S("P&G, Q4 FY26 release",U.pgRel,"adjusted free cash flow productivity"),S("PepsiCo, Q4 2025 release",U.peRel,"free cash flow conversion"),S("Reckitt, FY2025 results",U.rbRel,"free cash flow conversion"),S("General Mills, FY2026 release",U.gmRel,"free cash flow conversion"),S("Kraft Heinz, Q4 2025 release",U.khRel,"Free Cash Flow Conversion"),S("Unilever, FY2025 results",U.unRes,"cash conversion")],
+  kids:[
+  { n:"Cash Conversion Cycle (CCC)", kind:"id", v:co, own:["CFO","COO","CSO"],
+    def:"Days of sales that cash is tied up in working capital. DIO + DSO − DPO. SCOR calls it Cash-to-Cash Cycle Time (AM.1.1).",
+    desc:"How fast stock turns back into cash after paying suppliers.",
+    logic:"<b>How it rolls up (exact):</b> CCC = DIO + DSO − DPO. Excess and obsolete stock is a diagnostic behind DIO.",
+    vnote:"Church & Dwight and KDP report the full cycle. The largest CPGs headline working capital as a % of sales instead (Unilever, Nestlé, Reckitt, Colgate), and P&G reports the three day-counts without a cycle total.",
+    names:[["Church & Dwight","cash conversion cycle (DSO + DIO − DPO)"],["KDP","cash conversion cycle"],["Unilever","working capital as % of turnover"],["Nestlé","working capital as % of sales"],["Reckitt","net working capital % of 12-month net revenue"],["Colgate","working capital as % of net sales"],["General Mills / Campbell's","core working capital"],["P&G","DSO, inventory days on hand, DPO (no cycle total)"]],
+    src:[S("Church & Dwight, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/313927/000095017025019801/chd-20241231.htm","sum of DSO plus DIO less DPO"),S("KDP, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/1418135/000141813525000013/kdp-20241231.htm","DIO and DSO less DPO"),S("Nestlé APM, Jul 2020","https://www.nestle.com/sites/default/files/2020-07/nestle-group-alternative-performance-measures-july-2020-en.pdf","working capital as a % of sales"),S("Unilever, Charts 2015 to 2024","https://www.unilever.com/files/unilever-charts-2015-to-2024.pdf","working capital as % turnover"),S("Reckitt, Annual Report 2025","https://eu-assets.contentstack.com/v3/assets/blt93c8bc7a598af9f0/blt3a6f2cd6ab14bf47/69c2b35aa17ac75c0a18f6f2/Reckitt_Annual_Report_and_Accounts_2025_(2).pdf","net working capital as a percentage of 12-month net revenue"),S("Colgate, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/21665/000002166525000008/cl-20241231.htm","working capital as a percentage of Net sales"),S("SCOR Digital Standard",U.scor,"Cash-to-Cash Cycle Time, AM.1.1")],
+    kids:[
+    { n:"Days Inventory Outstanding (DIO)", kind:"id", v:co, own:["COO"],
+      def:"Average inventory ÷ cost of goods sold × days in period. SCOR calls it Inventory Days of Supply (AM.2.2).",
+      desc:"How long stock sits in plants and warehouses.",
+      vnote:"P&G reports it as 'inventory days on hand'.",
+      names:[["P&G","inventory days on hand"],["KDP","DIO"],["SCOR","inventory days of supply"]],
+      src:[S("P&G, 10-K for FY2016","https://www.sec.gov/Archives/edgar/data/80424/000008042416000212/fy151610-kreport.htm","inventory days on hand"),S("KDP, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/1418135/000141813525000013/kdp-20241231.htm","DIO over cost of sales"),S("SCOR Digital Standard",U.scor,"AM.2.2")] },
+    { n:"Days Sales Outstanding (DSO)", kind:"id", v:co, own:["CFO","CSO"],
+      def:"Average accounts receivable ÷ net sales × days in period. SCOR AM.2.1.",
+      desc:"How long customers take to pay. Covers credit terms and collections.",
+      vnote:"P&G reports DSO in its 10-K.",
+      names:[["P&G","days sales outstanding"],["KDP","DSO"]],
+      src:[S("P&G, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/80424/000008042424000083/pg-20240630.htm","days sales outstanding increased by two days"),S("KDP, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/1418135/000141813525000013/kdp-20241231.htm","DSO over net sales")] },
+    { n:"Days Payables Outstanding (DPO)", kind:"id", v:co, own:["CFO","COO"],
+      def:"Average accounts payable ÷ cost of goods sold × days in period. KDP divides by cost of sales plus SG&A, so state your denominator. SCOR AM.2.3.",
+      desc:"How long we take to pay suppliers. Covers supplier terms.",
+      vnote:"P&G reports it. Its 10-K ties payables gains to extended supplier terms, which analysts read as financing, not operations.",
+      names:[["P&G","days payable outstanding"],["KDP","DPO"]],
+      src:[S("P&G, 10-K for FY2016","https://www.sec.gov/Archives/edgar/data/80424/000008042416000212/fy151610-kreport.htm","days payable outstanding"),S("KDP, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/1418135/000141813525000013/kdp-20241231.htm","DPO")] },
+    { n:"Excess & Obsolete (E&O) Inventory %", kind:"drv", v:co, own:["COO","CSO"],
+      def:"Value of excess, slow-moving and obsolete inventory ÷ total inventory value × 100. SCOR has 'percentage of excess inventory' (AM.3.4).",
+      desc:"Stock that will not sell at full value. Driven by forecasting and portfolio complexity.",
+      vnote:"Replaces 'SLOB', an acronym only vendors use. Companies disclose an E&O reserve in dollars, not a ratio, so the percentage is internal practice.",
+      names:[["Mondelez","reserves for excess and obsolete inventory"],["Hershey","inventory obsolescence reserve"],["KDP","slow-moving and obsolete inventories"],["SCOR","percentage of excess inventory"]],
+      src:[S("Mondelez, FY2023 10-K","https://www.sec.gov/Archives/edgar/data/1103982/000110398224000019/mdlz-20231231.htm","reserves for excess and obsolete inventory"),S("Hershey, FY2024 10-K","https://www.sec.gov/Archives/edgar/data/47111/000004711125000014/hsy-20241231.htm","inventory obsolescence reserve"),S("SCOR Digital Standard",U.scor,"AM.3.4 percentage of excess inventory")] }
+  ]},
+  { n:"Capital Spending % of Net Sales", kind:"id", v:co, own:["CFO","COO"],
+    def:"Capital expenditure ÷ net sales × 100.",
+    desc:"How much cash the business reinvests in plants and equipment relative to its size.",
+    vnote:"P&G guides to it (4.5% to 5.5% of fiscal 2027 net sales) and Colgate guides to about 3.0% of net sales. Unilever and PepsiCo give absolute amounts. 'Capital intensity' is not their term.",
+    names:[["P&G","capital spending as % of net sales"],["Colgate","capital expenditures as % of net sales"],["Unilever","net capital expenditure (absolute)"],["PepsiCo","net capital spending (absolute)"]],
+    src:[S("P&G, FY2026 results release (pginvestor.com)","","capital spending in the range of four and a half to five and a half percent of net sales (no link captured)"),S("Colgate, FY2025 10-K",U.clK25,"capital expenditures about 3.0% of Net sales")],
+    kids:[
+    { n:"Return on Invested Capital (ROIC)", kind:"drv", v:co, own:["CFO","CEO"],
+      def:"Net operating profit after tax ÷ average invested capital × 100. Definitions vary: PepsiCo uses net income plus after-tax interest over invested capital.",
+      desc:"Whether the capital being spent earns a return. A rising capex ratio with falling ROIC is a warning.",
+      vnote:"Replaces Fixed Asset Turnover, Capacity Utilization and Capex-to-Depreciation, which are generic ratios no CPG company reports. ROIC is the return measure CPGs publish.",
+      names:[["PepsiCo","ROIC"],["Unilever","underlying return on invested capital (19.0%)"]],
+      src:[S("Unilever, 2025 Form 20-F","https://www.sec.gov/Archives/edgar/data/217410/000021741026000007/ul-20251231.htm","underlying return on invested capital remained strong at 19.0%"),S("PepsiCo, FY2025 10-K","","We define ROIC as net income plus interest expense after-tax (no link captured)")] }
+  ]}
+]},
+
+{ n:"Perfect Order Rate", v:ind, own:["COO","CSO"],
+  def:"% of customer orders delivered on time, in full, damage-free and with correct documentation (SCOR metric RL.1.1). Perfect orders ÷ total orders × 100.",
+  desc:"Reliability of the whole order-to-delivery chain as the retailer experiences it.",
+  logic:"<b>How it rolls up:</b> Perfect order = On-time × In-full × Damage-free × Documentation accuracy, measured per order. Retailer OTIF is the first two parts only.",
+  vnote:"SCOR is the supply chain standard. P&G's own description (on time, complete, billed correctly) is quoted in trade press. No CPG filing reports a perfect order rate. Retailers measure OTIF. Walmart introduced it in 2017 and its targets have changed since, so none is hard-coded here.",
+  names:[["SCOR (ASCM)","Perfect Order Fulfillment (RL.1.1)"],["P&G","order arrives on time, complete and billed correctly"],["Walmart, Kroger, Target","OTIF or fill rate and on-time scorecards"],["Kraft Heinz","OTIF (2022 proxy), case fill rate (2023 proxy)"]],
+  src:[S("ASCM, SCOR Digital Standard",U.scor,"RL.1.1 Perfect Order Fulfillment"),S("ASCM, SCOR introduction and front matter","https://www.ascm.org/globalassets/ascm_website_assets/docs/intro-and-front-matter-scor-digital-standard2.pdf","metric attributes"),S("IndustryWeek, The Perfect Order","https://www.industryweek.com/supply-chain/planning-forecasting/article/21951128/the-perfect-order","arrives on time, complete, and billed correctly"),S("Kraft Heinz, 2022 proxy","https://www.sec.gov/Archives/edgar/data/1637459/000110465922037838/tm2134352-1_def14a.htm","service levels in on-time, in-full performance"),S("IndustryWeek, Walmart OTIF (2017)","https://www.industryweek.com/supply-chain/fined-arriving-early-wal-mart-puts-its-suppliers-notice",""),S("Talk Business, Walmart 98% OTIF (2020)","https://talkbusiness.net/2020/09/walmart-demands-all-suppliers-comply-with-98-on-time-in-full-shipment-rule/",""),S("Logistics Viewpoints, Walmart lowers requirements (2024)","http://logisticsviewpoints.com/2024/02/05/walmart-lowers-their-shipping-requirements-but-their-suppliers-still-struggle/","")],
+  kids:[
+  { n:"On-Time Delivery %", kind:"id", v:ind, own:["COO","CSO"],
+    def:"Orders delivered within the agreed window ÷ total orders × 100. SCOR measures against the original customer commit date (RL.2.2). Retailers measure against their requested arrival date, which is stricter.",
+    desc:"Delivery punctuality to customers.",
+    vnote:"McKinsey (2019) found no standard OTIF definition and that most respondents prefer the retailer's requested date, because the supplier's commit date flatters the number.",
+    names:[["SCOR","delivery performance to original customer commit date (RL.2.2)"],["Kroger","original requested arrival date (ORAD)"]],
+    src:[S("McKinsey, Defining on-time in-full in the consumer sector (2019)","https://www.mckinsey.com/capabilities/operations/our-insights/defining-on-time-in-full-in-the-consumer-sector","no standard definition for OTIF"),S("SPS Commerce, Kroger compliance (2021)","https://www.spscommerce.com/community/articles/what-compliance-requirements-does-kroger-have/",""),S("SPS Commerce, Target compliance (2024)","https://www.spscommerce.com/community/articles/target-compliance-policy-update",""),S("SPS Commerce, Walmart OTIF (2024)","https://www.spscommerce.com/community/articles/walmart-otif-metrics",""),S("SCOR Digital Standard",U.scor,"RL.2.2")],
+    kids:[
+    { n:"Carrier On-Time Delivery", kind:"drv", v:pr, own:["COO"],
+      def:"Loads delivered within the appointment window ÷ total loads × 100.",
+      desc:"Reliability of transport partners.",
+      vnote:"Practitioner term. SCOR has no carrier metric. An RXO study of 100 CPG shippers reports a 95% on-time standard with a 30-minute buffer.",
+      names:[["RXO","on-time delivery to appointment"]],
+      src:[S("RXO, CPG shipper study","https://rxo.com/?p=18613","95% on-time standard, 30-minute buffer")] },
+    { n:"Order Fulfillment Cycle Time", kind:"drv", v:ind, own:["COO"],
+      def:"Average days from customer order receipt to delivery. SCOR RS.1.1.",
+      desc:"Speed of the order-to-delivery process. A longer cycle makes on-time harder.",
+      vnote:"SCOR definition text is members-only, so only the code and name were confirmed. No CPG company use found.",
+      names:[["SCOR","order fulfillment cycle time (RS.1.1)"]],
+      src:[S("SCOR Digital Standard",U.scor,"RS.1.1")] }
+  ]},
+  { n:"Case Fill Rate (In-Full)", kind:"id", v:co, own:["COO","CSO"],
+    def:"Cases delivered ÷ cases ordered × 100. SCOR calls the order-level version In-Full (RL.2.1). Walmart measures it per PO line.",
+    desc:"Whether we ship what was asked for. Short shipments mean lost sales and retailer fines.",
+    vnote:"Kraft Heinz used it as a service incentive metric in 2023. Clorox and Church & Dwight cite it in results releases. 'Line fill rate' and 'order fill rate' did not appear in CPG sources.",
+    names:[["Kraft Heinz","case fill rate (incentive metric)"],["Clorox","case fill rate"],["Church & Dwight","case fill rate"],["SCOR","percentage of orders delivered in full (RL.2.1)"]],
+    src:[S("Kraft Heinz, 2023 proxy",U.khProx23,"service levels in case fill rate"),S("Clorox, Aug 2021 results","https://www.sec.gov/Archives/edgar/data/21076/000120677421001938/clorox3938801-ex991.htm","highest case fill rate since the start of the pandemic"),S("Church & Dwight, Q2 2021 release","https://www.sec.gov/Archives/edgar/data/313927/000156459021039328/chd-ex991_6.htm","lower case fill rate"),S("SCOR Digital Standard",U.scor,"RL.2.1")],
+    kids:[
+    { n:"Forecast Accuracy", kind:"drv", v:ind, own:["CSO","COO"],
+      def:"1 − WMAPE, where WMAPE = Σ|actual − forecast| ÷ Σ actual, at SKU and location level. Pair it with forecast bias, Σ(actual − forecast) ÷ n, which shows direction.",
+      desc:"Quality of the demand plan. Poor forecasts cause both stock-outs and excess stock.",
+      vnote:"Standard in demand planning (Institute of Business Forecasting). No CPG company reporting found, so rated industry standard.",
+      names:[["IBF","forecast accuracy; MAPE; WMAPE; forecast value added"]],
+      src:[S("Institute of Business Forecasting, Forecast error metrics","https://ibf.org/knowledge/posts/forecast-error-metrics-to-assess-performance-39","lists MPE, MAPE, WMAPE and FVA as popular"),S("Demand-Planning.com, 8 KPIs every demand planner should know (2020)","https://demand-planning.com/2020/06/01/8-kpis-every-demand-planner-should-know/","forecast accuracy = 1 - |D-F|/D")] },
+    { n:"Supplier OTIF", kind:"drv", v:ind, own:["COO"],
+      def:"Inbound deliveries received on time and in full ÷ total inbound deliveries × 100. SCOR's formal name is Perfect Supplier Order Fulfillment (RL.1.2).",
+      desc:"Reliability of material and packaging supply. A late input stops a line.",
+      vnote:"No CPG company disclosure found. 'Supplier OTIF' is how practitioners say it.",
+      names:[["SCOR","perfect supplier order fulfillment (RL.1.2)"]],
+      src:[S("SCOR Digital Standard",U.scor,"RL.1.2, RL.2.5 to RL.2.7")] }
+  ]},
+  { n:"Damage-Free Delivery %", kind:"id", v:ind, own:["COO"],
+    def:"Orders delivered with no damaged product ÷ total orders × 100. SCOR: Customer Order Perfect Condition (RL.2.4).",
+    desc:"Handling quality through warehouse and transit.",
+    vnote:"The CPG-industry word is 'unsaleables', tracked as a cost (% of sales). The GMA/FMI benchmark put manufacturers at 1.11% of sales in 2000, and no newer figure was found.",
+    names:[["SCOR","customer order perfect condition (RL.2.4)"],["GMA / FMI","unsaleables"]],
+    src:[S("SCOR Digital Standard",U.scor,"RL.2.4"),S("FMI, unsaleables benchmarking report (2000)","https://www.fmi.org/newsroom/news-archive/view/2000/07/27/new-industry-benchmarking-report-reveals-impact-of-unsaleables-on-bottom-line-","")] },
+  { n:"Order Documentation Accuracy %", kind:"id", v:ind, own:["CFO","CSO"],
+    def:"Orders with correct invoice, shipping and order paperwork ÷ total orders × 100. SCOR: Customer Order Documentation Accuracy (RL.2.3).",
+    desc:"Order-to-cash accuracy. Errors cause deductions, disputes and slow payment.",
+    vnote:"The retailer-facing CPG term is 'deductions'. No CPG company discloses a deduction rate. Deductions also include promotional billbacks and OTIF fines, so they overlap other metrics.",
+    names:[["SCOR","customer order documentation accuracy (RL.2.3)"],["CPG practice","deductions; deduction rate"]],
+    src:[S("SCOR Digital Standard",U.scor,"RL.2.3"),S("Fractal, Deductions and margin leakage in CPG","https://fractal.ai/article/deductions-margin-leakage-cpg/","a customer paying you less than you invoiced")] }
+]}
+];
+
+// ---------- render ----------
+const CK = ["k1","k2","k3","k4"];
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const el = (tag, cls, html) => { const e=document.createElement(tag); if(cls) e.className=cls; if(html!==undefined) e.innerHTML=html; return e; };
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const owners = o => `<div class="own">${o.map((x,i)=>`<span class="chip${i===0?" pri":""}">${x}${i===0?" (primary)":""}</span>`).join("")}</div>`;
+const tag = k => k ? `<span class="tag ${k}">${k==="id"?"Identity":"Driver"}</span>` : "";
+const ev = v => v ? `<span class="ev ${v}">${EVL[v]}</span>` : "";
+
+function srcBlock(m){
+  if(!m.src && !m.names) return "";
+  let h = `<details class="src"><summary>Names and sources</summary><div class="srcbody">`;
+  if(m.vnote) h += `<p class="note">${m.vnote}</p>`;
+  if(m.names && m.names.length){
+    h += `<table class="names">` + m.names.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("") + `</table>`;
+  }
+  if(m.src && m.src.length){
+    h += `<ul class="srcs">` + m.src.map(s=>{
+      const link = s.u ? `<a href="${s.u}" target="_blank" rel="noopener noreferrer">${esc(s.l)}</a>` : esc(s.l);
+      const q = s.q ? ` <span class="q">: ${esc(s.q)}</span>` : "";
+      return `<li>${link}${q}</li>`;
+    }).join("") + `</ul>`;
+  }
+  return h + `</div></details>`;
+}
+function metricRows(m){
+  return `<div class="row"><div class="lab">Definition</div><div>${m.def}</div></div>
+          <div class="row"><div class="lab">Covers</div><div>${m.desc}</div></div>
+          <div class="row"><div class="lab">Owners</div><div>${owners(m.own)}</div></div>` + srcBlock(m);
+}
+
+// ---------- persona trees ----------
+// Every metric below comes from the researched master tree T, so its definition and sources carry over.
+const M = {};
+(function idx(l){ l.forEach(m=>{ M[m.n]=m; if(m.kids) idx(m.kids); }); })(T);
+const fromT = l => l.map(m=>({n:m.n, kind:m.kind, kids:m.kids?fromT(m.kids):undefined}));
+const N = (n, kind, kids, logic) => ({n, kind, kids, logic});
+
+const P = {
+ CEO:{ title:"CEO", blurb:"<b>Everything.</b> This is the master tree. The other four trees are re-cuts of it: each executive sees their own levers at the top, and every metric in the master tree appears in its primary owner's tree.",
+   tree: fromT(T) },
+
+ COO:{ title:"COO", blurb:"<b>Service, the cost of making and moving product, inventory and capex, and safety.</b> Safety is promoted to L1. Distribution cost joins gross margin as a cost lever. Price, brand and market metrics are left to the CSO and CMO.",
+   tree:[
+   N("Perfect Order Rate",null,[
+     N("On-Time Delivery %","id",[N("Carrier On-Time Delivery","drv"),N("Order Fulfillment Cycle Time","drv")]),
+     N("Case Fill Rate (In-Full)","id",[N("Forecast Accuracy","drv"),N("Supplier OTIF","drv")]),
+     N("Damage-Free Delivery %","id"),
+     N("Order Documentation Accuracy %","id")]),
+   N("Gross Margin %",null,[
+     N("Input Cost Inflation","drv"),
+     N("Overall Equipment Effectiveness (OEE)","drv"),
+     N("Distribution Expenses % of Net Sales","drv",[N("Logistics Cost per Case","drv")]),
+     N("Product Recalls (count and cost)","drv")],
+     "<b>How it rolls up:</b> Gross margin = 1 − cost of goods sold ÷ net sales. These are the cost levers the COO controls. Distribution sits here because many companies book it in cost of goods sold; where it sits below gross margin, read it as the COO's slice of operating margin. The price side of gross margin is in the CSO and CFO trees."),
+   N("Free Cash Flow Conversion",null,[
+     N("Cash Conversion Cycle (CCC)","id",[N("Days Inventory Outstanding (DIO)","id"),N("Days Payables Outstanding (DPO)","id"),N("Excess & Obsolete (E&O) Inventory %","drv")],
+       "<b>How it rolls up (exact):</b> CCC = DIO + DSO − DPO. The COO moves inventory and supplier terms. Receivables (DSO) sit in the CFO and CSO trees."),
+     N("Capital Spending % of Net Sales","id",[N("Return on Invested Capital (ROIC)","drv")])],
+     "<b>How it rolls up:</b> FCF conversion = (Net earnings + D&amp;A − Increase in working capital − Capex) ÷ Net earnings. The COO controls inventory, supplier payables and most of capex."),
+   N("Total Recordable Incident Rate (TRIR)",null,undefined,
+     "<b>Why it is at the top:</b> for the COO, safety is a licence-to-operate measure, not a cost line. In the CEO tree it sits under gross margin for lack of a slot.")
+ ]},
+
+ CFO:{ title:"CFO", blurb:"<b>Growth, the margin bridge and cash.</b> Gross margin is promoted to L1 so price and cost pressure show before they reach operating margin. Consumer, brand and plant diagnostics are left to the CMO, CSO and COO.",
+   tree:[
+   N("Organic Sales Growth",null,[
+     N("Organic Volume Growth","id"),
+     N("Price/Mix","id",[N("Pricing","id"),N("Mix","id"),N("Trade Spend % of Gross Sales","drv"),N("Trade Promotion ROI","drv")])],
+     "<b>How it rolls up (exact):</b> Organic sales growth = Organic volume growth + Price/Mix. The CFO watches the price side in detail. Volume drivers (penetration, buying rate, distribution) live in the CMO and CSO trees."),
+   N("Gross Margin %",null,[
+     N("Input Cost Inflation","drv"),
+     N("Productivity Savings","drv"),
+     N("Product Recalls (count and cost)","drv")],
+     "<b>How it rolls up:</b> Gross margin moves on price (Price/Mix, under Organic Sales Growth) and on cost. These are the cost and savings lines the CFO tracks. Plant drivers such as OEE are in the COO tree."),
+   N("Adjusted Operating Margin",null,[
+     N("Advertising & Marketing % of Net Sales","id",[N("Marketing ROI (Advertising ROI)","drv")]),
+     N("Distribution Expenses % of Net Sales","id"),
+     N("Overheads % of Net Sales","id")],
+     "<b>How it rolls up (exact):</b> Operating margin = Gross margin % (the L1 next door) − Advertising &amp; marketing % − Distribution expenses % − Overheads %."),
+   N("Free Cash Flow Conversion",null,[
+     N("Cash Conversion Cycle (CCC)","id",[N("Days Inventory Outstanding (DIO)","id"),N("Days Sales Outstanding (DSO)","id"),N("Days Payables Outstanding (DPO)","id"),N("Order Documentation Accuracy %","drv")],
+       "<b>How it rolls up (exact):</b> CCC = DIO + DSO − DPO. Order documentation errors cause deductions and slow payment, so they sit behind DSO."),
+     N("Capital Spending % of Net Sales","id",[N("Return on Invested Capital (ROIC)","drv")])])
+ ]},
+
+ CSO:{ title:"CSO", blurb:"<b>Top line, share and the retailer relationship.</b> Market share and retailer service are promoted to L1, and receivables come up as a leaf because payment terms are negotiated by sales. Brand and media metrics are left to the CMO.",
+   tree:[
+   N("Organic Sales Growth",null,[
+     N("Organic Volume Growth","id",[N("Household Penetration","drv"),N("Buying Rate","drv")],
+       "<b>How it rolls up:</b> Consumer volume = Households × Penetration × Buying rate (NielsenIQ). Repeat rate and brand drivers are in the CMO tree."),
+     N("Price/Mix","id",[N("Pricing","id"),N("Mix","id"),N("Trade Spend % of Gross Sales","drv"),N("Trade Promotion ROI","drv")])]),
+   N("Value Market Share Change",null,[
+     N("Category Growth","drv"),
+     N("Weighted Distribution (%ACV)","drv"),
+     N("On-Shelf Availability (OSA)","drv")]),
+   N("Perfect Order Rate",null,[
+     N("On-Time Delivery %","id"),
+     N("Case Fill Rate (In-Full)","id",[N("Forecast Accuracy","drv")]),
+     N("Order Documentation Accuracy %","id")],
+     "<b>How it rolls up:</b> Retailers fine on-time and in-full (OTIF) and charge back paperwork errors as deductions, so these are the parts the CSO answers for with customers. Damage-free delivery and transport detail sit in the COO tree."),
+   N("Days Sales Outstanding (DSO)",null,undefined,
+     "<b>Why it is at the top:</b> customer payment terms are negotiated by sales. Collections are run by finance, so the CFO tree carries it too.")
+ ]},
+
+ CMO:{ title:"CMO", blurb:"<b>Brand, consumer demand and marketing spend.</b> Brand equity and advertising are promoted to L1, and the consumer drivers of volume are opened up under growth. Supply chain, cash and trade terms are left to the COO, CFO and CSO.",
+   tree:[
+   N("Brand Equity (Meaningful, Different, Salient)",null,[
+     N("Unaided Brand Awareness","drv"),
+     N("Brand Consideration","drv"),
+     N("Innovation Rate","drv")]),
+   N("Organic Sales Growth",null,[
+     N("Organic Volume Growth","id",[N("Household Penetration","drv"),N("Buying Rate","drv"),N("Repeat Rate","drv")]),
+     N("Price/Mix","id",[N("Mix","id"),N("Pricing","id")],
+       "<b>How it rolls up:</b> Price/Mix = Pricing + Mix. Portfolio mix is the CMO's lever. Trade spend and promotion ROI are in the CSO and CFO trees."),
+     N("Value Market Share Change","drv",[N("Category Growth","drv")],
+       "<b>How it rolls up:</b> Share change ≈ our growth − category growth. Distribution and shelf availability, the other share drivers, are in the CSO tree.")],
+     "<b>How it rolls up (exact):</b> Organic sales growth = Organic volume growth + Price/Mix. Value market share change explains the market-side why."),
+   N("Advertising & Marketing % of Net Sales",null,[
+     N("Marketing ROI (Advertising ROI)","drv"),
+     N("Return on Ad Spend (ROAS)","drv"),
+     N("Excess Share of Voice (ESOV)","drv")])
+ ]}
+};
+const ORDER = ["CEO","COO","CFO","CSO","CMO"];
+
+// default logic: reuse the master tree's text only when the children are identical
+const sameKids = s => { const m=M[s.n]; const a=(s.kids||[]).map(x=>x.n).join("|"); const b=(m.kids||[]).map(x=>x.n).join("|"); return a===b; };
+const logicOf = s => s.logic!==undefined ? s.logic : (sameKids(s) ? (M[s.n].logic||"") : "");
+
+// structural checks: names exist, max 4 children, max 3 levels, no metric twice in one tree
+const problems = [];
+ORDER.forEach(p=>{
+  const seen = new Set();
+  if(P[p].tree.length>4) problems.push(p+": more than 4 L1");
+  (function chk(l,d){ l.forEach(s=>{
+    if(!M[s.n]) problems.push(p+": unknown metric "+s.n);
+    if(seen.has(s.n)) problems.push(p+": duplicate "+s.n); seen.add(s.n);
+    if(s.kids){ if(d>=3) problems.push(p+": level overflow at "+s.n); if(s.kids.length>4) problems.push(p+": more than 4 under "+s.n); chk(s.kids,d+1); }
+  }); })(P[p].tree,1);
+  P[p].set = seen;
+});
+problems.forEach(x=>console.error(x));
+
+const pyr = document.getElementById("pyr");
+const tree = document.getElementById("tree");
+
+function render(p){
+  pyr.innerHTML=""; tree.innerHTML="";
+  document.getElementById("blurb").innerHTML = P[p].blurb;
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on", b.dataset.p===p));
+  const spec = P[p].tree;
+  let nL2=0, nL3=0;
+  pyr.style.gridTemplateColumns = `repeat(${spec.length},1fr)`;
+  spec.forEach((s1,i)=>{
+    const k = CK[i], m1 = M[s1.n];
+    const col = el("div","col "+k);
+    const a1 = el("a","",`<div class="p1">${m1.n}</div>`); a1.href="#"+slug(m1.n); col.appendChild(a1);
+    (s1.kids||[]).forEach(s2=>{
+      nL2++;
+      const a = el("a","",`<div class="p2">${s2.n}</div>`); a.href="#"+slug(s2.n); col.appendChild(a);
+      if(s2.kids){ const w=el("div","p3"); s2.kids.forEach(s3=>{nL3++; w.appendChild(el("span","",s3.n));}); col.appendChild(w); }
+    });
+    pyr.appendChild(col);
+
+    const d1 = el("details","l1 "+k); d1.open = true; d1.id = slug(m1.n);
+    d1.appendChild(el("summary","",`<span class="lvltag">L1</span>${m1.n}${ev(m1.v)}`));
+    const b1 = el("div","body");
+    b1.appendChild(el("div","metric",metricRows(m1)));
+    const lg1 = logicOf(s1); if(lg1) b1.appendChild(el("div","logic",lg1));
+    (s1.kids||[]).forEach(s2=>{
+      const m2 = M[s2.n];
+      const d2 = el("details","l2"); d2.open = true; d2.id = slug(m2.n);
+      d2.appendChild(el("summary","",`<span class="lvltag">L2</span>${m2.n}${tag(s2.kind)}${ev(m2.v)}`));
+      const b2 = el("div","");
+      b2.appendChild(el("div","metric",metricRows(m2)));
+      const lg2 = logicOf(s2); if(lg2 && s2.kids) b2.appendChild(el("div","logic",lg2));
+      if(s2.kids){
+        const g = el("div","l3grid");
+        s2.kids.forEach(s3=>{ const m3=M[s3.n]; g.appendChild(el("div","l3",`<div class="metric"><div class="nm"><span class="lvltag">L3</span>${m3.n}${tag(s3.kind)}${ev(m3.v)}</div>${metricRows(m3)}</div>`)); });
+        b2.appendChild(g);
+      }
+      d2.appendChild(b2);
+      b1.appendChild(d2);
+    });
+    d1.appendChild(b1);
+    tree.appendChild(d1);
+  });
+  document.getElementById("count").textContent = `${P[p].title} tree: ${spec.length} at L1, ${nL2} at L2, ${nL3} at L3`;
+  try{ localStorage.setItem("cpgPersona", p); }catch(e){}
+}
+
+const tabs = document.getElementById("tabs");
+ORDER.forEach(p=>{ const b=el("button","",P[p].title); b.dataset.p=p; b.onclick=()=>render(p); tabs.appendChild(b); });
+let start = "CEO"; try{ const s=localStorage.getItem("cpgPersona"); if(P[s]) start=s; }catch(e){}
+render(start);
+
+// coverage matrix
+(function(){
+  const all = Object.keys(M);
+  const head = document.querySelector("#cov thead"), body = document.querySelector("#cov tbody");
+  head.innerHTML = `<tr><th>Metric</th><th>Primary owner</th>${ORDER.map(p=>`<th>${p}</th>`).join("")}</tr>`;
+  let ok=0;
+  all.forEach(n=>{
+    const pri = M[n].own[0];
+    if(P[pri] && P[pri].set.has(n)) ok++;
+    const cells = ORDER.map(p=>{
+      if(!P[p].set.has(n)) return `<td class="cv"></td>`;
+      return `<td class="cv${p===pri?" pri":""}">${p===pri?"● primary":"●"}</td>`;
+    }).join("");
+    const tr=document.createElement("tr"); tr.innerHTML=`<td>${esc(n)}</td><td>${pri}</td>${cells}`; body.appendChild(tr);
+  });
+  const sizes = ORDER.map(p=>`${p} ${P[p].set.size}`).join(", ");
+  document.getElementById("covsum").textContent = `${all.length} metrics. ${ok} of ${all.length} appear in their primary owner's tree. Metrics per tree: ${sizes}.` + (problems.length? ` Structure problems: ${problems.join("; ")}.` : " No tree breaks the 4-per-level or 3-level rule.");
+})();
+
+document.getElementById("expand").onclick = () => document.querySelectorAll("details").forEach(d=>{ if(!d.classList.contains("src")) d.open=true; });
+document.getElementById("collapse").onclick = () => document.querySelectorAll("details.l2").forEach(d=>d.open=false);
+document.getElementById("srcopen").onclick = () => document.querySelectorAll("details.src").forEach(d=>d.open=true);
+document.getElementById("srcclose").onclick = () => document.querySelectorAll("details.src").forEach(d=>d.open=false);
+// changes table
+const CH = [
+ ["Organic Net Sales Growth","Organic Sales Growth","No company uses 'net' in the P&G form. 'Organic' means excluding M&A and FX. Each company's own label is listed."],
+ ["Operating Profit Margin","Adjusted Operating Margin","Every company adds a qualifier (core, underlying, comparable, adjusted). 'Adjusted' is the neutral one."],
+ ["Volume Share Change","Value Market Share Change","Value share, in basis points, is what P&G, Coca-Cola, Colgate and Unilever report."],
+ ["Category Volume Growth; Category Household Penetration; Category Buy Rate","Category Growth (one metric)","Companies say 'category growth' and quote it mostly in value. The other two were not standard terms."],
+ ["Weighted Distribution (ACV), category-weighted","Weighted Distribution (%ACV), all-commodity weighted","The first draft described PCV. ACV is weighted by total store sales."],
+ ["Category Buy Rate (inside the share tree)","Buying Rate (under Volume Growth)","'Buying rate' is the Circana and NielsenIQ term."],
+ ["Brand Equity Score","Brand Equity (Meaningful, Different, Salient)","No score is published by CPG companies. Kantar's framework is the name practitioners use."],
+ ["Net Promoter Score","Dropped","No CPG company cites brand NPS. Household penetration and repeat rate cover advocacy through behaviour."],
+ ["Innovation Rate (Vitality Index)","Innovation Rate","Henkel and Nestlé say 'innovation rate'. 'Vitality' means something else at NielsenIQ."],
+ ["Net Price Realization","Pricing","No company release uses the first draft's term."],
+ ["Mix Effect","Mix","P&G and Kimberly-Clark print 'mix'."],
+ ["Gross-to-Net Deduction %","Trade Spend % of Gross Sales","Companies only say sales are net of trade spend. BCG calls the ratio the trade rate."],
+ ["Purchase Price Variance","Input Cost Inflation","PPV is a plant accounting term. Executives see input cost inflation and procurement savings."],
+ ["Cost of Poor Quality","Product Recalls (count and cost)","No CPG reports COPQ and my definition was too broad. Recalls are what companies disclose."],
+ ["Selling & Distribution Cost % (cost to serve)","Distribution Expenses % of Net Sales","Only Nestlé prints a distribution ratio. Sales-force cost moves into Overheads."],
+ ["Sales Force Productivity; Opex Budget Variance %; Net Sales per Employee","Dropped","Generic ratios. No CPG company reports them."],
+ ["Cost Savings Delivery vs Plan","Productivity Savings","Standard CPG term. Unilever and Nestlé publish delivered versus target."],
+ ["SLOB inventory %","Excess & Obsolete (E&O) Inventory %","SLOB is a vendor acronym. Companies disclose E&O reserves."],
+ ["Capex % of Net Sales","Capital Spending % of Net Sales","P&G and Colgate use this phrase."],
+ ["Capacity Utilization; Fixed Asset Turnover; Capex-to-Depreciation","Return on Invested Capital (ROIC)","Generic ratios no CPG reports. ROIC is what Unilever and PepsiCo publish."],
+ ["Perfect Order Rate, 'In-Full %'","Case Fill Rate (In-Full)","Kraft Heinz, Clorox and Church & Dwight use 'case fill rate'."],
+ ["Documentation Accuracy %","Order Documentation Accuracy %","SCOR name. Retailers call the cost 'deductions'."],
+ ["Production Schedule Adherence","Dropped","No CPG evidence found. OEE covers plant productivity."]
+];
+const tc = document.querySelector("#chg tbody");
+CH.forEach(r=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td><td>${esc(r[2])}</td>`; tc.appendChild(tr); });
+
+// ownership table
+const EX = ["CEO","CFO","CSO","CMO","COO"];
+const prim = {}, sec = {};
+EX.forEach(x=>{prim[x]=[];sec[x]=[];});
+(function walk(list){ list.forEach(m=>{ m.own.forEach((x,i)=>(i===0?prim:sec)[x].push(m.n)); if(m.kids) walk(m.kids); }); })(T);
+const tb = document.querySelector("#own tbody");
+EX.forEach(x=>{
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><b>${x}</b></td><td><b>${prim[x].length}</b>${prim[x].length?": "+prim[x].join(", "):" (none as primary)"}</td><td>${sec[x].length} metrics</td>`;
+  tb.appendChild(tr);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+---
+// Four decisions that shaped Pulse: before on the left, after on the right. Numbered boxes on
+// the after picture match the notes underneath; hovering either one lights up the other.
+// Box positions are [x, y, w, h] as fractions of the picture.
+const I = '/experiments/executive-pulse/history/img';
+const decisions = [
+	{
+		title: 'T-shaped browsing',
+		why: 'Executives have 5, 15 or 50 minutes. The top of the T answers “am I on track?” in one screen; the stem lets any number open deeper without leaving the page.',
+		before: { src: `${I}/s/v1.webp`, w: 1424, h: 1792, cap: 'Version 1: every chart at the same depth, on one long page.' },
+		after: { src: `${I}/d-t-after.webp`, w: 1408, h: 1230, cap: 'Final: the home page on top, one metric opened beneath it.' },
+		boxes: [[0.009, 0.055, 0.322, 0.525], [0.357, 0.055, 0.634, 0.525], [0.03, 0.627, 0.297, 0.018], [0.03, 0.65, 0.47, 0.048, 1], [0.725, 0.712, 0.245, 0.023]],
+		notes: [
+			'The summary: what needs attention, worst first.',
+			'Four core metrics cover the whole role in one screen. Together they are the five-minute check.',
+			'Any number opens one level at a time, with a breadcrumb back up.',
+			'The panel opens right under its card, so the home page stays in view.',
+			'Filters belong to the panel: cut by country, brand or channel without losing your place.',
+		],
+	},
+	{
+		title: 'Prioritising the metrics',
+		why: 'The first node diagram had 94 metrics. The pyramid keeps four per role and makes every other number findable beneath them.',
+		before: { src: `${I}/d-node-before.webp`, w: 1800, h: 1062, cap: 'The first node diagram: 94 metrics across four tiers.' },
+		after: { src: `${I}/s/pyr-glance.webp`, w: 1800, h: 789, cap: 'The pyramid: the CEO’s four core metrics and what sits under each.' },
+		boxes: [[0.008, 0.14, 0.235, 0.115], [0.008, 0.268, 0.235, 0.078], [0.25, 0.49, 0.232, 0.1], [0.008, 0.69, 0.235, 0.2], [0.004, 0.93, 0.2, 0.045], [0.73, 0.14, 0.235, 0.14]],
+		notes: [
+			'Four core metrics per role, from what CPG boards measure and pay executives on: growth, margin, cash and share. Only what the executive can move.',
+			'Parts add up: each level reconciles to the one above, so a gap always splits cleanly.',
+			'Levers are causes you can pull, each with one owner.',
+			'Lenses such as category growth sit beside the tree, never inside the sum.',
+			'“Where” is a cut by brand, market or channel, not another metric. That alone removed dozens of metrics.',
+			'Shared metrics have one owner: the CEO watches cash conversion, the CFO owns it.',
+		],
+	},
+	{
+		title: 'Issues before metrics',
+		why: 'An executive’s first question is “what needs me?”, not “what are my numbers?”. So the summary is a list of issues, and the metrics sit beside it as context.',
+		before: { src: `${I}/d-issues-before.webp`, w: 670, h: 295, cap: 'Version 2: the summary was prose about metrics.' },
+		after: { src: `${I}/d-issues-after.webp`, w: 982, h: 1350, cap: 'Final: the summary is the issues, worst first.' },
+		boxes: [[0.44, 0.018, 0.548, 0.032], [0.06, 0.113, 0.81, 0.097], [0.88, 0.14, 0.05, 0.045], [0.055, 0.898, 0.37, 0.034]],
+		notes: [
+			'How many issues, by severity, worst first.',
+			'Each issue reads in the order an executive thinks: what is off, by how much against what goal, and why, in one line.',
+			'Every issue opens its analysis.',
+			'The actions on them are one glance away.',
+		],
+	},
+	{
+		title: 'The metric card',
+		why: 'A card should read the way an executive thinks: is it off, by how much, against what goal, where is it now, and why.',
+		before: { src: `${I}/d-card-before.webp`, w: 316, h: 257, cap: 'Version 2: the raw value led, and the reader had to work out whether 17.2% was good.' },
+		after: { src: `${I}/d-card-after.webp`, w: 872, h: 602, cap: 'Final: the same metric, read in the order an executive asks.' },
+		boxes: [[0.08, 0.03, 0.48, 0.15], [0.08, 0.19, 0.48, 0.176], [0.6, 0.19, 0.38, 0.21], [0.08, 0.41, 0.85, 0.185], [0.04, 0.665, 0.92, 0.27]],
+		notes: [
+			'Status first, coloured only when it needs attention, then the metric.',
+			'The gap is the headline: how far off, against which goal. Then the value now and the goal.',
+			'Trend, and the change since last week.',
+			'Why, in one sentence, with its source.',
+			'Possible reasons: the parts that moved it, each one click deeper.',
+		],
+	},
+];
+---
+
+<div class="dec">
+	{decisions.map((d) => (
+		<section class="d">
+			<header>
+				<h3>{d.title}</h3>
+				<p class="why">{d.why}</p>
+			</header>
+			<div class="pair">
+				<figure class="before">
+					<a href={d.before.src} target="_blank" rel="noopener"><img src={d.before.src} width={d.before.w} height={d.before.h} alt={d.before.cap} loading="lazy" decoding="async" /></a>
+					<figcaption><b>Before</b> {d.before.cap}</figcaption>
+				</figure>
+				<figure class="after">
+					<div class="shot">
+						<a href={d.after.src} target="_blank" rel="noopener"><img src={d.after.src} width={d.after.w} height={d.after.h} alt={d.after.cap} loading="lazy" decoding="async" /></a>
+						{d.boxes.map(([x, y, w, h], i) => <span class="box" data-n={i} style={`left:${x * 100}%;top:${y * 100}%;width:${w * 100}%;height:${h * 100}%;--i:${i}`} aria-hidden="true" />)}
+						{d.boxes.map(([x, y, w, , side], i) => <span class={(side ?? (x + w / 2 > 0.55 ? 1 : 0)) ? 'num r' : 'num'} data-n={i} style={`top:${y * 100}%;--i:${i}`} aria-hidden="true">{i + 1}</span>)}
+					</div>
+					<figcaption><b>After</b> {d.after.cap}</figcaption>
+				</figure>
+			</div>
+			<ol class="notes">{d.notes.map((n, i) => <li data-n={i}>{n}</li>)}</ol>
+		</section>
+	))}
+</div>
+
+<style>
+	.dec {
+		--w: min(1240px, calc(100vw - 2rem));
+		--ease: cubic-bezier(0.22, 0.8, 0.2, 1);
+		--hlc: #2f5be8;
+		width: var(--w);
+		margin-left: calc((100% - var(--w)) / 2);
+	}
+	.d { margin: 0 0 4.5em; }
+	.d header { max-width: 720px; }
+	.d h3 { margin: 0.4em 0 0.3em; }
+	.why { margin: 0 0 1.4em; color: rgb(var(--gray)); font-size: 0.95em; }
+	.pair {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+		gap: 3rem;
+		align-items: start;
+	}
+	figure { margin: 0; }
+	figure a { display: block; }
+	figure img {
+		display: block;
+		width: 100%;
+		max-width: none;
+		border-radius: 8px;
+		border: 1px solid #2e2e33;
+	}
+	.before img { opacity: 0.6; transition: opacity 0.3s ease; }
+	.before:hover img { opacity: 1; }
+	.before img { max-height: 520px; object-fit: cover; object-position: top; }
+	figcaption { font-size: 0.72em; color: rgb(var(--gray)); margin-top: 0.7em; }
+	figcaption b { color: rgb(var(--gray-dark)); font-weight: 600; margin-right: 0.3em; }
+	/* the after picture keeps its own shape, so the boxes stay on their spots; height is capped by width */
+	.after { padding: 0 34px; }
+	.shot { position: relative; margin: 0 auto; max-width: min(100%, var(--mw, 100%)); }
+	.box {
+		position: absolute;
+		border: 1.5px solid var(--hlc);
+		border-radius: 5px;
+		opacity: 0;
+		transform: scale(1.04);
+		transition: opacity 0.45s ease calc(var(--i) * 90ms), transform 0.6s var(--ease) calc(var(--i) * 90ms), box-shadow 0.25s ease, background 0.25s ease;
+		pointer-events: auto;
+	}
+	.d.in .box { opacity: 1; transform: none; }
+	/* the number sits in the margin beside its box, never on top of the screen */
+	.num {
+		position: absolute;
+		left: -30px;
+		width: 22px;
+		height: 22px;
+		margin-top: -2px;
+		border-radius: 50%;
+		background: var(--hlc);
+		color: #fff;
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 22px;
+		text-align: center;
+		opacity: 0;
+		transition: opacity 0.45s ease calc(var(--i) * 90ms), box-shadow 0.25s ease;
+	}
+	.num.r { left: auto; right: -30px; }
+	.d.in .num { opacity: 1; }
+	.num.on { box-shadow: 0 0 0 4px rgba(47, 91, 232, 0.35); }
+	.box.on { background: rgba(47, 91, 232, 0.1); box-shadow: 0 0 0 4px rgba(47, 91, 232, 0.28); }
+	.notes {
+		columns: 2;
+		column-gap: 2.5rem;
+		margin: 1.6em 0 0;
+		padding-left: 1.4em;
+		font-size: 0.82em;
+	}
+	.notes li { break-inside: avoid; margin-bottom: 0.45em; padding: 0.15em 0.4em; border-radius: 6px; transition: background 0.25s ease, color 0.25s ease; cursor: default; }
+	.notes li::marker { color: var(--accent); font-weight: 700; }
+	.notes li.on { background: rgba(122, 162, 255, 0.12); color: rgb(var(--black)); }
+	@media (max-width: 860px) {
+		.pair { grid-template-columns: 1fr; }
+		.notes { columns: 1; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.box, .num, .notes li, .before img { transition: none; }
+	}
+</style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.dec .d').forEach((d) => {
+		// cap the after picture's height at 560px by giving it a matching width
+		const img = d.querySelector<HTMLImageElement>('.shot img')!, shot = d.querySelector<HTMLElement>('.shot')!;
+		shot.style.setProperty('--mw', `${Math.round((560 * +img.getAttribute('width')!) / +img.getAttribute('height')!)}px`);
+		const boxes = [...d.querySelectorAll<HTMLElement>('.box, .num')], notes = [...d.querySelectorAll<HTMLElement>('.notes li')];
+		const light = (n: string | null) => [...boxes, ...notes].forEach((e) => e.classList.toggle('on', e.dataset.n === n));
+		[...boxes, ...notes].forEach((e) => { e.addEventListener('pointerenter', () => light(e.dataset.n!)); e.addEventListener('pointerleave', () => light(null)); });
+		// boxes draw in one after another when the decision scrolls into view
+		new IntersectionObserver(([e], o) => { if (e.isIntersecting) { d.classList.add('in'); o.disconnect(); } }, { threshold: 0.35 }).observe(d);
+	});
+</script>

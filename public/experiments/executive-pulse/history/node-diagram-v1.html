@@ -1,0 +1,616 @@
+<meta charset="utf-8">
+<title>Executive Metric Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f5f7;--surface:#ffffff;--surface-2:#f7f8fa;--ink:#141a22;--ink-2:#4d5766;--muted:#7d8695;--line:#dfe3e9;--line-2:#c9d0d8;
+  --accent:#24308f;--on-accent:#fff;--lane-a:#ffffff;--lane-b:#f8f9fb;
+  --SH:#3b4250;--CEO:#4a3aa7;--CFO:#0f8f6e;--CMO:#d95926;--CSO:#2a78d6;--COO:#2f7d1f;
+  --edge:#9aa3b0;--esc:#d03b3b;--hl:#f2b01e;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#0e1116;--surface:#161a21;--surface-2:#1c2129;--ink:#eef1f5;--ink-2:#b3bbc7;--muted:#828c9a;--line:#29303a;--line-2:#3a424e;
+  --accent:#9aa5ff;--on-accent:#0e1116;--lane-a:#13171d;--lane-b:#171b22;
+  --SH:#c3c9d4;--CEO:#9085e9;--CFO:#2fbf94;--CMO:#f07a45;--CSO:#5aa0f0;--COO:#5cc04a;--edge:#5d6674;--esc:#ef6b6b;--hl:#f2b01e}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0e1116;--surface:#161a21;--surface-2:#1c2129;--ink:#eef1f5;--ink-2:#b3bbc7;--muted:#828c9a;--line:#29303a;--line-2:#3a424e;
+  --accent:#9aa5ff;--on-accent:#0e1116;--lane-a:#13171d;--lane-b:#171b22;
+  --SH:#c3c9d4;--CEO:#9085e9;--CFO:#2fbf94;--CMO:#f07a45;--CSO:#5aa0f0;--COO:#5cc04a;--edge:#5d6674;--esc:#ef6b6b;--hl:#f2b01e}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:-.01em;margin-right:auto}
+header h1 span{font-weight:400;color:var(--ink-2)}
+.grp{display:flex;flex-direction:column;gap:3px}
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;padding:2px;background:var(--surface);gap:1px}
+.seg button{border:0;background:none;padding:4px 9px;border-radius:5px;font-size:12px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg button:hover{background:var(--surface-2);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+select,input[type=search]{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px}
+input[type=search]{width:190px}
+.chk{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.chk label{display:flex;gap:4px;align-items:center;cursor:pointer}
+main{flex:1;display:flex;min-height:0}
+#stage{flex:1;position:relative;min-width:0;overflow:hidden;background:var(--bg)}
+#svg{width:100%;height:100%;display:block;cursor:grab}
+#svg:active{cursor:grabbing}
+aside{width:340px;flex:none;border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:860px){main{flex-direction:column}aside{width:auto;border-left:0;border-top:1px solid var(--line);max-height:45vh}#stage{min-height:55vh}}
+aside h2{margin:0;font-size:16px;letter-spacing:-.01em}
+aside h3{margin:0 0 6px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.tag.role{color:#fff;border-color:transparent}
+.list{display:flex;flex-direction:column;gap:3px}
+.list button{all:unset;cursor:pointer;font-size:12px;padding:4px 6px;border-radius:5px;display:flex;gap:8px;align-items:baseline}
+.list button:hover{background:var(--surface-2)}
+.list button:focus-visible{outline:2px solid var(--accent)}
+.list .id{font-family:var(--mono);font-size:10.5px;color:var(--muted);min-width:46px}
+.list .k{margin-left:auto;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.insight{background:var(--surface-2);border-radius:8px;padding:9px 11px;font-size:12.5px;border-left:3px solid var(--hl)}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.hint{font-size:12px;color:var(--ink-2);line-height:1.5}
+svg text{font-family:var(--sans)}
+.node{cursor:pointer}
+.node .id{font-family:var(--mono);font-size:9.5px;font-weight:500}
+.node .lbl{font-size:11px;fill:var(--ink)}
+.dim{opacity:.12}
+.lane-title{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+.col-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;fill:var(--muted)}
+#tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;font-size:12px;max-width:300px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+#tip{max-width:360px;line-height:1.45}#tip b{display:block;font-size:13px;margin-bottom:1px}.tt-k{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}.tt-r{margin-top:6px}.tt-r>span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}#tip code{font-family:var(--mono);font-size:11px;color:var(--ink)}
+.zoombtns{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+.zoombtns button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:7px;cursor:pointer;font-size:16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <h1>Executive Metric Map <span>· roles → jobs → problems → metrics by tier → actions</span></h1>
+  <div class="grp"><span class="lab">Layout</span><div class="seg" id="v-layout"><button data-v="tree" aria-pressed="true">Tree</button><button data-v="web" aria-pressed="false">Web</button></div></div>
+  <div class="grp"><span class="lab">View</span><div class="seg" id="v-mode"><button data-v="full" aria-pressed="true">Full map</button><button data-v="owner" aria-pressed="false">Ownership</button><button data-v="collab" aria-pressed="false">Collaboration</button></div></div>
+  <div class="grp"><label class="lab" for="v-role">Role</label><select id="v-role"><option value="all">All roles</option><option value="CEO">CEO</option><option value="CFO">CFO</option><option value="CMO">CMO</option><option value="CSO">Chief Sales Officer</option><option value="COO">COO</option></select></div>
+  <div class="grp"><label class="lab" for="v-search">Find</label><input type="search" id="v-search" list="v-ids" placeholder="ID or name, e.g. F4"><datalist id="v-ids"></datalist></div>
+  <div class="grp"><span class="lab">Show</span><div class="chk">
+    <label><input type="checkbox" id="c-cross" checked> Cross-role links</label>
+    <label><input type="checkbox" id="c-diag"> Diagnosed-by</label>
+    <label><input type="checkbox" id="c-deep" checked> Tiers 3–4</label>
+    <label><input type="checkbox" id="c-ins"> Insights</label>
+  </div></div>
+</header>
+<main>
+  <div id="stage"><svg id="svg" role="img" aria-label="Interactive metric map"></svg>
+    <div class="zoombtns"><button id="z-in" aria-label="Zoom in">+</button><button id="z-out" aria-label="Zoom out">−</button><button id="z-fit" aria-label="Fit to screen">⤢</button></div>
+  </div>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<div id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function(){
+"use strict";
+/* ================= DATA ================= */
+const LANES=[{id:'SH',name:'Company pulse strip (shared)'},{id:'CEO',name:'CEO'},{id:'CFO',name:'CFO · incl. RGM'},{id:'CMO',name:'CMO · incl. Chief Brand Officer'},{id:'CSO',name:'Chief Sales Officer'},{id:'COO',name:'COO · incl. Supply chain & Procurement'}];
+const COLS=['Role','Job','Problem','Tier 1 · outcome','Tier 2 · driver','Tier 3 · locator','Tier 4 · evidence','Action'];
+const COLOF={role:0,job:1,problem:2,SH:3,T1:3,T2:4,alert:4,T3:5,T4:6,action:7};
+const TIERRANK={SH:1,T1:1,T2:2,alert:2,T3:3,T4:4};
+const TYPENAME={role:'Role',job:'Job',problem:'Problem',SH:'Shared strip (tier 1)',T1:'Tier 1 · outcome',T2:'Tier 2 · driver',alert:'Escalation alert',T3:'Tier 3 · locator',T4:'Tier 4 · evidence',action:'Action / owner'};
+const N=[],E=[],FEEDS=[];
+const node=(id,type,lane,label,o={})=>N.push({id,type,lane,label,...o});
+const edge=(s,t,k,label)=>E.push({s,t,k,label});
+const role=(id,label,alt,jobs)=>{node('R-'+id,'role',id,label,{alt});jobs.forEach(([jid,jl,rm])=>{node(jid,'job',id,jl,{roadmap:!!rm});edge('R-'+id,jid,'job')})};
+const prob=(id,lane,label,jobs,meas,diag)=>{node(id,'problem',lane,label);jobs.forEach(j=>edge(j,id,'monitors'));meas.forEach(m=>edge(id,m,'measured'));diag.forEach(d=>edge(id,d,'diagnosed'))};
+const met=(id,tier,lane,label,owner,feeds,o={})=>{node(id,tier,lane,label,{owner,...o});(feeds||[]).forEach(f=>FEEDS.push([id,f]))};
+
+// Shared strip
+[['Sh1','Net sales vs target','CSO','Gross sales − trade spend − returns · weekly · Geo, Cat, Ch · vs Tgt, LY, Fcst'],
+ ['Sh2','Organic growth (volume vs price/mix)','CFO','Growth excl. FX and M&A = volume + price/mix · weekly'],
+ ['Sh3','Operating profit vs target','CFO','Contribution margin − overheads · monthly · company level only'],
+ ['Sh4','Contribution margin vs target','CFO','Gross margin − A&P − distribution costs · weekly est., monthly actual'],
+ ['Sh5','FY outlook vs target (+ vs guidance)','CFO','YTD actual + forecast · monthly · label vs guidance visible to all'],
+ ['Sh6','Value market share & change','CMO','Our consumption ÷ category value (measured channels) · 4-weekly, ~3-wk lag'],
+ ['Sh7','Share price vs peers','CFO','Our % change − peer index % change · daily · company level'],
+ ['Sh8','Top 5 company exceptions','Varies','Ranked by $ and full-year impact · severity + direction pills']
+].forEach(([id,l,o,d])=>met(id,'SH','SH',l,o,[],{def:d}));
+
+// CEO
+role('CEO','CEO','MD, Group CEO, President · also serves category/BU and country heads via filters',[['CEO-1','Growth & plan delivery'],['CEO-2','Profit delivery'],['CEO-3','Competitive position'],['CEO-4','Investor view'],['CEO-5','Portfolio health'],['CEO-6','Biggest risks & opportunities']]);
+met('C1','T1','CEO','Contribution to growth (who adds / subtracts)','CEO');
+met('C2','T1','CEO','Our growth vs market growth, by country','CMO');
+met('C4','T1','CEO','TSR vs peers','CFO');
+met('C15','T1','CEO','Net profit / EPS vs target','CFO');
+met('C3','T2','CEO','Detailed exception list (cause, owner, status)','Varies',['Sh8']);
+met('C5','T2','CEO','Profit bridge','CFO',['Sh3','Sh4']);
+met('C6','T2','CEO','Gross margin %','CFO',['Sh4']);
+met('C7','T2','CEO','Run rate required vs current','CSO',['Sh5']);
+met('C7b','T2','CEO','Catch-up map: gap + headroom','CEO',['Sh5','C7']);
+met('C8','T2','CEO','Inflation recovery %','CFO',['C5']);
+met('C16','T2','CEO','P&L cascade (NS → GM → CM → OP → NP)','CFO',['Sh3','C15']);
+met('C14','alert','CEO','Recall / regulatory escalation alert','COO',['Sh8']);
+met('C9','T3','CEO','Net sales & CM by brand × country × channel','CSO',['C5','C1']);
+met('C10','T3','CEO','Share by brand × country; competitor gap','CMO',['C2']);
+met('C11','T3','CEO','Lost sales from stock-outs; fill rate','COO',['C7b']);
+met('C12','T3','CEO','Channel stock weeks','CSO',['C7b']);
+met('C13','T4','CEO','Trends, external signals, event detail','—',['C9','C10','C11','C12']);
+prob('CEO-I1','CEO','Sales behind target',['CEO-1'],['Sh1','C1'],['C9','C11','C12','C7b']);
+prob('CEO-I2','CEO','Profit behind plan',['CEO-2'],['Sh3','Sh4','C15'],['C5','C6','C8','C16']);
+prob('CEO-I3','CEO','Losing share',['CEO-3'],['Sh6','C2'],['C10']);
+prob('CEO-I4','CEO','Year at risk',['CEO-1'],['Sh5'],['C7','C7b']);
+prob('CEO-I5','CEO','Outperformance — can we scale it?',['CEO-5'],['C1','Sh8'],['C7b','C9']);
+prob('CEO-A1','CEO','Share price falling vs peers',['CEO-4'],['Sh7','C4'],['Sh2','Sh3','F6']);
+prob('CEO-I6','CEO','Escalated risk (recall, regulatory, >$ threshold)',['CEO-6'],['Sh8'],['C3','C14']);
+
+// CFO
+role('CFO','CFO','Finance Director · includes Revenue Growth Management (RGM)',[['CFO-1','P&L delivery'],['CFO-2','Gross-to-net'],['CFO-3','Costs'],['CFO-4','Forecast & outlook'],['CFO-5','RGM levers (price, promo, mix)'],['CFO-6','Budget control'],['CFO-7','Investor expectations'],['CFO-8','Cash & working capital',1]]);
+met('F1','T1','CFO','Gross margin %','CFO',['Sh4']);
+met('F2','T1','CFO','Trade spend % of gross sales','CFO',['Sh4']);
+met('F3','T1','CFO','Price realization vs RGM plan','CFO',['Sh2']);
+met('F4','T1','CFO','Inflation recovery %','CFO',['F1']);
+met('F5','T1','CFO','Promotion ROI','CFO',['Sh4']);
+met('F6','T1','CFO','Latest estimate vs guidance vs consensus','CFO',['Sh5']);
+met('F7','T2','CFO','Profit bridge','CFO',['F1','Sh4']);
+met('F8','T2','CFO','COGS bridge','CFO',['F1','F4']);
+met('F9','T2','CFO','Price / volume / mix split','CFO',['Sh2','F3']);
+met('F10','T2','CFO','% volume on promotion','CFO',['F2','F5']);
+met('F11','T2','CFO','A&P spend vs budget','CFO',['Sh4']);
+met('F12','T2','CFO','Returns vs returns provision','CFO',['F2']);
+met('F13','T2','CFO','Valuation multiple vs peers','CFO',['Sh7']);
+met('F14','T2','CFO','Flow-through (Δ profit ÷ Δ sales)','CFO',['Sh4']);
+met('F22','T2','CFO','EPS bridge','CFO',['F6','C15']);
+met('F15','T3','CFO','Trade spend by key account & channel','CFO',['F2','F10']);
+met('F16','T3','CFO','Promotion-by-promotion results','CFO',['F5','F10']);
+met('F17','T3','CFO','Price realization by country & key account','CFO',['F9']);
+met('F18','T3','CFO','Inflation chain panel','CFO',['F8']);
+met('F19','T3','CFO','Commodity index & hedge cover','CFO',['F8']);
+met('F20','T3','CFO','Shipments vs consumption gap','CFO',['F9','F14']);
+met('F21','T4','CFO','Monthly P&L, trends, consensus history','—',['F15','F16','F17','F18','F19','F20']);
+prob('CFO-I1','CFO','Margin below plan',['CFO-1'],['F1','Sh4'],['F7','F8','F14']);
+prob('CFO-I2','CFO','Growth bought with discounts',['CFO-5'],['F5','Sh2'],['F9','F10','F14','F16','F20']);
+prob('CFO-I3','CFO','Trade spend overrun',['CFO-2','CFO-6'],['F2'],['F15','F16']);
+prob('CFO-I4','CFO','Price increase did not land',['CFO-5'],['F3'],['F17']);
+prob('CFO-I5','CFO','COGS overrun',['CFO-3'],['F4','F1'],['F8','F18','F19']);
+prob('CFO-I6','CFO','Forecast / guidance miss risk',['CFO-4','CFO-7'],['F6','Sh5'],['F22']);
+
+// CMO
+role('CMO','CMO','Chief Brand Officer, Chief Growth Officer, Marketing Director',[['CMO-1','Share & brand growth'],['CMO-2','Competition'],['CMO-3','Marketing spend'],['CMO-4','Marketing effectiveness'],['CMO-5','Promotion effectiveness (results)'],['CMO-7','Competitive watch'],['CMO-6','Brand health',1]]);
+met('M1','T1','CMO','Brand growth vs market growth, by brand','CMO',['Sh6']);
+met('M2','T1','CMO','ROMI, blended & by brand','CMO',['Sh4']);
+met('M3','T1','CMO','A&P spend vs budget','CMO',['Sh4']);
+met('M4','T1','CMO','Who is gaining share from us','CMO',['Sh6']);
+met('M5','T1','CMO','Live campaign performance','CMO',['M2']);
+met('M6','T2','CMO','Share drivers (distribution, rate of sale, price gap, SOV, promo)','CMO',['M1','Sh6']);
+met('M7','T2','CMO','Category & adjacent-category growth','CMO',['M1','M4']);
+met('M8','T2','CMO','Private-label share trend','CMO',['M4']);
+met('M9','T2','CMO','A&P phasing by brand & month','CMO',['M3']);
+met('M10','T2','CMO','Promotion results summary (read-only)','CFO',['M2']);
+met('M11','T3','CMO','Share by variant × country; competitor price','CMO',['M6']);
+met('M12','T3','CMO','ROMI by media & campaign','CMO',['M2','M9']);
+met('M13','T3','CMO','Campaign detail','CMO',['M5']);
+met('M14','T3','CMO','Competitor activity log','CMO',['M7','M8','M6']);
+met('M15','T4','CMO','Consumption trends, flighting, CPI','—',['M11','M12','M13','M14']);
+prob('CMO-I1','CMO','Share falling',['CMO-1'],['Sh6','M1'],['M6','M11']);
+prob('CMO-I2','CMO','Low ROMI',['CMO-4','CMO-3'],['M2'],['M12']);
+prob('CMO-I3','CMO','Campaign underperforms',['CMO-4'],['M5'],['M13']);
+prob('CMO-I4','CMO','Category shifting',['CMO-1'],['M1'],['M7']);
+prob('CMO-I5','CMO','Adjacent-category threat',['CMO-7'],['M4'],['M7','M14']);
+prob('CMO-I6','CMO','Private-label gains',['CMO-2'],['M4'],['M8']);
+prob('CMO-I7','CMO','Promotion returns weak',['CMO-5'],['M2'],['M10']);
+
+// CSO
+role('CSO','Chief Sales Officer','Chief Commercial Officer, Chief Customer Officer, VP Sales',[['CSO-1','Sales vs target'],['CSO-2','Distribution'],['CSO-3','Account performance'],['CSO-4','Promotion execution'],['CSO-5','Channel inventory'],['CSO-6','Profitable sales'],['CSO-7','Near-expiry & returns']]);
+met('S1','T1','CSO','Volume vs target','CSO',['Sh1']);
+met('S2','T1','CSO','Run rate required vs current, by channel','CSO',['Sh5']);
+met('S3','T1','CSO','Key account attainment (ranked by gap)','CSO',['Sh1']);
+met('S4','T1','CSO','Weighted distribution & net listings','CSO',['Sh1']);
+met('S5','T1','CSO','Channel stock (weeks of cover)','CSO',['Sh1']);
+met('S6','T1','CSO','Trade spend vs agreed terms','CSO',['Sh4']);
+met('S7','T2','CSO','Sales gap split (volume, price, distribution, OSA)','CSO',['S1','S3']);
+met('S8','T2','CSO','Sales flow: shipments → distributor → shopper','CSO',['S5']);
+met('S9','T2','CSO','Promotion execution: compliance & volume','CSO',['S1','S6']);
+met('S10','T2','CSO','Returns % & near-expiry in channel','CSO',['S5']);
+met('S11','T2','CSO','On-shelf availability in stores','CSO',['S4','S7']);
+met('S12','T2','CSO','Catch-up by region & zone','CSO',['S2']);
+met('S13','T3','CSO','Distribution by SKU × account','CSO',['S11']);
+met('S14','T3','CSO','Account scorecard vs joint business plan','CSO',['S7']);
+met('S15','T3','CSO','Promotion events by account','CSO',['S9']);
+met('S16','T3','CSO','Returns by reason × account × SKU','CSO',['S10','S8']);
+met('S17','T3','CSO','Sales by zone → city & distributor','CSO',['S12']);
+met('S18','T4','CSO','Shipments, distributor stock, store audits','—',['S13','S14','S15','S16','S17']);
+prob('CSO-I1','CSO','Account or channel behind',['CSO-1','CSO-3'],['S1','S3','Sh1'],['S7','S11','S14','S17']);
+prob('CSO-I2','CSO','Channel stuffing risk',['CSO-5'],['S5'],['S8']);
+prob('CSO-I3','CSO','Distribution loss',['CSO-2'],['S4'],['S13']);
+prob('CSO-I4','CSO','Promotion not executed',['CSO-4','CSO-6'],['S6'],['S9','S15']);
+prob('CSO-I5','CSO','Promotion under-delivered on volume',['CSO-4'],['S1'],['S9','S15']);
+prob('CSO-I6','CSO','Rising returns',['CSO-7'],['S5'],['S10','S16']);
+prob('CSO-I7','CSO','Behind on run rate',['CSO-1'],['S2'],['S12','S17']);
+
+// COO
+role('COO','COO','Includes Supply Chain and Procurement',[['COO-1','Customer service'],['COO-2','Inventory'],['COO-3','Unit costs'],['COO-4','Procurement'],['COO-5','Planning'],['COO-6','Quality & compliance'],['COO-7','Plant performance',1]]);
+met('O1','T1','COO','Customer service: OTIF, key-account breach, lost sales','COO',['Sh1']);
+met('O2','T1','COO','Stock-out risk (cover < replenishment time)','COO',['O1']);
+met('O3','T1','COO','Inventory health, end to end','COO',['Sh4']);
+met('O4','T1','COO','Input cost (procurement)','COO',['O5']);
+met('O5','T1','COO','Unit costs: COGS & cost to serve per case','COO',['Sh4']);
+met('O6','T1','COO','Quality & compliance cases','COO',['Sh8']);
+met('O7','T2','COO','Service failures by root cause','COO',['O1']);
+met('O8','T2','COO','COGS bridge','COO',['O5']);
+met('O9','T2','COO','Cost-to-serve bridge','COO',['O5']);
+met('O10','T2','COO','Commodity inflation & hedge cover','COO',['O4']);
+met('O11','T2','COO','Procurement savings & supplier OTIF','COO',['O4']);
+met('O12','T2','COO','Forecast accuracy & bias','COO',['O1','O2','O3']);
+met('O13','T2','COO','Write-offs % net sales','COO',['O3']);
+met('O14','T2','COO','Complaint trend, holds, legal/regulatory cases','COO',['O6']);
+met('O23','T2','COO','Stock readiness for upcoming promotions','COO',['O2']);
+met('O15','T3','COO','Fill rate & lost sales by SKU × warehouse × KA','COO',['O7']);
+met('O16','T3','COO','Inventory by warehouse × SKU; near-expiry list','COO',['O13','O12']);
+met('O17','T3','COO','Cost per case by category & plant','COO',['O8']);
+met('O18','T3','COO','Commodity price index; hedge positions','COO',['O10']);
+met('O19','T3','COO','Freight by route; rush-shipment spend','COO',['O9']);
+met('O20','T3','COO','Complaints/recalls by batch, plant, market','COO',['O14']);
+met('O21','T4','COO','Service reports, supplier data, incident log','—',['O15','O16','O17','O18','O19','O20']);
+prob('COO-I1','COO','Fill rate / OTIF drop',['COO-1'],['O1'],['O7','O15']);
+prob('COO-I2','COO','COGS overrun',['COO-3','COO-4'],['O4','O5'],['O8','O10','O17','O18']);
+prob('COO-I3','COO','Inventory build-up',['COO-2','COO-5'],['O3'],['O12','O16']);
+prob('COO-I4','COO','Cost to serve rising',['COO-3'],['O5'],['O9','O19']);
+prob('COO-I5','COO','Quality / compliance case',['COO-6'],['O6'],['O14','O20']);
+prob('COO-I6','COO','Items about to stock out',['COO-1','COO-5'],['O2'],['O12','O23','O15']);
+prob('COO-I7','COO','Near-expiry stock (ours or channel)',['COO-2'],['O3'],['O13','O16']);
+
+// Actions
+[['A-CEO','CEO','Assign owner, intervene, reallocate investment'],['A-CFO','CFO','Re-forecast, cap trade spend, approve price/promo budgets, update guidance'],['A-CMO','CMO','Reallocate A&P, adjust/stop campaigns, respond to competitors'],['A-CSO','CSO','Recovery plan by account, fix distribution, enforce promo compliance, manage returns'],['A-COO','COO','Expedite/reallocate stock, hedge/re-source, liquidate near-expiry, quality containment']].forEach(([id,l,t])=>node(id,'action',l,t));
+
+// Cross-role edges
+[['S1','Sh1','influences','volume drives net sales'],['S4','Sh1','influences','distribution drives net sales'],['M1','Sh1','influences','brand demand drives net sales'],['F3','Sh1','influences','price drives net sales'],['F3','Sh2','influences','price drives price/mix'],
+ ['O1','Sh1','influences','lost sales reduce net sales'],['O1','C11','influences','lost sales'],['O1','S7','influences','availability gap'],['F2','Sh4','influences','trade spend reduces margin'],['S6','Sh4','influences','trade terms affect margin'],
+ ['M3','Sh4','influences','A&P reduces margin'],['M3','F11','influences','CFO controls A&P budget'],['O5','Sh4','influences','unit costs reduce margin'],['O5','F1','influences','costs drive gross margin'],['O4','F4','influences','cost inflation vs price recovery'],
+ ['F8','O8','mirrors','same COGS bridge data'],['F5','M10','mirrors','promo results read by CMO'],['F16','S15','influences','ROI (CFO) vs execution (CSO)'],['F16','O23','influences','promo plan drives stock needs'],['S5','O3','mirrors','channel stock as COO context'],
+ ['S5','F20','influences','channel loading = revenue-quality risk'],['S10','F12','influences','returns hit provision'],['S10','O13','influences','returns become write-offs'],['O1','S3','influences','OTIF breach hits account & fines'],['M6','Sh6','influences','share drivers'],
+ ['S11','Sh6','influences','shelf availability drives share'],['M7','C2','influences','category growth explains growth vs market'],['M2','F11','influences','ROMI informs budget'],['S12','C7b','influences','sales catch-up feeds CEO map'],['O12','Sh5','influences','forecast accuracy affects outlook'],
+ ['F6','Sh5','influences','"vs guidance" label'],['F22','C15','mirrors','EPS bridge behind net profit/EPS'],['C16','F7','mirrors','P&L cascade shared by CEO & CFO'],['O6','Sh8','escalates','recall / regulatory / > $ threshold'],['O6','C14','escalates','escalation to CEO']
+].forEach(([s,t,k,l])=>edge(s,t,k,l));
+
+const INS={Sh1:'YTD net sales −0.1% vs target; Bolt Brew UK and Verdant Gulf offset by Lumen Care India.',Sh4:'Contribution margin −2.8% vs target, mainly COGS (oat inflation) and deeper promotions.',Sh8:'🔴 Bolt Brew · UK −$6.2M ↓ worsening — competitor price cut.',C7b:'Lumen Care India and Mexico general trade have headroom to over-deliver; Bolt Brew UK cannot close its own gap.',
+ F3:'Price realization +2.1% vs plan +4.0%; two key accounts delayed the increase to July (≈ −$12M).',F4:'Inflation recovery 62%: price increases cover only part of oat cost inflation.',F5:'Crisply USA promotions ROI 0.55x: growth is being bought.',F6:'EPS $3.05: $0.13 below consensus, $0.05 below guidance range.',
+ M1:'Bolt Brew UK −22% vs market +3%; share −2.1 pts.',M4:'Rival energy brand gained 6 pts distribution in UK convenience after a 12% price cut.',M5:'Lumen Care India sale-day campaign lift +140% vs plan +80%.',S3:'3 of 12 key accounts behind target; largest gap a UK convenience chain (−$3M).',
+ S5:'Mexico general-trade channel cover 5.1 weeks vs normal 3.5: loading risk.',O1:'OTIF 94.1% vs 95% · 3 key accounts below contract threshold · est. fines $0.4M · main cause: supply shortage.',O2:'14 SKU-locations in Indonesia below replenishment time (Tidewell juices).',O4:'Oat cost +18% vs budget; hedge cover 40%.',O6:'1 open regulatory notice (labelling, UAE); no active recalls.'};
+const D={
+Sh1:['Revenue we keep after trade deductions and returns, compared with target.','Gross sales − trade spend − returns','Below target → find where (brand, country, channel) and why (volume, price or availability).'],
+Sh2:['Growth from the existing business, excluding currency and acquisitions, split into volume and price/mix.','Reported growth − FX effect − M&A effect = volume growth + price/mix','Price-led growth with falling volume is fragile; volume-led growth with falling price/mix may mean heavy discounting.'],
+Sh3:['Profit from operations after all operating costs, company level.','Contribution margin − overheads (SG&A)','Monthly and company-level only. Use contribution margin to see profit by brand, country or channel.'],
+Sh4:['Profit each brand or market contributes before shared overheads.','Gross margin − A&P − distribution costs','The profit number you can slice. A gap here is explained by the profit bridge.'],
+Sh5:['Where the full year will land, vs target and vs guidance.','YTD actual + forecast for the remaining weeks','A gap needs a catch-up plan; "at risk vs guidance" flags investor risk.'],
+Sh6:['Our share of category sales in measured channels.','Our consumption value ÷ category value','Falling share while the market grows = losing to competitors; falling with the market = category problem.'],
+Sh7:['How our share price moved relative to a peer group.','Our % change − peer index % change','Underperforming peers is company-specific: check organic growth, margins and outlook vs consensus.'],
+Sh8:['The five most material deviations right now: risks and opportunities.','Ranked by $ gap and full-year impact; severity + direction pills','Start any review here; each item opens its diagnosis and owner.'],
+C1:['How much each brand or country added to, or took away from, total growth.','Segment change in net sales ÷ total net sales in base period','Shows who carries growth and who drags it; contributions add up to total growth.'],
+C2:['Our growth compared with category growth, by country.','Our consumption growth − market growth','Positive = gaining share. Negative while the market grows = competitive problem.'],
+C4:['Total return to shareholders vs a peer group.','(End price − start price + dividends) ÷ start price','Slow-moving and tied to executive pay; a sustained gap needs a strategic response.'],
+C15:['Bottom-line profit and earnings per share vs target.','Net profit = operating profit − interest − tax; EPS = net profit ÷ shares','What the board and investors judge; a miss is traced through the EPS bridge.'],
+C3:['The full exception list with cause, owner, status and action.','Same ranking as Sh8, expanded','Shows whether each issue already has an owner, so nothing looks new twice.'],
+C5:['Splits the profit gap into its drivers.','Target profit + volume + mix + price + trade + COGS + distribution + A&P = actual','The core "why": the biggest bar is where to look next.'],
+C6:['Share of net sales left after cost of goods.','(Net sales − COGS) ÷ net sales','Falling = prices not covering costs, more discounting, or a weaker mix.'],
+C7:['Weekly sales needed for the rest of the year vs the current weekly pace.','(FY target − YTD actual) ÷ remaining weeks','A large uplift on current pace = target unlikely without action.'],
+C7b:['Where the remaining gap must be closed, and who has the headroom to deliver more.','Gap by brand × country + run rate + momentum, share trend, ROMI, fill rate','Tells the CEO who to lean on, and who cannot close their own gap.'],
+C8:['How much cost inflation we recovered through pricing.','Price realization $ ÷ COGS inflation $','Below 100% = margin squeeze; links procurement costs to pricing.'],
+C16:['The P&L in one view, each line vs target and last year.','Net sales → gross margin → contribution margin → operating profit → net profit','Shows at which line the gap opens up.'],
+C14:['Escalation of a recall, regulatory action or large quality/legal case.','Triggered by the escalation rule','Needs immediate CEO awareness; the COO owns the response.'],
+C9:['Net sales and margin for each brand × country × channel.','—','Locates exactly where a gap sits.'],
+C10:['Share and competitor price gap by brand and country.','Our share; our price ÷ competitor price','Locates where share was lost and whether price is the reason.'],
+C11:['Sales lost because we could not supply, and fill rate.','Unfilled cases × net price','Separates supply problems from demand problems.'],
+C12:['Stock held by distributors and retailers, in weeks of sales.','Channel stock ÷ weekly consumption','High = over-shipped; future orders will drop.'],
+C13:['Weekly trends and external events behind the numbers.','—','Evidence; checks seasonality and one-offs.'],
+F1:['Share of net sales left after cost of goods.','(Net sales − COGS) ÷ net sales','The most steerable margin line; moves with price, trade spend, mix and input costs.'],
+F2:['Trade spend relative to gross sales (gross-to-net leakage).','Trade spend ÷ gross sales','Rising = giving more to retailers; check promotion depth and key-account terms.'],
+F3:['Price increase achieved vs what the RGM plan assumed.','Σ actual volume × (actual price − LY price) ÷ LY net sales, vs plan','A shortfall breaks the margin plan; find which country or account delayed.'],
+F4:['Share of input-cost inflation recovered by price increases.','Price realization $ ÷ COGS inflation $','Below 100% = margin squeeze; check commodity trend and pending price increases.'],
+F5:['Profit return on promotion spend.','Incremental gross margin ÷ promotion cost','Below 1.0x destroys profit: growth is being bought.'],
+F6:['Our latest forecast vs our guidance and analysts’ consensus.','Latest estimate vs guidance range vs consensus (net sales, operating profit, EPS)','A gap signals an earnings miss and share-price risk; drill via the EPS bridge.'],
+F7:['Profit change split into volume, mix, price, trade, COGS, distribution and A&P.','Target + Σ effects = actual','Shows which lever moved margin.'],
+F8:['Change in unit cost split by driver.','Commodities + packaging + FX + conversion + freight + mix + volume','Shows what is pushing costs up; same data as the COO view.'],
+F9:['Growth split into price, volume and mix.','Price effect + volume effect + mix effect = growth','Quality of growth: price-only or discount-driven volume are warning signs.'],
+F10:['Share of volume sold on promotion.','Promoted volume ÷ total volume','Rising = dependence on discounting.'],
+F11:['Marketing spend vs budget.','Actual A&P ÷ budget','Overspend hits margin; underspend can hurt future growth. Read with ROMI.'],
+F12:['Customer returns vs the provision booked for them.','Actual returns vs returns provision','Returns above provision cut net sales; often a sign of over-shipping.'],
+F13:['How the market values us relative to peers.','P/E = share price ÷ EPS; EV/EBITDA','Context for investor conversations; not directly controllable.'],
+F14:['How much extra sales turn into extra profit.','Δ profit ÷ Δ sales','Low flow-through = growth bought with discounts or costs.'],
+F22:['EPS change split into operating profit, interest, tax and share count.','Base EPS + Σ effects = EPS','Explains an EPS gap vs guidance or consensus.'],
+F15:['Trade spend by key account and channel.','—','Locates which customer drives a trade-spend overrun.'],
+F16:['Results of each promotion event.','Lift, ROI, depth → verdict: repeat / optimise / stop','Decides which promotions to repeat or stop.'],
+F17:['Price realization by country and key account.','—','Locates where the price increase did not land.'],
+F18:['Linked chain from commodity cost to margin.','Commodity → cost per case → price → volume → margin','Makes the inflation story explicit.'],
+F19:['Commodity price trend and how much is hedged.','Hedged volume ÷ forecast requirement','Low cover = exposed to further cost spikes.'],
+F20:['Gap between what we ship and what shoppers buy.','Shipment growth − consumption growth','A widening gap = revenue pulled forward into the channel.'],
+F21:['Monthly P&L lines, trends, consensus history.','—','Evidence behind the CFO numbers.'],
+M1:['Each brand’s growth vs its category’s growth.','Brand consumption growth − category growth','Below market = losing share; read with the share drivers.'],
+M2:['Profit generated per $1 of marketing.','Incremental gross margin ÷ A&P (marketing mix model)','Below hurdle = move spend. Refreshed quarterly.'],
+M3:['Marketing spend vs budget.','Actual A&P ÷ budget','Check phasing before calling it overspend.'],
+M4:['Which competitors and private label are taking share from us.','Change in competitor share','Tells "to whom" we are losing.'],
+M5:['Sales lift of running and recent campaigns vs plan.','(Campaign sales − baseline) ÷ baseline','The weekly signal to continue, adjust or stop.'],
+M6:['Why share moved: distribution, rate of sale, price gap, share of voice, promotions.','—','Points to the lever that fixes share.'],
+M7:['Growth of our category and neighbouring categories.','Category value now ÷ LY − 1','Detects demand moving to adjacent categories.'],
+M8:['Retailers’ own-brand share trend.','Private label value ÷ market value','Rises in downturns as shoppers trade down.'],
+M9:['A&P spend by month vs plan.','—','Separates timing from real overspend.'],
+M10:['Promotion lift and ROI (the CFO owns the levers).','Incremental gross margin ÷ promotion cost','Shows whether promotions help or erode the brand.'],
+M11:['Share and shelf price by variant and country.','—','Locates where share was lost.'],
+M12:['ROMI by media type and campaign.','—','Shows which spend is not working.'],
+M13:['Detailed campaign results.','Lift vs baseline, reach, sales in window','Evidence behind live campaign performance.'],
+M14:['Log of competitor launches, price moves and ad bursts.','—','Context for share movements.'],
+M15:['Consumption trends, flighting calendar, consumer inflation.','—','Evidence.'],
+S1:['Cases sold vs target.','Actual volume ÷ target','Separates selling more from charging more.'],
+S2:['Weekly pace needed vs current pace, by channel.','(Target − YTD actual) ÷ remaining weeks','Shows which channel must accelerate.'],
+S3:['Key accounts ranked by gap to target.','Actual ÷ target, by account','Focuses field effort on the biggest gaps.'],
+S4:['Share of category sales in stores that stock us; listings gained or lost.','Category sales of stocking stores ÷ total category sales','Not on shelf = cannot sell; losses need a recovery plan.'],
+S5:['Weeks of our stock held by distributors and retailers.','Channel stock ÷ weekly consumption','Above normal = over-shipping and a future order drop.'],
+S6:['Trade spend vs what was negotiated, per account.','Actual spend ÷ agreed terms','Keeps Sales accountable for profitable revenue.'],
+S7:['Why an account or channel is behind: volume, price, distribution, shelf availability.','—','Points to the fix.'],
+S8:['Flow from shipments to distributor sales to shopper purchases.','Shipments → secondary sales → consumption','Shows where stock is stuck.'],
+S9:['Whether promotions ran as agreed and sold as forecast.','Compliant events ÷ planned; volume vs plan','Volume side of promotions (the CFO owns ROI).'],
+S10:['Returns as % of gross sales, and near-expiry stock in the channel.','Returns ÷ gross sales','Rising returns cut net sales and usually follow over-stocking.'],
+S11:['Whether products are actually on store shelves.','Checks with stock ÷ total checks','Shipped but not on shelf = lost sales that fill rate does not show.'],
+S12:['Gap and headroom by region and zone.','—','Who must deliver more; feeds the CEO catch-up map.'],
+S13:['Distribution by SKU and account.','—','Locates delistings.'],
+S14:['Account performance vs the joint business plan.','—','Detail for account reviews.'],
+S15:['Promotion events by account.','—','Locates execution failures.'],
+S16:['Returns by reason, account and SKU.','—','Locates the source of returns.'],
+S17:['Sales by zone, city and distributor.','—','Geographic depth.'],
+S18:['Shipments, distributor stock reports, store audits.','—','Evidence.'],
+O1:['Whether customers get complete, on-time orders; accounts breaching their contract threshold; sales lost.','OTIF = orders on time and in full ÷ total orders; lost sales = unfilled cases × net price','Breaches mean fines and retailer friction; check the root cause.'],
+O2:['Items that will run out before replenishment arrives.','SKU-locations where days of cover < replenishment lead time','Early warning before service fails.'],
+O3:['Our days of inventory vs target, plus channel cover (context) and near-expiry value.','Our inventory ÷ average daily COGS','Too high = cash and write-off risk; too low = stock-out risk.'],
+O4:['Commodity and packaging inflation vs budget, and savings delivered.','Price paid ÷ budget price − 1; savings vs target','Feeds cost per case and the CFO’s inflation recovery.'],
+O5:['Cost of goods and cost to serve per case vs budget.','COGS ÷ volume; distribution costs ÷ volume','Both directly reduce contribution margin.'],
+O6:['Complaints, quality holds, recalls and open regulatory/legal cases.','Complaints per million units; case count and $ exposure','Rare but high impact; recalls escalate to the CEO.'],
+O7:['Why service failed, plus stock-out frequency and recovery time.','—','Points to the fix: supply, forecast, production or transport.'],
+O8:['Unit-cost change split by driver.','Σ cost effects','Same data as the CFO COGS bridge.'],
+O9:['Cost-to-serve change split by driver.','Warehousing + freight + rush shipments + handling','Shows what is pushing logistics costs up.'],
+O10:['Commodity price trend vs budget, and hedge cover.','—','The biggest driver of cost per case.'],
+O11:['Savings delivered and supplier reliability.','Savings vs target; supplier OTIF','How much cost pressure procurement is offsetting.'],
+O12:['How accurate and how biased the demand forecast is.','1 − WMAPE; (forecast − actual) ÷ actual','Root driver of service, inventory and cost.'],
+O13:['Value of stock destroyed or written down.','Write-offs ÷ net sales','Follows from aged and near-expiry stock.'],
+O14:['Complaint trend, holds and legal/regulatory case detail.','—','Evidence behind quality & compliance cases.'],
+O23:['Stock cover for upcoming promotions.','Available stock ÷ forecast promotion volume (next 4 weeks)','Prevents promotion-driven stock-outs.'],
+O15:['Fill rate and lost sales by SKU × warehouse × account.','—','Locates service failures.'],
+O16:['Inventory by warehouse and SKU; near-expiry list.','—','Locates excess and at-risk stock.'],
+O17:['Cost per case by category and plant.','—','Locates cost overruns.'],
+O18:['Commodity price index and hedge positions.','—','Detail behind commodity inflation.'],
+O19:['Freight cost by route and rush shipments.','—','Locates logistics overruns.'],
+O20:['Complaints and recalls by batch, plant and market.','—','Locates quality issues.'],
+O21:['Service reports, supplier data, incident log.','—','Evidence.']
+};
+
+const HOT=new Set(['Sh1','Sh4','Sh5','Sh6','Sh8','F4','O4','F5','M10','S15','O23','S5','O3','F20','S10','F12','O13','O1','S3']);
+
+/* ============== derived edges ============== */
+const byId=new Map(N.map(n=>[n.id,n]));
+FEEDS.forEach(([child,parent])=>{const c=byId.get(child),p=byId.get(parent);if(!c||!p)return;
+ if(TIERRANK[c.type]>TIERRANK[p.type])edge(parent,child,'explained');else edge(child,parent,'feeds','feeds')});
+// actions: from each lane's T3 nodes (+ T2 with no deeper children) to its action
+LANES.slice(1).forEach(l=>{const a='A-'+l.id;N.filter(n=>n.lane===l.id&&n.type==='T3').forEach(n=>edge(n.id,a,'ends'))});
+E.forEach(e=>{if(!byId.has(e.s)||!byId.has(e.t))console.warn('missing',e)});
+const STRUCT=new Set(['job','monitors','measured','diagnosed','explained','ends','feeds']);
+const CROSS=new Set(['influences','mirrors','escalates']);
+const isCross=e=>CROSS.has(e.k)||(e.k==='measured'&&byId.get(e.s).lane!==byId.get(e.t).lane&&byId.get(e.t).lane!=='SH');
+
+/* ================= STATE ================= */
+const st={layout:'tree',mode:'full',role:'all',sel:null,cross:true,diag:false,deep:true,ins:false};
+
+/* ================= LAYOUT ================= */
+const NW=178,NH=36,COLW=214,ROWH=46,PADT=56,LANEPAD=22;
+function treeLayout(){
+ const vis=n=>st.deep||!['T3','T4','action'].includes(n.type)||n.type==='action';
+ let y=PADT;const laneBox={};
+ LANES.forEach(l=>{
+  const cols=COLS.map(()=>[]);
+  N.filter(n=>n.lane===l.id&&vis(n)).forEach(n=>cols[COLOF[n.type]].push(n));
+  // order by barycentre of parents
+  const order=new Map();
+  cols.forEach((c,ci)=>{
+   if(ci>0)c.forEach(n=>{const ps=E.filter(e=>e.t===n.id&&STRUCT.has(e.k)&&order.has(e.s)).map(e=>order.get(e.s));n._bc=ps.length?ps.reduce((a,b)=>a+b,0)/ps.length:999});
+   if(ci>0)c.sort((a,b)=>a._bc-b._bc);
+   c.forEach((n,i)=>order.set(n.id,i))});
+  const rows=Math.max(1,...cols.map(c=>c.length));
+  const h=rows*ROWH+LANEPAD*2;
+  cols.forEach((c,ci)=>{const off=(rows-c.length)*ROWH/2;c.forEach((n,i)=>{n.tx=20+ci*COLW;n.ty=y+LANEPAD+off+i*ROWH})});
+  laneBox[l.id]={y,h};y+=h+8});
+ N.forEach(n=>{if(!vis(n)){n.tx=null}});
+ return laneBox}
+let laneBox=treeLayout();
+function webLayout(){
+ const ns=N.filter(n=>n.tx!=null).map(n=>({id:n.id,x:n.tx,y:n.ty,n}));
+ const ids=new Set(ns.map(d=>d.id));
+ const ls=E.filter(e=>ids.has(e.s)&&ids.has(e.t)&&(STRUCT.has(e.k)||CROSS.has(e.k))&&e.k!=='diagnosed').map(e=>({source:e.s,target:e.t,k:e.k}));
+ // shared core: connect strip to role nodes
+ N.filter(n=>n.type==='SH').forEach(s=>LANES.slice(1).forEach(l=>ls.push({source:s.id,target:'R-'+l.id,k:'shared'})));
+ const laneIdx=Object.fromEntries(LANES.map((l,i)=>[l.id,i]));
+ const sim=d3.forceSimulation(ns).force('link',d3.forceLink(ls).id(d=>d.id).distance(d=>d.k==='shared'?260:CROSS.has(d.k)?140:90).strength(d=>d.k==='shared'?.02:CROSS.has(d.k)?.08:.5))
+  .force('charge',d3.forceManyBody().strength(-260)).force('collide',d3.forceCollide(62))
+  .force('x',d3.forceX(d=>COLOF[d.n.type]*170).strength(.06)).force('y',d3.forceY(d=>d.n.type==='SH'?-200:laneIdx[d.n.lane]*260).strength(.05)).stop();
+ for(let i=0;i<320;i++)sim.tick();
+ ns.forEach(d=>{d.n.wx=d.x;d.n.wy=d.y})}
+
+/* ================= RENDER ================= */
+const svg=d3.select('#svg'),root=svg.append('g'),gLanes=root.append('g'),gCols=root.append('g'),gLinks=root.append('g'),gNodes=root.append('g'),gIns=root.append('g');
+const zoom=d3.zoom().scaleExtent([.15,2.5]).on('zoom',ev=>root.attr('transform',ev.transform));svg.call(zoom).on('dblclick.zoom',null);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const laneColor=l=>`var(--${l})`;
+const ownerLane=o=>({CEO:'CEO',CFO:'CFO',CMO:'CMO',CSO:'CSO',COO:'COO'})[o]||'SH';
+const pos=n=>st.layout==='tree'?[n.tx,n.ty]:[n.wx,n.wy];
+function nodeColor(n){if(n.type==='action'||n.type==='role'||n.type==='job'||n.type==='problem')return laneColor(n.lane==='SH'?'SH':n.lane);return laneColor(st.mode==='owner'?ownerLane(n.owner):n.lane)}
+function fillFor(n){const c=nodeColor(n);const pctBy={role:100,job:14,problem:0,SH:20,T1:22,T2:11,alert:16,T3:5,T4:0,action:8};return pctBy[n.type]===100?c:`color-mix(in oklab, ${c} ${pctBy[n.type]}%, var(--surface))`}
+function shapePath(n){const w=NW,h=NH;
+ if(n.type==='problem')return `M10 0 H${w-10} L${w} ${h/2} L${w-10} ${h} H10 L0 ${h/2}Z`;
+ const r=n.type==='role'||n.type==='job'||n.type==='action'?10:n.type==='T4'?h/2:4;
+ return `M${r} 0 H${w-r} Q${w} 0 ${w} ${r} V${h-r} Q${w} ${h} ${w-r} ${h} H${r} Q0 ${h} 0 ${h-r} V${r} Q0 0 ${r} 0Z`}
+const trunc=(s,k)=>s.length>k?s.slice(0,k-1)+'…':s;
+function linkPath(e){const s=byId.get(e.s),t=byId.get(e.t);const[sx,sy]=pos(s),[tx,ty]=pos(t);
+ if(st.layout==='web'){const x1=sx+NW/2,y1=sy+NH/2,x2=tx+NW/2,y2=ty+NH/2;const mx=(x1+x2)/2+(y2-y1)*.12,my=(y1+y2)/2-(x2-x1)*.12;return `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`}
+ if(tx>sx+5){const x1=sx+NW,y1=sy+NH/2,x2=tx,y2=ty+NH/2,dx=(x2-x1)*.5;return `M${x1} ${y1} C${x1+dx} ${y1} ${x2-dx} ${y2} ${x2} ${y2}`}
+ if(tx<sx-5){const x1=sx,y1=sy+NH/2,x2=tx+NW,y2=ty+NH/2,dx=Math.max(40,(x1-x2)*.5);return `M${x1} ${y1} C${x1-dx} ${y1} ${x2+dx} ${y2} ${x2} ${y2}`}
+ const x1=sx+NW,y1=sy+NH/2,x2=tx+NW,y2=ty+NH/2,b=40+Math.min(120,Math.abs(y2-y1)*.15);return `M${x1} ${y1} C${x1+b} ${y1} ${x2+b} ${y2} ${x2} ${y2}`}
+function edgeStyle(e){const s=byId.get(e.s);
+ switch(e.k){case'job':case'monitors':return{c:'var(--edge)',w:1,d:null,o:.55};
+  case'measured':return{c:laneColor(s.lane),w:1.5,d:isCross(e)?'5 4':null,o:isCross(e)?.35:.8};
+  case'diagnosed':return{c:laneColor(s.lane),w:1,d:'1 4',o:.6};
+  case'explained':return{c:'var(--edge)',w:1.2,d:null,o:.7};
+  case'feeds':return{c:'var(--edge)',w:1.1,d:'3 3',o:.28};
+  case'ends':return{c:'var(--edge)',w:1,d:'1 3',o:.45};
+  case'influences':return{c:laneColor(s.lane==='SH'?'SH':s.lane),w:1.6,d:'6 4',o:.45};
+  case'mirrors':return{c:laneColor(s.lane),w:2.4,d:'2 3',o:.8};
+  case'escalates':return{c:'var(--esc)',w:2,d:'6 3',o:.9}}}
+function edgeVisible(e){const s=byId.get(e.s),t=byId.get(e.t);if(s.tx==null||t.tx==null)return false;
+ if(e.k==='diagnosed'&&!st.diag)return false;if(CROSS.has(e.k)&&!st.cross)return false;
+ if(st.mode==='collab'&&!CROSS.has(e.k)&&!isCross(e))return false;return true}
+
+let selSet=null;
+function draw(animate){
+ const T=animate?d3.transition().duration(550):null;
+ // lanes
+ const lanes=gLanes.selectAll('g.lane').data(st.layout==='tree'?LANES:[],d=>d.id);
+ lanes.exit().remove();
+ const le=lanes.enter().append('g').attr('class','lane');
+ le.append('rect');le.append('text').attr('class','lane-title');
+ gLanes.selectAll('g.lane').each(function(d,i){const b=laneBox[d.id];const g=d3.select(this);
+  g.select('rect').attr('x',0).attr('y',b.y).attr('width',COLS.length*COLW+20).attr('height',b.h).attr('rx',12).attr('fill',i%2?'var(--lane-b)':'var(--lane-a)').attr('stroke','var(--line)');
+  g.select('text').attr('x',14).attr('y',b.y+15).attr('fill',laneColor(d.id)).text(d.name)});
+ const cols=gCols.selectAll('text').data(st.layout==='tree'?COLS:[]);cols.exit().remove();
+ cols.enter().append('text').attr('class','col-title').merge(cols).attr('x',(d,i)=>20+i*COLW+NW/2).attr('y',30).attr('text-anchor','middle').text(d=>d);
+ // links
+ const ed=E.filter(edgeVisible);
+ const lk=gLinks.selectAll('path').data(ed,e=>e.s+'>'+e.t+e.k);lk.exit().remove();
+ const lkm=lk.enter().append('path').attr('fill','none').merge(lk);
+ lkm.each(function(e){const s=edgeStyle(e);d3.select(this).attr('stroke',s.c).attr('stroke-width',s.w).attr('stroke-dasharray',s.d).attr('data-o',s.o)});
+ (T?lkm.transition(T):lkm).attr('d',linkPath);
+ // nodes
+ const nd=N.filter(n=>n.tx!=null);
+ const ns=gNodes.selectAll('g.node').data(nd,n=>n.id);ns.exit().remove();
+ const ne=ns.enter().append('g').attr('class','node').attr('tabindex',0).attr('role','button').attr('aria-label',n=>n.id+' '+n.label);
+ ne.append('path').attr('class','shape');ne.append('text').attr('class','id');ne.append('text').attr('class','lbl');ne.append('circle').attr('class','ib').attr('r',4.5);
+ const nm=ne.merge(ns);
+ nm.select('.shape').attr('d',shapePath).attr('fill',fillFor).attr('stroke',nodeColor)
+  .attr('stroke-width',n=>n.type==='SH'?3:n.type==='T1'?2.2:n.type==='T2'?1.5:1)
+  .attr('stroke-dasharray',n=>n.type==='T4'?'4 3':n.roadmap?'3 3':null).attr('opacity',n=>n.roadmap?.55:1);
+ nm.select('.id').attr('x',9).attr('y',14).attr('fill',n=>n.type==='role'?'#fff':nodeColor(n)).text(n=>n.type==='role'?'ROLE':n.type==='action'?'ACTION':n.id+(n.roadmap?' · roadmap':'')+(n.type==='alert'?' · alert':''));
+ nm.select('.lbl').attr('x',9).attr('y',28).attr('fill',n=>n.type==='role'?'#fff':'var(--ink)').style('font-weight',n=>n.type==='role'||n.type==='T1'||n.type==='SH'?600:400).text(n=>trunc(n.label,29));
+ nm.select('.ib').attr('cx',NW-8).attr('cy',8).attr('fill','var(--hl)').attr('display',n=>INS[n.id]?null:'none');
+ (T?nm.transition(T):nm).attr('transform',n=>{const[x,y]=pos(n);return `translate(${x},${y})`});
+ nm.on('click',(ev,n)=>{ev.stopPropagation();select(n.id);focusNode(n.id)}).on('keydown',(ev,n)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(n.id);focusNode(n.id)}})
+  .on('mousemove',(ev,n)=>showTip(ev,n)).on('mouseleave',hideTip);
+ // insight bubbles
+ const ins=gIns.selectAll('g').data(st.ins?nd.filter(n=>INS[n.id]):[],n=>n.id);ins.exit().remove();
+ const ie=ins.enter().append('g');ie.append('rect');ie.append('text');
+ ie.merge(ins).each(function(n){const[x,y]=pos(n);const g=d3.select(this);const t=trunc(INS[n.id],46);
+  g.select('text').attr('x',x+8).attr('y',y-8).attr('font-size',10.5).attr('fill','var(--ink)').text(t);
+  const w=t.length*5.5+14;g.select('rect').attr('x',x).attr('y',y-22).attr('width',w).attr('height',19).attr('rx',9).attr('fill','var(--surface)').attr('stroke','var(--hl)')});
+ applyDim()}
+
+/* ================= HIGHLIGHT / FILTER ================= */
+function related(id){
+ const s=new Set([id]);const down=[id],up=[id];
+ const struct=E.filter(e=>STRUCT.has(e.k)&&(e.k!=='diagnosed'||st.diag));
+ while(down.length){const c=down.pop();struct.forEach(e=>{if(e.s===c&&!s.has(e.t)&&e.k!=='feeds'){s.add(e.t);down.push(e.t)}})}
+ const ups=new Set([id]);
+ while(up.length){const c=up.pop();struct.forEach(e=>{if(e.t===c&&!ups.has(e.s)&&e.k!=='feeds'){ups.add(e.s);s.add(e.s);up.push(e.s)}})}
+ E.forEach(e=>{if((CROSS.has(e.k)||e.k==='feeds')&&(e.s===id||e.t===id)){s.add(e.s);s.add(e.t)}});
+ return s}
+function roleSet(r){const s=new Set();N.forEach(n=>{if(n.lane===r||n.lane==='SH')s.add(n.id)});
+ E.forEach(e=>{const a=byId.get(e.s),b=byId.get(e.t);if(a.lane===r||b.lane===r){if(CROSS.has(e.k)||isCross(e)||e.k==='feeds'){s.add(e.s);s.add(e.t)}}});s.add('A-'+r);return s}
+function applyDim(){
+ let keep=null;
+ if(selSet)keep=selSet;else if(st.role!=='all')keep=roleSet(st.role);
+ if(st.mode==='collab'&&!selSet){keep=new Set(HOT);E.filter(e=>CROSS.has(e.k)).forEach(e=>{keep.add(e.s);keep.add(e.t)})}
+ gNodes.selectAll('g.node').classed('dim',n=>keep&&!keep.has(n.id)).select('.shape').attr('stroke-width',n=>(st.mode==='collab'&&HOT.has(n.id))||(selSet&&n.id===st.sel)?3.5:n.type==='SH'?3:n.type==='T1'?2.2:n.type==='T2'?1.5:1)
+  .attr('stroke',n=>selSet&&n.id===st.sel?'var(--hl)':nodeColor(n));
+ gLinks.selectAll('path').attr('opacity',function(e){const o=+this.getAttribute('data-o');if(!keep)return o;return keep.has(e.s)&&keep.has(e.t)?Math.min(1,o+.2):.05});
+ gIns.selectAll('g').classed('dim',n=>keep&&!keep.has(n.id))}
+
+/* ================= PANEL ================= */
+const panel=document.getElementById('panel');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KLBL={job:'job',monitors:'monitors',measured:'measured by',diagnosed:'diagnosed by',explained:'explained by',ends:'ends in',feeds:'feeds',influences:'influences',mirrors:'same data',escalates:'escalates to'};
+function item(id,k){const n=byId.get(id);return `<button data-id="${id}"><span class="id">${esc(n.type==='role'?'ROLE':id)}</span><span>${esc(n.label)}</span><span class="k">${esc(k||'')}</span></button>`}
+function select(id){st.sel=id;selSet=id?related(id):null;applyDim();renderPanel();}
+function renderPanel(){
+ if(!st.sel){panel.innerHTML=`<h2>How to read this map</h2>
+  <p class="hint">Each band is one executive role. Read left to right: <b>role → jobs → problems they monitor → tier-1 outcomes → tier-2 drivers → tier-3 locators → tier-4 evidence → action</b>. The top band is the <b>company pulse strip</b> every role sees.</p>
+  <p class="hint"><b>Click any node</b> to highlight its full path up to the role and down to evidence and action, plus any links to other roles. Click empty space to clear.</p>
+  <div><h3>Node types</h3><div class="legend">${legendRows()}</div></div>
+  <div><h3>Link types</h3><div class="legend">${edgeLegend()}</div></div>
+  <div><h3>Views</h3><p class="hint"><b>Ownership</b> colours metrics by the executive who owns them, not the view they sit in. <b>Collaboration</b> keeps only cross-role links and the hotspots where 2+ roles meet. <b>Web</b> lays the same graph out as a force-directed network.</p></div>`;bindPanel();return}
+ const n=byId.get(st.sel);
+ const out=E.filter(e=>e.s===n.id),inc=E.filter(e=>e.t===n.id);
+ const grp=(arr,f)=>arr.length?arr.map(f).join(''):'<span class="hint">—</span>';
+ const laneName=LANES.find(l=>l.id===n.lane)?.name||n.lane;
+ const ownerTag=n.owner?`<span class="tag role" style="background:${laneColor(ownerLane(n.owner))}">Owner: ${esc(n.owner)}</span>`:'';
+ panel.innerHTML=`<div><h3>${esc(TYPENAME[n.type])}${n.roadmap?' · roadmap':''}</h3><h2>${esc(n.type==='role'?n.label:n.id+' · '+n.label)}</h2></div>
+  <div class="meta"><span class="tag role" style="background:${laneColor(n.lane)}">${esc(n.type==='action'?n.lane:laneName)}</span>${ownerTag}${HOT.has(n.id)?'<span class="tag">Collaboration hotspot</span>':''}</div>
+  ${(()=>{const x=info(n);return (x.m?`<div><h3>What it is</h3><p class="hint" style="margin:0">${esc(x.m)}</p></div>`:'')+(x.f?`<div><h3>Formula</h3><p class="hint" style="margin:0;font-family:var(--mono);font-size:11.5px">${esc(x.f)}</p></div>`:'')+(x.i?`<div><h3>So what</h3><p class="hint" style="margin:0">${esc(x.i)}</p></div>`:'')+(x.see.length?`<div><h3>Also consider</h3><div class="list">${x.see.map(id=>item(id,'')).join('')}</div></div>`:'')})()}${n.def?`<div><h3>Data</h3><p class="hint" style="margin:0">${esc(n.def)}</p></div>`:''}
+  ${INS[n.id]?`<div><h3>Insight (synthetic example)</h3><div class="insight">${esc(INS[n.id])}</div></div>`:''}
+  <div><h3>Comes from (upstream)</h3><div class="list">${grp(inc,e=>item(e.s,KLBL[e.k]+(e.label&&CROSS.has(e.k)?': '+e.label:'')))}</div></div>
+  <div><h3>Leads to (downstream)</h3><div class="list">${grp(out,e=>item(e.t,KLBL[e.k]+(e.label&&CROSS.has(e.k)?': '+e.label:'')))}</div></div>
+  <button class="tag" id="clr" style="align-self:flex-start;cursor:pointer;background:var(--surface)">Clear selection</button>`;
+ bindPanel()}
+function bindPanel(){panel.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{select(b.dataset.id);focusNode(b.dataset.id)});const c=document.getElementById('clr');if(c)c.onclick=()=>select(null)}
+function legendRows(){const sw=(t,extra='')=>`<svg width="40" height="18" aria-hidden="true"><rect x="1" y="2" width="38" height="14" rx="${t==='role'?6:t==='T4'?7:3}" fill="${t==='role'?'var(--CEO)':`color-mix(in oklab, var(--CEO) ${t==='T1'?22:t==='T2'?11:t==='T3'?5:0}%, var(--surface))`}" stroke="${t==='SH'?'var(--SH)':'var(--CEO)'}" stroke-width="${t==='SH'?3:t==='T1'?2.2:1.2}" ${t==='T4'?'stroke-dasharray="4 3"':''}/></svg>`;
+ return [['role','Role'],['job','Job'],['problem','Problem (hexagon)'],['SH','Shared strip metric'],['T1','Tier 1 · first screen'],['T2','Tier 2 · one click'],['T3','Tier 3 · drill-down'],['T4','Tier 4 · evidence']].map(([t,l])=>t==='problem'?`<svg width="40" height="18" aria-hidden="true"><path d="M5 2H35L39 9L35 16H5L1 9Z" fill="none" stroke="var(--CEO)"/></svg><span>${l}</span>`:`${sw(t)}<span>${l}</span>`).join('')+'<svg width="40" height="18" aria-hidden="true"><circle cx="20" cy="9" r="4.5" fill="var(--hl)"/></svg><span>Has a sample insight</span>'}
+function edgeLegend(){const ln=(c,d,w)=>`<svg width="40" height="12" aria-hidden="true"><path d="M2 6H38" stroke="${c}" stroke-width="${w}" ${d?`stroke-dasharray="${d}"`:''}/></svg>`;
+ return [ln('var(--edge)',null,1.2)+'<span>Explained by (drill path)</span>',ln('var(--CEO)',null,1.5)+'<span>Problem measured by</span>',ln('var(--CEO)','1 4',1)+'<span>Problem diagnosed by (toggle)</span>',ln('var(--edge)','3 3',1.2)+'<span>Feeds a shared / higher metric</span>',ln('var(--CFO)','6 4',1.6)+'<span>Influences (cross-role)</span>',ln('var(--CFO)','2 3',2.4)+'<span>Same data in two roles</span>',ln('var(--esc)','6 3',2)+'<span>Escalates to CEO</span>',ln('var(--edge)','1 3',1)+'<span>Ends in action</span>'].join('')}
+
+/* ================= TOOLTIP ================= */
+const tip=document.getElementById('tip');
+function lbl(id){const n=byId.get(id);return n.type==='role'?n.label:n.id}
+function info(n){
+ const out=E.filter(e=>e.s===n.id),inc=E.filter(e=>e.t===n.id);
+ const isM=['SH','T1','T2','T3','T4','alert'].includes(n.type);
+ let m,f,i;
+ if(D[n.id])[m,f,i]=D[n.id];
+ else if(n.type==='role'){m=n.alt;i='Tier-1 view: '+N.filter(x=>x.lane===n.lane&&x.type==='T1').map(x=>x.label).join('; ')+'. Also sees the shared pulse strip.'}
+ else if(n.type==='job'){const ps=out.filter(e=>e.k==='monitors').map(e=>byId.get(e.t).label);m=`A core job of the ${LANES.find(l=>l.id===n.lane).name.split(' ·')[0]}${n.roadmap?' (roadmap — not in the prototype)':''}.`;i=ps.length?'Problems watched under this job: '+ps.join('; ')+'.':'Out of scope for now.'}
+ else if(n.type==='problem'){const me=out.filter(e=>e.k==='measured').map(e=>lbl(e.t)),dg=out.filter(e=>e.k==='diagnosed').map(e=>lbl(e.t));const rn=LANES.find(l=>l.id===n.lane).name.split(' ·')[0];m=`An issue the ${rn} watches for. When "${n.label.toLowerCase()}" happens, this is the path they follow.`;i=`Spot it in ${me.map(x=>x+' '+byId.get(x).label).join('; ')}. Diagnose with ${dg.join(', ')}.`}
+ else if(n.type==='action'){m='What this executive can do once the cause is found.';i=n.label}
+ const see=[];const add=id=>{if(id!==n.id&&!see.includes(id)&&isMetric(byId.get(id)))see.push(id)};
+ if(isM){out.filter(e=>e.k==='explained').forEach(e=>add(e.t));E.filter(e=>(CROSS.has(e.k))&&(e.s===n.id||e.t===n.id)).forEach(e=>add(e.s===n.id?e.t:e.s));inc.filter(e=>e.k==='explained').forEach(e=>add(e.s));out.filter(e=>e.k==='feeds').forEach(e=>add(e.t))}
+ else if(n.type==='problem'){out.forEach(e=>add(e.t))}
+ return{m,f:f&&f!=='—'?f:null,i,see:see.slice(0,6)}}
+function isMetric(n){return n&&['SH','T1','T2','T3','T4','alert'].includes(n.type)}
+function showTip(ev,n){const x=info(n);
+ tip.innerHTML=`<b>${esc(n.type==='role'?n.label:n.id+' · '+n.label)}</b><span class="tt-k">${esc(TYPENAME[n.type])}${n.owner&&n.owner!=='—'?' · owner '+esc(n.owner):''}</span>`+
+  (x.m?`<div class="tt-r"><span>What it is</span>${esc(x.m)}</div>`:'')+(x.f?`<div class="tt-r"><span>Formula</span><code>${esc(x.f)}</code></div>`:'')+
+  (x.i?`<div class="tt-r"><span>So what</span>${esc(x.i)}</div>`:'')+(x.see.length?`<div class="tt-r"><span>Also consider</span>${x.see.map(id=>esc(lbl(id)+' '+byId.get(id).label)).join('<br>')}</div>`:'')+
+  (INS[n.id]?`<div class="tt-r"><span>Example insight</span><i>${esc(INS[n.id])}</i></div>`:'');
+ tip.hidden=false;
+ const r=tip.getBoundingClientRect();let px=ev.clientX+16,py=ev.clientY+16;if(px+r.width>innerWidth-8)px=ev.clientX-r.width-16;if(py+r.height>innerHeight-8)py=Math.max(8,innerHeight-r.height-8);tip.style.left=px+'px';tip.style.top=py+'px'}
+function hideTip(){tip.hidden=true}
+
+/* ================= CONTROLS ================= */
+function seg(id,key,after){const el=document.getElementById(id);el.onclick=e=>{const b=e.target.closest('button');if(!b)return;st[key]=b.dataset.v;el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));after()}}
+seg('v-layout','layout',()=>{if(st.layout==='web'&&N[0].wx==null)webLayout();draw(true);setTimeout(fit,600)});
+seg('v-mode','mode',()=>{draw(false)});
+document.getElementById('v-role').onchange=e=>{st.role=e.target.value;select(null);applyDim();if(st.role!=='all')focusLane(st.role);else fit()};
+const chk=(id,key,re)=>document.getElementById(id).onchange=e=>{st[key]=e.target.checked;if(re){laneBox=treeLayout();N.forEach(n=>n.wx=null);if(st.layout==='web')webLayout()}if(st.sel)selSet=related(st.sel);draw(!!re)};
+chk('c-cross','cross');chk('c-diag','diag');chk('c-deep','deep',true);chk('c-ins','ins');
+document.getElementById('v-ids').innerHTML=N.map(n=>`<option value="${n.type==='role'?n.label:n.id}">${esc(n.label)}</option>`).join('');
+document.getElementById('v-search').onchange=e=>{const q=e.target.value.trim().toLowerCase();const n=N.find(n=>n.id.toLowerCase()===q)||N.find(n=>n.label.toLowerCase().includes(q));if(n){if(n.tx==null){document.getElementById('c-deep').checked=true;st.deep=true;laneBox=treeLayout();draw(false)}select(n.id);focusNode(n.id)}};
+svg.on('click',()=>select(null));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')select(null)});
+document.getElementById('z-in').onclick=()=>svg.transition().call(zoom.scaleBy,1.3);
+document.getElementById('z-out').onclick=()=>svg.transition().call(zoom.scaleBy,1/1.3);
+document.getElementById('z-fit').onclick=fit;
+function bounds(ids){const ns=N.filter(n=>n.tx!=null&&(!ids||ids.has(n.id)));const xs=ns.map(n=>pos(n)[0]),ys=ns.map(n=>pos(n)[1]);return[Math.min(...xs)-20,Math.min(...ys)-40,Math.max(...xs)+NW+20,Math.max(...ys)+NH+20]}
+function fitTo(b){const el=document.getElementById('stage');const W=el.clientWidth,H=el.clientHeight;const k=Math.min(2,Math.max(.15,Math.min(W/(b[2]-b[0]),H/(b[3]-b[1]))));
+ svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(W/2-k*(b[0]+b[2])/2,H/2-k*(b[1]+b[3])/2).scale(k))}
+function fit(){fitTo(bounds(null))}
+function focusLane(r){fitTo(bounds(new Set(N.filter(n=>n.lane===r||(n.lane==='SH')).map(n=>n.id))))}
+function focusNode(id){const n=byId.get(id);if(!n||n.tx==null)return;const s=selSet||new Set([id]);fitTo(bounds(s))}
+
+draw(false);renderPanel();requestAnimationFrame(fit);
+addEventListener('resize',()=>{});
+})();
+</script>
