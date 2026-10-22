@@ -1,5 +1,8 @@
 ---
 import Layout from '../../layouts/BlogPost.astro';
+import BuildStory from '../../components/BuildStory.astro';
+import DemoReel from '../../components/DemoReel.astro';
+import Decisions from '../../components/Decisions.astro';
 ---
 
 <Layout
@@ -47,4 +50,39 @@ import Layout from '../../layouts/BlogPost.astro';
 	</ul>
 
 	<p>Based on these we <a href="/experiments/executive-pulse/" target="_blank" rel="noopener">designed a dashboard</a> for these CXO users. The company in it, Northstar Consumer Goods, is fictional and all data is synthetic.</p>
+
+	<hr />
+	<h2>How I built it</h2>
+	<p>Pulse went through three versions before this one. Scroll to see how the thinking changed, with the pyramid and the dashboard side by side.</p>
+	<BuildStory />
+
+	<h3>Watch it work</h3>
+	<p>The live dashboard, running one CEO morning on its own. Hover to pause, or pick a step.</p>
+	<DemoReel />
+
+	<h2>Four decisions that shaped Pulse</h2>
+	<p>Each one is shown before and after. The numbers on the right match the notes underneath.</p>
+	<Decisions />
+
+	<h2>What I learned</h2>
+	<ol class="learn">
+		<li><strong>Understand your users to the depth of how they will use it.</strong> They are the ones who have to like what you build, so it should feel custom built for them. That only comes from spending the time to understand them.</li>
+		<li><strong>Structure before detail.</strong> A product manager is expected to go down to the smallest detail, and without a solid structure it gets overwhelming fast. Structure well, prioritise hard and decide how deep you want to go.</li>
+		<li><strong>Good design is not optional.</strong> Model what your users expect, and remember that less is more. Most people can tell bad design from good but can’t say what is wrong. Seeing that is the product manager’s job.</li>
+		<li><strong>Building skills with AI compounds.</strong> Writing reusable skills was not an incremental gain, it was exponential: every skill made the next round faster and better.</li>
+	</ol>
+
+	<h2>The skills I built</h2>
+	<p>Both skills are available on my GitHub.</p>
+	<ul>
+		<li><strong><a href="https://github.com/cerisecloud/cpg-exec-dashboard-critic" target="_blank" rel="noopener">CPG executive critic</a>.</strong> It thinks like a CPG CEO, CFO, CMO, Chief Sales Officer or COO: their priorities, rhythms and decisions. It reviews any dashboard element by element, through that executive’s eyes.</li>
+		<li><strong><a href="https://github.com/cerisecloud/design-studio-skills" target="_blank" rel="noopener">Design studio</a>.</strong> A design process for any page or app: explore varied directions, have an independent critic judge screenshots only, then subtract and polish. Adapted from Anshu Chimala’s <a href="https://www.lennysnewsletter.com/p/how-to-turn-your-ai-into-a-world" target="_blank" rel="noopener">How to turn your AI into a world-class designer</a> on Lenny’s Newsletter.</li>
+	</ul>
+
+	<p class="foot-note">Early versions were called Kestrel; the name changed to Pulse in version 2. Northstar Consumer Goods, its brands and all figures are fictional.</p>
 </Layout>
+
+<style>
+	.learn li { margin-bottom: 0.6em; }
+	.foot-note { font-size: 0.8em; color: rgb(var(--gray)); margin-top: 2em; }
+</style>

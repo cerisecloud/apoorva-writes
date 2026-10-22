@@ -1,0 +1,266 @@
+---
+// "How I built it": a scroll story. The picture stays put while the steps scroll past.
+// Each step shows one or two slots stacked; a slot plays one or more frames like a GIF.
+// A frame is an image, the part of it to show (v: [x, y, w, h] as fractions, so the frame
+// takes the shape of what it shows and never has empty space), and boxes to highlight.
+const D = '/experiments/executive-pulse/history/img/s';
+const H = '/experiments/executive-pulse/history';
+const P = '/experiments/executive-pulse';
+const img = (id: string, w: number, h: number, alt: string) => ({ id, src: `${D}/${id}.webp`, w, h, alt });
+const I = {
+	nodeA: img('node-a', 2400, 2383, 'The first node diagram: roles, jobs, problems and metrics in four tiers'),
+	nodeB: img('node-b', 2400, 2383, 'The node diagram with inflation recovery selected: only its flow stays lit'),
+	v1: img('v1', 1424, 1792, 'Version 1 of the dashboard'),
+	research: img('research', 1600, 1342, 'The metric research'),
+	v2: img('v2', 1360, 900, 'Version 2 of the dashboard'),
+	review: img('review', 1220, 660, 'The value-tree review by the CPG executive skill'),
+	glance: img('pyr-glance', 1800, 789, 'The metric pyramid for the CEO'),
+	chain: img('pyr-chain', 1800, 241, 'The pyramid chain for operating margin'),
+	v3: img('v3', 1400, 900, 'Version 3 of the dashboard'),
+	om1: img('om-1', 1800, 1164, 'The final Pulse home page for the CEO'),
+	om2: img('om-2', 1800, 1164, 'Operating margin opened in place'),
+	om3: img('om-3', 1800, 1164, 'Operating margin cut to Sunrise Oats'),
+	om4: img('om-4', 1800, 1164, 'The overdue Sunrise Oats action'),
+	om5: img('om-5', 1800, 1164, 'A follow-up email drafted from the action'),
+	or1: img('or-1', 1800, 1164, 'The CEO home page with the Orchard Juice issue'),
+	or2: img('or-2', 1800, 1164, 'Organic sales growth for Orchard Juice in Indonesia'),
+	or3: img('or-3', 1800, 1164, 'Organic volume growth and its levers'),
+	or4: img('or-4', 1800, 1164, 'Sales lost to supply, with the action to assign'),
+	or5: img('or-5', 1800, 1164, 'Assigning the action to the Indonesia Supply Lead'),
+	or6: img('or-6', 1800, 1164, 'The email drafted with the analysis attached'),
+};
+type F = { i: keyof typeof I; v?: number[]; hl?: number[][] };
+const FULL = [0, 0, 1, 1];
+const steps: { ch?: string; text: string; quote?: string; credit?: boolean; link?: string[]; slots: F[][] }[] = [
+	{ ch: 'Start with the people', slots: [[{ i: 'nodeA', v: [0, 0.245, 0.46, 0.28] }]],
+	  text: 'I started with the people, not the charts: five executives, the jobs they do, the problems they watch, and the metrics behind each problem, four tiers deep, ending in an action.',
+	  link: [`${H}/node-diagram-v1.html`, 'Explore the first node diagram'] },
+	{ slots: [[{ i: 'nodeA', v: [0.08, 0.265, 0.3, 0.17], hl: [[0.104, 0.291, 0.079, 0.119], [0.199, 0.281, 0.079, 0.14]] }]],
+	  text: 'Each role became a profile: what they are paid on, what they worry about and what they can change. The CEO alone had six jobs and seven problems to watch.' },
+	{ slots: [[{ i: 'nodeA', v: [0, 0.275, 0.62, 0.15] }, { i: 'nodeB', v: [0, 0.275, 0.62, 0.15], hl: [[0.009, 0.306, 0.651, 0.078]] }]],
+	  text: 'The threads mattered most. Click any metric and only its flow lights up: the role and problem above it, the action below it, and every other role it touches.' },
+	{ slots: [[{ i: 'nodeB', v: [0.27, 0.3, 0.46, 0.1], hl: [[0.295, 0.336, 0.079, 0.016], [0.676, 0.367, 0.079, 0.016]] }]],
+	  text: 'Take inflation recovery, behind the oats story. It sits under the CFO’s costs job, answers “COGS overrun” and ends in an action: re-forecast and cap trade spend.' },
+	{ slots: [[{ i: 'nodeB', v: [0.765, 0.01, 0.235, 0.36], hl: [[0.776, 0.048, 0.205, 0.02]] }]],
+	  text: 'The panel names the owner, the CFO, lists procurement’s input cost as what feeds it, and flags a collaboration hotspot: two executives have to act together. That is where shared ownership lives.' },
+	{ ch: 'Version 1, and why I scrapped it', slots: [[{ i: 'v1', v: [0, 0, 1, 0.33], hl: [[0.006, 0.094, 0.55, 0.018]] }]],
+	  text: 'Version 1 followed the brief: are we on track, where is the gap, what is driving it. The structure was right, and a core metric reached its cause in three steps.',
+	  link: [`${H}/dashboard-v1.html`, 'Open version 1'] },
+	{ slots: [[{ i: 'v1', v: [0, 0.32, 1, 0.6] }]],
+	  text: 'But it was a sea of charts. Too many metrics, no T-shape for an executive with 5, 15 or 50 minutes, and no clear owner where two roles share a number.',
+	  quote: 'The executive’s job is not to be lost in a sea of metrics.',
+	  link: [`${H}/v1-feedback.pdf`, 'Read my V1 feedback (PDF)'] },
+	{ ch: 'Version 2: fewer, better metrics', slots: [[{ i: 'research', v: [0, 0.1, 0.68, 0.36], hl: [[0.014, 0.121, 0.317, 0.15]] }]],
+	  text: 'So I cut. Four core metrics per role, checked against what CPG companies report to shareholders and pay their executives on, not what I remembered.',
+	  link: [`${H}/metric-research.html`, 'See the metric research'] },
+	{ slots: [[{ i: 'v2', v: [0, 0.52, 1, 0.33], hl: [[0.018, 0.548, 0.964, 0.285]] }]],
+	  text: 'Version 2 put them on one calm page: a short summary, four core metrics and my actions. Five minutes to know where you stand.' },
+	{ ch: 'Version 3: let the executive review it', slots: [[{ i: 'review', v: [0, 0.5, 1, 0.5], hl: [[0.568, 0.615, 0.42, 0.36]] }]],
+	  text: 'Then I stopped guessing what a CFO would think. I wrote a skill that thinks like a CPG CEO, CFO, CMO, Chief Sales Officer and COO, and asked it to review. Its verdict: the home page worked, the trees underneath did not.',
+	  link: [`${H}/value-tree-review.html`, 'Read the review'] },
+	{ slots: [[{ i: 'glance', v: [0.485, 0.125, 0.245, 0.79] }, { i: 'om1', v: [0.35, 0.46, 0.33, 0.36] }]],
+	  text: 'Version 3 rebuilt every tree on three rules: each level adds up to the one above, every lever has one owner, and “where” is a cut of the data, not another metric. The top of each tree is a card on the home page.',
+	  link: [`${P}/metric-pyramid.html`, 'Open the metric pyramid'] },
+	{ ch: 'Design: less, but better', slots: [[{ i: 'v2', v: [0, 0, 1, 0.92] }, { i: 'v3', v: FULL }, { i: 'om1', v: FULL }]],
+	  text: 'Design ran as its own loop: explore directions, have an independent critic judge screenshots only, then subtract. Each round removed something, like the same fact shown three times or red doing six jobs.',
+	  credit: true },
+	{ ch: 'The final version, used', slots: [[{ i: 'om1', v: [0, 0.06, 0.35, 0.64], hl: [[0.021, 0.354, 0.312, 0.11]] }]],
+	  text: 'A CEO opens Pulse. The summary leads with what needs attention: Sunrise Oats is $26.1M below plan on margin, and Orchard Juice in Indonesia can’t be supplied.' },
+	{ slots: [[{ i: 'chain', v: FULL }], [{ i: 'om1', v: [0.35, 0.46, 0.33, 0.36] }, { i: 'om2', v: [0, 0.66, 1, 0.16], hl: [[0.04, 0.696, 0.92, 0.081]] }]],
+	  text: 'Operating margin looks only 16 bps off. Open it, and the walk shows why that misleads: gross margin lost 108 bps, hidden by an overhead freeze. It is the same chain as in the pyramid.' },
+	{ slots: [[{ i: 'om3', v: [0, 0.19, 1, 0.42], hl: [[0.027, 0.209, 0.665, 0.064]] }, { i: 'om4', v: [0, 0.43, 1, 0.12], hl: [[0.04, 0.458, 0.92, 0.064]] }, { i: 'om5', v: [0.26, 0.18, 0.48, 0.64], hl: [[0.284, 0.282, 0.431, 0.072]] }]],
+	  text: 'Cut to Sunrise Oats and it is 318 bps behind: oat costs are up 18% and the price increase is stuck at retailers. The fix is already assigned and three days overdue, so the email opens as a follow-up.' },
+	{ slots: [[{ i: 'glance', v: [0, 0.125, 0.25, 0.53], hl: [[0.01, 0.445, 0.1, 0.035]] }], [{ i: 'or1', v: [0, 0.44, 0.35, 0.16], hl: [[0.021, 0.464, 0.312, 0.11]] }, { i: 'or2', v: [0, 0.8, 1, 0.13], hl: [[0.04, 0.823, 0.92, 0.084]] }, { i: 'or3', v: [0, 0.67, 1, 0.11], hl: [[0.04, 0.693, 0.92, 0.065]] }, { i: 'or4', v: [0, 0.6, 1, 0.12], hl: [[0.04, 0.633, 0.92, 0.064]] }]],
+	  text: 'Orchard Juice is the opposite problem. Shoppers want it, but late inbound shipments leave fill rate near 82%. Down the same branch of the pyramid: sales growth, then volume, then sales lost to supply.' },
+	{ slots: [[{ i: 'or5', v: [0.26, 0.29, 0.48, 0.42] }, { i: 'or6', v: [0.26, 0.18, 0.48, 0.64] }]],
+	  text: 'One click asks the Indonesia Supply Lead to rush the shipments, and drafts the email with the numbers behind it. Every action then lands in My actions with an owner and a due date.',
+	  link: [`${P}/#CEO`, 'Try it as the CEO'] },
+];
+const data = JSON.stringify({ I, steps: steps.map((s) => s.slots) });
+---
+
+<section class="story" aria-label="How I built it">
+	<div class="stage" aria-hidden="true"></div>
+	<ol class="steps">
+		{steps.map((s, i) => (
+			<li class="step" data-i={i}>
+				{s.ch && <p class="ch">{s.ch}</p>}
+				<p>{s.text}</p>
+				{s.quote && <blockquote>“{s.quote}”</blockquote>}
+				{s.credit && <p class="credit">Adapted from Anshu Chimala’s <a href="https://www.lennysnewsletter.com/p/how-to-turn-your-ai-into-a-world" target="_blank" rel="noopener">How to turn your AI into a world-class designer</a> on Lenny’s Newsletter.</p>}
+				{s.link && <p class="go"><a href={s.link[0]} target="_blank" rel="noopener">{s.link[1]}</a></p>}
+			</li>
+		))}
+	</ol>
+	<script type="application/json" id="story-data" set:html={data} />
+</section>
+
+<style>
+	.story {
+		--w: min(1240px, calc(100vw - 2rem));
+		--ease: cubic-bezier(0.22, 0.8, 0.2, 1);
+		--cam: 0.95s;
+		--fade: 0.45s;
+		--hlc: #2f5be8;
+		width: var(--w);
+		margin: 1.5em 0 0 calc((100% - var(--w)) / 2);
+		display: grid;
+		grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+		gap: 0 4.5rem;
+		align-items: start;
+	}
+	.stage {
+		position: sticky;
+		top: 9vh;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+		transition: top var(--cam) var(--ease);
+	}
+	.stage :global(.slot) {
+		position: relative;
+		overflow: hidden;
+		border-radius: 8px;
+		background: #fff;
+		border: 1px solid #2e2e33;
+		transition: width var(--cam) var(--ease), height var(--cam) var(--ease);
+	}
+	.stage :global(.cv) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform-origin: 0 0;
+		opacity: 0;
+		transition: transform var(--cam) var(--ease), opacity var(--fade) ease;
+	}
+	.stage :global(.cv.on) { opacity: 1; }
+	.stage :global(.cv.snap) { transition: opacity var(--fade) ease; }
+	.stage :global(.cv img) { display: block; width: 100%; height: 100%; max-width: none; border-radius: 0; }
+	/* highlight: a rounded box drawn around what the step talks about */
+	.stage :global(.hl) {
+		position: absolute;
+		border: calc(2px / var(--s)) solid var(--hlc);
+		border-radius: calc(6px / var(--s));
+		box-shadow: 0 0 0 calc(3px / var(--s)) rgba(47, 91, 232, 0.16);
+		opacity: 0;
+		transform: scale(1.06);
+		transition: opacity 0.4s ease, transform 0.6s var(--ease);
+		pointer-events: none;
+	}
+	.stage :global(.hl.in) { opacity: 1; transform: none; }
+	.steps {
+		list-style: none;
+		margin: 0;
+		padding: 22vh 0 34vh;
+	}
+	.step {
+		position: relative;
+		min-height: 58vh;
+		font-size: 0.95em;
+		line-height: 1.6;
+		color: rgb(var(--gray));
+		transition: color 0.4s ease;
+	}
+	.step.on { color: rgb(var(--gray-dark)); }
+	.step p { margin: 0 0 0.8em; }
+	.ch {
+		font-size: 0.7em;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.step blockquote { font-size: 1em; margin: 0 0 0.8em; }
+	.credit { font-size: 0.85em; }
+	.go { font-size: 0.85em; }
+	.go a { color: rgb(var(--gray-dark)); text-decoration-color: rgba(255, 255, 255, 0.35); }
+	.go a:hover { color: var(--accent-hover); }
+	@media (max-width: 860px) {
+		.story { display: block; }
+		.stage { top: 0 !important; z-index: 2; padding: 0.8rem 0 1.2rem; background: linear-gradient(var(--bg) 88%, transparent); }
+		.steps { padding: 40vh 0 30vh; }
+		.step { min-height: 70vh; color: rgb(var(--gray-dark)); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.stage :global(.slot), .stage :global(.cv), .stage :global(.hl), .step { transition: none; }
+	}
+</style>
+
+<script>
+	type Img = { id: string; src: string; w: number; h: number; alt: string };
+	type Fr = { i: string; v?: number[]; hl?: number[][] };
+	type Slot = { el: HTMLElement; cvs: Map<string, HTMLElement>; cur: string; k: number; seq: Fr[] };
+	const story = document.querySelector<HTMLElement>('.story');
+	if (story) {
+		const { I, steps } = JSON.parse(story.querySelector('#story-data')!.textContent!) as { I: Record<string, Img>; steps: Fr[][][] };
+		const stage = story.querySelector<HTMLElement>('.stage')!;
+		const items = [...story.querySelectorAll<HTMLElement>('.step')];
+		const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const wide = () => matchMedia('(min-width: 861px)').matches;
+		const GAP = 12, SEQ = 1900;
+		// two slots are enough: a step shows one picture, or a tree above the screen it became
+		const slots: Slot[] = [0, 1].map(() => { const el = document.createElement('div'); el.className = 'slot'; el.style.display = 'none'; stage.append(el); return { el, cvs: new Map(), cur: '', k: 0, seq: [] }; });
+		const view = (f: Fr) => f.v || [0, 0, 1, 1];
+		const aspect = (f: Fr) => { const im = I[f.i], v = view(f); return (v[3] * im.h) / (v[2] * im.w); };
+		const cvFor = (s: Slot, id: string) => {
+			let cv = s.cvs.get(id);
+			if (!cv) {
+				const im = I[id];
+				cv = document.createElement('div'); cv.className = 'cv snap';
+				cv.style.width = `${im.w}px`; cv.style.height = `${im.h}px`;
+				const el = document.createElement('img'); el.src = im.src; el.alt = im.alt; el.decoding = 'async';
+				cv.append(el); s.el.append(cv); s.cvs.set(id, cv);
+			}
+			return cv;
+		};
+		// size every slot so the stack fits, then point each slot's camera at its view
+		const layout = () => {
+			const live = slots.filter((s) => s.seq.length);
+			const Wc = stage.clientWidth, Hmax = wide() ? Math.min(innerHeight * 0.8, 820) : innerHeight * 0.42;
+			const hs = live.map((s) => Wc * aspect(s.seq[s.k]));
+			const f = Math.min(1, (Hmax - GAP * (live.length - 1)) / hs.reduce((a, b) => a + b, 0));
+			// keep the picture centred on the reading line, where the active step sits
+			if (wide()) stage.style.top = `${Math.max(24, (innerHeight - (hs.reduce((a, b) => a + b, 0) * f + GAP * (live.length - 1))) / 2)}px`;
+			live.forEach((s, n) => {
+				const fr = s.seq[s.k], im = I[fr.i], [vx, vy, vw] = view(fr);
+				const W = Wc * f, sc = W / (vw * im.w);
+				s.el.style.width = `${W}px`; s.el.style.height = `${hs[n] * f}px`;
+				const cv = cvFor(s, fr.i);
+				cv.style.setProperty('--s', String(sc));
+				cv.style.transform = `translate(${-vx * im.w * sc}px, ${-vy * im.h * sc}px) scale(${sc})`;
+			});
+		};
+		const showFrame = (s: Slot, k: number, first: boolean) => {
+			const prev = s.cur; s.k = k; const fr = s.seq[k]; s.cur = fr.i;
+			const cv = cvFor(s, fr.i);
+			if (prev !== fr.i) { cv.classList.add('snap'); s.cvs.forEach((c, id) => c.classList.toggle('on', id === fr.i)); }
+			s.el.querySelectorAll('.hl').forEach((h) => h.remove());
+			layout();
+			requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.remove('snap')));
+			// highlights draw in once the camera has settled
+			(fr.hl || []).forEach((r, j) => {
+				const b = document.createElement('i'), p = 0.006; b.className = 'hl';
+				Object.assign(b.style, { left: `${(r[0] - p) * 100}%`, top: `${(r[1] - p * 1.4) * 100}%`, width: `${(r[2] + 2 * p) * 100}%`, height: `${(r[3] + 2.8 * p) * 100}%` });
+				cv.append(b); setTimeout(() => b.classList.add('in'), (first ? 560 : 280) + j * 140);
+			});
+		};
+		let cur = -1, timer = 0;
+		const show = (i: number) => {
+			if (i === cur) return; cur = i; clearInterval(timer);
+			items.forEach((s, k) => s.classList.toggle('on', k === i));
+			slots.forEach((s, n) => {
+				s.seq = steps[i][n] || []; s.el.style.display = s.seq.length ? '' : 'none';
+				if (s.seq.length) showFrame(s, 0, true);
+			});
+			// sequences play like a GIF while their step is on screen
+			if (!still && slots.some((s) => s.seq.length > 1)) timer = window.setInterval(() => slots.forEach((s) => { if (s.seq.length > 1) showFrame(s, (s.k + 1) % s.seq.length, false); }), SEQ);
+			// fetch the next step's pictures ahead of time
+			(steps[i + 1] || []).flat().forEach((f) => { const im = new Image(); im.src = I[f.i].src; });
+		};
+		const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) show(+(e.target as HTMLElement).dataset.i!); }), { rootMargin: wide() ? '-45% 0px -45% 0px' : '-62% 0px -30% 0px' });
+		items.forEach((s) => io.observe(s));
+		show(0);
+		addEventListener('resize', () => layout());
+	}
+</script>

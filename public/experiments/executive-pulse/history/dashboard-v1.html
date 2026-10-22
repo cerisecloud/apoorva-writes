@@ -1,0 +1,1135 @@
+<meta charset="utf-8">
+<title>Kestrel Executive Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f6f8fa; --ink:#121821; --ink-2:#4a5566; --muted:#7a8494;
+  --line:#dde2e8; --line-2:#c9d0d8; --accent:#24308f; --on-accent:#ffffff; --accent-soft:#e6e9fb;
+  --pos:#2a78d6; --neg:#e34948; --mid:#f0efec; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --good:#0ca30c; --good-t:#0a7a0a; --warn:#fab219; --warn-t:#8a5a00; --crit:#d03b3b; --crit-t:#b52d2d;
+  --grid:#e6e9ed; --axis:#c3c9d1; --tgt:#5b6474; --ly:#a3abb7;
+  --shadow:0 10px 40px rgba(18,24,33,.18);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e1116; --surface:#161a21; --surface-2:#1c2129; --ink:#eef1f5; --ink-2:#b3bbc7; --muted:#808a98;
+    --line:#29303a; --line-2:#3a424e; --accent:#9aa5ff; --on-accent:#0e1116; --accent-soft:#232a4a;
+    --pos:#3987e5; --neg:#e66767; --mid:#2f3238; --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --good-t:#3cc43c; --warn-t:#fab219; --crit-t:#ef6b6b;
+    --grid:#232931; --axis:#3a424e; --tgt:#aab3c0; --ly:#5f6876; --shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e1116; --surface:#161a21; --surface-2:#1c2129; --ink:#eef1f5; --ink-2:#b3bbc7; --muted:#808a98;
+  --line:#29303a; --line-2:#3a424e; --accent:#9aa5ff; --on-accent:#0e1116; --accent-soft:#232a4a;
+  --pos:#3987e5; --neg:#e66767; --mid:#2f3238; --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --good-t:#3cc43c; --warn-t:#fab219; --crit-t:#ef6b6b;
+  --grid:#232931; --axis:#3a424e; --tgt:#aab3c0; --ly:#5f6876; --shadow:0 10px 40px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.45;margin:0}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:20px;padding-block:0 40px}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+
+/* header */
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:14px 10px}
+.mark{display:flex;align-items:center;gap:10px;margin-right:auto}
+.mark svg{flex:none}
+.co{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.co span{font-weight:400;color:var(--ink-2)}
+.asof{font-size:12px;color:var(--ink-2)}
+.synth{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border:1px dashed var(--line-2);border-radius:6px;color:var(--ink-2)}
+.tabs{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px}
+.tabs button{border:0;background:none;padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--ink-2);font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+
+/* filters */
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in oklab,var(--bg) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding-block:8px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fg>label,.fg>.lab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;padding:2px;background:var(--surface);gap:1px}
+.seg button{border:0;background:none;padding:4px 9px;border-radius:5px;font-size:12px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg button:hover{background:var(--surface-2);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg.sm button{padding:3px 7px;font-size:11px}
+select{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;max-width:190px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px}
+.btn:hover{border-color:var(--line-2)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.scope{font-size:12px;color:var(--ink-2);padding-block:8px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.scope b{color:var(--ink);font-weight:600}
+
+/* stages */
+.stage-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:20px 0 8px}
+.stage-n{font-family:var(--mono);font-size:11px;color:var(--accent);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+.stage-t{font-weight:600;font-size:15px;letter-spacing:-.005em}
+.stage-q{color:var(--ink-2);font-size:12.5px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:start}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.stretch{align-items:stretch}
+@media (max-width:1200px){.s3,.s4,.s5{grid-column:span 6}.s7,.s8{grid-column:span 12}}
+@media (max-width:760px){.grid>*{grid-column:span 12}.wrap{padding-inline:16px}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.card-h h3{margin:0;font-size:13.5px;font-weight:600}
+.card-h p{margin:2px 0 0;color:var(--ink-2);font-size:12px}
+.focus-tag{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:1px}
+.foot{font-size:11.5px;color:var(--muted)}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+svg text{fill:var(--muted);font-family:var(--sans);font-size:10.5px}
+svg .lbl{fill:var(--ink-2)}
+svg .strong{fill:var(--ink);font-weight:600}
+
+/* status */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;border:1px solid}
+.pill.good{color:var(--good-t);border-color:color-mix(in oklab,var(--good) 45%,transparent);background:color-mix(in oklab,var(--good) 10%,transparent)}
+.pill.warn{color:var(--warn-t);border-color:color-mix(in oklab,var(--warn) 60%,transparent);background:color-mix(in oklab,var(--warn) 14%,transparent)}
+.pill.crit{color:var(--crit-t);border-color:color-mix(in oklab,var(--crit) 45%,transparent);background:color-mix(in oklab,var(--crit) 10%,transparent)}
+.pill.opp{color:var(--pos);border-color:color-mix(in oklab,var(--pos) 45%,transparent);background:color-mix(in oklab,var(--pos) 10%,transparent)}
+.pill.neu{color:var(--ink-2);border-color:var(--line-2);background:var(--surface-2)}
+.d-good{color:var(--good-t)}.d-warn{color:var(--warn-t)}.d-crit{color:var(--crit-t)}.d-neu{color:var(--ink-2)}
+
+/* briefing */
+.brief{gap:12px}
+.brief-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brief-head{font-size:16px;font-weight:600;line-height:1.35;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.brief dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 12px}
+.brief dt{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.brief dd{margin:0;font-size:12.5px;color:var(--ink)}
+.ai-tag{font-family:var(--mono);font-size:10px;color:var(--ink-2);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in oklab,var(--accent) 40%,transparent);text-underline-offset:2px;font:inherit}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px 10px;display:flex;flex-direction:column;gap:4px;min-width:0;transition:border-color .15s, box-shadow .15s}
+.kpi:hover{border-color:var(--line-2);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.kpi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpi .k-top{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.kpi .k-l{font-size:12px;color:var(--ink-2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .k-v{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.kpi .k-d{font-size:12px;font-weight:600}
+.kpi .k-s{font-size:11px;color:var(--muted);min-height:16px}
+.kpi svg{height:28px;width:100%;display:block;margin-top:2px}
+
+/* exceptions */
+.exlist{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+.ex{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:9px 8px;border-radius:8px;width:100%}
+.ex:hover{background:var(--surface-2)}
+.ex:focus-visible{outline:2px solid var(--accent)}
+.ex .rank{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:2px;grid-row:span 3}
+.ex .t{display:flex;gap:6px;justify-content:space-between;align-items:center;font-weight:600;font-size:12.5px}
+.ex .g{font-size:12px}
+.ex .c{font-size:11.5px;color:var(--ink-2)}
+.ex+.ex{border-top:1px solid var(--line)}
+
+/* heatmap */
+.hm-wrap{overflow-x:auto}
+table.hm{border-collapse:separate;border-spacing:2px;width:100%;min-width:560px}
+.hm th{font-weight:500;font-size:11px;color:var(--ink-2);text-align:center;padding:4px 2px;white-space:nowrap}
+.hm th.rh{text-align:left;padding-right:8px}
+.hm th.rh small{display:block;color:var(--muted);font-size:10px;font-weight:400}
+.hm td{padding:0}
+.hm td button{all:unset;box-sizing:border-box;display:block;width:100%;text-align:center;padding:9px 2px;border-radius:5px;font-size:11.5px;font-weight:500;cursor:pointer;font-variant-numeric:tabular-nums;position:relative}
+.hm td button:hover{outline:2px solid var(--ink);outline-offset:-1px}
+.hm td button:focus-visible{outline:2px solid var(--accent)}
+.hm td button.flag::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 1.5px var(--surface)}
+.hm td.na{color:var(--muted);text-align:center;font-size:11px}
+.hm tr.tot th,.hm td.tot button{font-weight:700}
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.ramp{display:inline-flex;height:8px;width:120px;border-radius:4px;overflow:hidden;vertical-align:middle;margin:0 6px}
+.ramp span{flex:1}
+
+/* tables */
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+.t th{font-weight:500;color:var(--muted);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;padding:5px 6px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+.t td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.t td.r,.t th.r{text-align:right;font-variant-numeric:tabular-nums}
+.t tr.click{cursor:pointer}
+.t tr.click:hover td{background:var(--surface-2)}
+.tbl-wrap{overflow-x:auto}
+
+/* romi bars */
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:center;font-size:12px}
+.bar-track{position:relative;height:16px}
+.bar-fill{position:absolute;left:0;top:3px;height:10px;border-radius:0 4px 4px 0;background:var(--s1)}
+.bar-fill.low{background:var(--neg)}
+.bar-hurdle{position:absolute;top:-2px;bottom:-2px;border-left:1.5px dashed var(--tgt)}
+.bar-txt{position:absolute;top:0;font-size:11px;white-space:nowrap;color:var(--ink-2);line-height:16px}
+
+/* signals */
+.sig{display:grid;grid-template-columns:44px 1fr;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line)}
+.sig:first-child{border-top:0}
+.sig .wk{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:1px}
+.sig .tx{font-size:12px}
+.sig .meta{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
+.chip{font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.scroll{max-height:330px;overflow:auto}
+
+/* actions */
+.status-btn{all:unset;cursor:pointer;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);white-space:nowrap}
+.status-btn[data-s="Open"]{color:var(--ink-2)}
+.status-btn[data-s="Assigned"]{color:var(--accent);border-color:var(--accent)}
+.status-btn[data-s="Done"]{color:var(--good-t);border-color:var(--good)}
+.status-btn:focus-visible{outline:2px solid var(--accent)}
+
+/* tooltip & drawer */
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:var(--shadow);max-width:280px}
+#tip .tr{display:flex;justify-content:space-between;gap:14px}
+#tip .th{font-weight:600;margin-bottom:4px}
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.35);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(600px,100vw);background:var(--surface);z-index:50;box-shadow:var(--shadow);display:flex;flex-direction:column;border-left:1px solid var(--line)}
+.dr-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 20px 12px;padding-top:calc(16px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--line)}
+.dr-h h2{margin:0;font-size:18px;letter-spacing:-.01em}
+.dr-h .crumb{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.dr-b{overflow:auto;padding:16px 20px 28px;display:flex;flex-direction:column;gap:16px}
+.dr-b h4{margin:0 0 6px;font-size:11px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border-radius:8px;padding:9px 10px}
+.stat .l{font-size:11px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:600}
+.stat .d{font-size:11.5px;font-weight:600}
+.diag{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-size:12.5px}
+.diag dt{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.diag dd{margin:0}
+.close{all:unset;cursor:pointer;width:30px;height:30px;display:grid;place-items:center;border-radius:6px;font-size:20px;color:var(--ink-2)}
+.close:hover{background:var(--surface-2)}
+.close:focus-visible{outline:2px solid var(--accent)}
+
+/* approach doc */
+.doc{max-width:980px;margin:18px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:32px clamp(18px,4vw,48px) 40px}
+.doc h1{font-size:24px;letter-spacing:-.02em;margin:0 0 4px;text-wrap:balance}
+.doc .lede{color:var(--ink-2);font-size:14px;max-width:72ch;margin:0 0 18px}
+.doc h2{font-size:12px;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:26px 0 8px;font-weight:500}
+.doc p,.doc li{font-size:13.5px;max-width:78ch}
+.doc ul{padding-left:18px;margin:6px 0}
+.doc li{margin:3px 0}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;font-size:12.5px;font-weight:600}
+.flow span{background:var(--accent-soft);color:var(--accent);padding:5px 10px;border-radius:6px}
+.flow em{color:var(--muted);font-style:normal}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.tree{font-family:var(--mono);font-size:12px;background:var(--surface-2);border-radius:8px;padding:12px 14px;white-space:pre;overflow-x:auto;line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="mark">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="7" fill="var(--accent)"/><path d="M7 20 L15 9 L23 20 L19 20 L15 14.5 L11 20Z" fill="var(--on-accent)"/></svg>
+      <div>
+        <div class="co">Kestrel Consumer Group <span>· Executive Pulse</span></div>
+        <div class="asof">FY2026 · Actuals through <b>Week 41</b> (w/e 11 Oct 2026) · Forecast Wk 42–52 · Reporting currency USD</div>
+      </div>
+    </div>
+    <div class="synth" title="All companies, brands, figures and events are fictional">Synthetic data · illustrative</div>
+    <nav class="tabs" role="tablist" aria-label="View">
+      <button id="tab-dash" role="tab" aria-selected="true" aria-controls="view-dash">Dashboard</button>
+      <button id="tab-approach" role="tab" aria-selected="false" aria-controls="view-approach">Product approach</button>
+    </nav>
+  </header>
+
+  <section id="view-dash" role="tabpanel" aria-labelledby="tab-dash">
+    <div class="filters" id="filters">
+      <div class="fg"><span class="lab">View as</span><div class="seg" id="f-role" role="group" aria-label="Role lens"></div></div>
+      <div class="fg"><span class="lab">Period</span><div class="seg" id="f-lens" role="group" aria-label="Period"></div></div>
+      <div class="fg"><span class="lab">Compare to</span><div class="seg" id="f-comp" role="group" aria-label="Comparator"></div></div>
+      <div class="fg"><label for="f-geo">Geography</label><select id="f-geo"></select></div>
+      <div class="fg"><label for="f-brand">Brand</label><select id="f-brand"></select></div>
+      <div class="fg"><label for="f-ch">Channel</label><select id="f-ch"></select></div>
+      <button class="btn" id="f-reset">Reset</button>
+    </div>
+    <div class="scope" id="scope"></div>
+
+    <div class="stage-h"><span class="stage-n">1 · Health</span><span class="stage-t">Are we on track?</span><span class="stage-q">Headline position against target, last year and full-year outlook</span></div>
+    <div class="grid stretch">
+      <div class="card brief s4" id="brief"></div>
+      <div class="s8"><div class="kpis" id="kpis"></div></div>
+    </div>
+
+    <div class="stage-h"><span class="stage-n">2 · Deviation</span><span class="stage-t">Where is the gap, and how big?</span><span class="stage-q">Trend vs plan, what bridges target to actual, and the most material exceptions</span></div>
+    <div class="grid">
+      <div class="card s5" id="c-trend">
+        <div class="card-h"><div><h3 id="trend-title">Weekly trend</h3><p id="trend-sub"></p></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><div class="seg sm" id="trend-metric" role="group" aria-label="Trend metric"></div><div class="seg sm" id="trend-mode" role="group" aria-label="Trend mode"></div></div></div>
+        <div class="chart" id="trend"></div>
+        <div class="legend" id="trend-legend"></div>
+      </div>
+      <div class="card s4" id="c-bridge">
+        <div class="card-h"><div><h3 id="bridge-title">Variance bridge</h3><p id="bridge-sub"></p></div><div class="seg sm" id="bridge-metric" role="group" aria-label="Bridge metric"></div></div>
+        <div class="chart" id="bridge"></div>
+        <div class="foot">Click a bar to see which brands and markets drive it. Axis truncated to show movement.</div>
+      </div>
+      <div class="card s3" id="c-ex">
+        <div class="card-h"><div><h3>Exceptions requiring attention</h3><p id="ex-sub"></p></div></div>
+        <ul class="exlist" id="exlist"></ul>
+      </div>
+    </div>
+
+    <div class="stage-h"><span class="stage-n">3 · Drivers</span><span class="stage-t">What is driving it?</span><span class="stage-q">Brand × market performance, and whether growth is profitable</span></div>
+    <div class="grid">
+      <div class="card s7" id="c-heat">
+        <div class="card-h"><div><h3 id="hm-title">Performance map</h3><p id="hm-sub">Click any cell to diagnose it. Dots mark ranked exceptions.</p></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><div class="seg sm" id="hm-metric" role="group" aria-label="Heatmap metric"></div><div class="seg sm" id="hm-cols" role="group" aria-label="Heatmap columns"></div></div></div>
+        <div class="hm-wrap" id="heat"></div>
+        <div class="legend" id="hm-legend"></div>
+      </div>
+      <div class="card s5" id="c-quad">
+        <div class="card-h"><div><h3>Profitable growth or bought growth?</h3><p>Revenue growth vs gross-margin change, vs last year</p></div><div class="seg sm" id="quad-dim" role="group" aria-label="Quadrant dimension"></div></div>
+        <div class="chart" id="quad"></div>
+        <div class="legend" id="quad-legend"></div>
+        <div>
+          <div class="card-h" style="margin-bottom:4px"><div><h3 style="font-size:12.5px">Revenue growth management: plan vs actual</h3></div></div>
+          <div class="tbl-wrap"><table class="t" id="rgm"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-h"><span class="stage-n">4 · Implications</span><span class="stage-t">Is it us, or the market? Is our spend working?</span><span class="stage-q">External context, marketing and promotion returns</span></div>
+    <div class="grid" id="band4">
+      <div class="card s4" id="c-market" data-key="market">
+        <div class="card-h"><div><h3>Us vs the market <span class="focus-tag" hidden>Your focus</span></h3><p id="mkt-sub">Net revenue growth vs category growth, by country</p></div></div>
+        <div class="chart" id="mkt"></div>
+        <div class="legend"><span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.5"/></svg> Market (category) growth</span><span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--pos)"/></svg> Our growth – gaining share</span><span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--neg)"/></svg> Losing share</span></div>
+        <div class="foot">Market data: syndicated retail audit, all measured channels (synthetic). Channel filter not applied to market figures.</div>
+      </div>
+      <div class="card s4" id="c-mkting" data-key="mkting">
+        <div class="card-h"><div><h3>Marketing &amp; promotion returns <span class="focus-tag" hidden>Your focus</span></h3><p>Incremental gross margin per $1 of A&amp;P (marketing mix model)</p></div></div>
+        <div class="bars" id="romi"></div>
+        <div class="tbl-wrap"><table class="t" id="promos"></table></div>
+      </div>
+      <div class="card s4" id="c-signals" data-key="signals">
+        <div class="card-h"><div><h3>External signals <span class="focus-tag" hidden>Your focus</span></h3><p>Competitor, pricing, category, demand and supply events in scope</p></div></div>
+        <div class="scroll" id="signals"></div>
+      </div>
+    </div>
+
+    <div class="stage-h"><span class="stage-n">5 · Action</span><span class="stage-t">What should leadership do next?</span><span class="stage-q">Recommended actions generated from the exceptions above, with owners and value at stake</span></div>
+    <div class="card" id="c-actions">
+      <div class="tbl-wrap"><table class="t" id="actions"></table></div>
+      <div class="foot">Value at stake = estimated full-year impact if the issue is resolved (or opportunity captured). Status is held for this browser session only in the prototype.</div>
+    </div>
+  </section>
+
+  <section id="view-approach" role="tabpanel" aria-labelledby="tab-approach" hidden>
+    <article class="doc">
+      <h1>Executive Pulse: product approach</h1>
+      <p class="lede">A single-page decision cockpit for the leadership of a multi-country, multi-brand, multi-channel consumer goods company. It is built around one sequence: <b>business health → deviation → drivers → implications → action</b>.</p>
+
+      <h2>The problem</h2>
+      <p>CPG leaders get dozens of reports: sales cubes, trade promotion management (TPM) exports, syndicated share decks and finance packs. Each answers a different question at a different grain and on a different refresh cycle. Executives spend their review time reconciling numbers instead of deciding. The hard part is not showing data. It is <b>choosing what deserves attention</b>, <b>linking a financial outcome to the driver that caused it</b>, and <b>separating "us" from "the market"</b>, all on one page.</p>
+
+      <h2>Executive users and the decisions they make</h2>
+      <div class="tbl-wrap"><table class="t">
+        <thead><tr><th>Role</th><th>Primary question</th><th>Typical decision</th><th>Lens defaults</th></tr></thead>
+        <tbody>
+          <tr><td><b>CEO</b></td><td>Are we on track? What are the 3 issues that move the year?</td><td>Where to intervene; which leader owns it</td><td>NR, CM, share, FY outlook</td></tr>
+          <tr><td><b>CFO</b></td><td>Are we growing profitably? Where is margin leaking?</td><td>Re-forecast, cap trade spend, approve price moves</td><td>CM bridge, GM%, trade % of gross sales</td></tr>
+          <tr><td><b>CMO / Brand</b></td><td>Are we winning vs competitors? Is A&amp;P paying back?</td><td>Reallocate A&amp;P, respond to competitor moves</td><td>Share, growth vs market, ROMI, promo ROI</td></tr>
+          <tr><td><b>Chief Sales Officer</b></td><td>Which channels, customers and markets are short of target?</td><td>Redeploy field effort, fix distribution, renegotiate terms</td><td>NR and volume vs target, outlook</td></tr>
+          <tr><td><b>COO / Supply chain</b></td><td>Are we losing sales to availability? Is cost-to-serve rising?</td><td>Expedite, reallocate stock, change service levels</td><td>Fill rate, lost sales, cost per case</td></tr>
+          <tr><td><b>Procurement</b></td><td>How is input inflation hitting margin vs budget?</td><td>Hedge, re-source, trigger price or pack changes</td><td>COGS per case, GM%</td></tr>
+          <tr><td><b>Revenue growth mgmt (RGM)</b></td><td>Are price, promo and mix delivering the plan?</td><td>Re-design promo calendar, price-pack architecture</td><td>Price realization, promo depth and ROI, mix</td></tr>
+        </tbody></table></div>
+      <p>The role lens changes <i>emphasis</i>: which KPIs appear, how exceptions rank and which cards are marked "your focus". It never changes the numbers. Every role sees one version of the truth.</p>
+
+      <h2>Metric prioritization</h2>
+      <div class="two">
+        <div>
+          <ul>
+            <li><b>Tier 1, outcomes (always visible):</b> net revenue, contribution margin, FY outlook, market share. These are what the board asks about.</li>
+            <li><b>Tier 2, drivers (one click away):</b> volume, price, mix, trade spend, COGS, cost-to-serve, A&amp;P. These explain Tier 1 through an additive bridge.</li>
+            <li><b>Tier 3, diagnostics (inside the drill drawer):</b> SKU, city, channel, promotion event, fill rate, competitor signal.</li>
+          </ul>
+          <p>Ranking rule: an item reaches the front page only if it is <b>material</b> (it moves the $ outcome), <b>actionable</b> (it has an owner) and <b>unexpected</b> (it deviates from plan or from the market).</p>
+        </div>
+<div class="tree">Gross sales      = Volume × List price
+− Trade &amp; promo  (promo depth, terms)
+= Net revenue     ← Volume · Mix · Price · Promo
+− COGS            (commodities, FX, plant)
+= Gross margin
+− Logistics       (cost-to-serve)
+− A&amp;P             (media, shopper)
+= Contribution margin
+
+External lens: market growth → share
+               competitor price index
+               category trends &amp; seasonality</div>
+      </div>
+
+      <h2>Dashboard structure: five bands, one decision sequence</h2>
+      <div class="flow"><span>1 Health</span><em>→</em><span>2 Deviation</span><em>→</em><span>3 Drivers</span><em>→</em><span>4 Implications</span><em>→</em><span>5 Action</span></div>
+      <ul>
+        <li><b>Health:</b> an AI briefing (status, what changed, why, outlook) plus six role-specific KPI tiles, each shown against target, last year and recent trend.</li>
+        <li><b>Deviation:</b> a weekly or cumulative trend vs target and LY with the forecast to year-end, and a <b>variance bridge</b> that splits the gap into volume, mix, price, trade, COGS, logistics and A&amp;P. Beside them, a ranked <b>exceptions</b> feed.</li>
+        <li><b>Drivers:</b> a brand × country (or channel) performance map, and a growth-vs-margin quadrant that answers "are we buying growth?", with the RGM plan-vs-actual scorecard.</li>
+        <li><b>Implications:</b> our growth vs category growth (share gain or loss), marketing and promotion ROI, and external signals such as competitor moves, input costs, demand and supply.</li>
+        <li><b>Action:</b> recommended actions with an owner, value at stake and status, each traced back to the exception that produced it.</li>
+      </ul>
+
+      <h2>Interaction model</h2>
+      <ul>
+        <li><b>Global context bar:</b> role, period (last week, rolling 4 weeks, QTD, YTD, FY outlook), comparator (target or LY), geography (region → country), brand (category → brand) and channel. Every panel responds to the same context.</li>
+        <li><b>Progressive disclosure:</b> clicking any KPI, bridge bar, heat-map cell, quadrant bubble, exception, promotion or action opens a <b>drill drawer</b> with a diagnosis, mini-bridge, trend and breakdown by SKU, city, channel or country. "Focus dashboard on this" pushes that slice into the global filters, so the whole page re-cuts without navigating away.</li>
+        <li><b>Exception-led:</b> the default view shows the most material deviations, risks and opportunities, not every metric.</li>
+      </ul>
+
+      <h2>Where AI earns its place</h2>
+      <ul>
+        <li><b>Materiality ranking and anomaly detection:</b> scores every brand × market × channel slice by $ gap, weighted to the role, and suppresses noise.</li>
+        <li><b>Driver attribution:</b> an additive volume / mix / price / promo / cost decomposition, so every "why" ties back to dollars.</li>
+        <li><b>Causal hypotheses:</b> joins internal drivers with external signals (competitor price index, market growth, fill rate, commodity costs) to propose the likely cause, each with its evidence.</li>
+        <li><b>Narrative generation:</b> the executive briefing and the drawer diagnosis, where every sentence cites a number on the page.</li>
+        <li><b>Forecasting:</b> a run-rate-adjusted FY outlook in the prototype; production would use ML forecasting with promo and seasonality features.</li>
+        <li><b>Marketing mix model (MMM) and post-event promo evaluation:</b> ROMI and promotion ROI (incremental vs baseline) feed the "repeat, optimise or stop" calls.</li>
+        <li><b>Next-best action:</b> rule and model-generated recommendations with owners. Closed actions feed back to improve ranking.</li>
+        <li><b>Later: conversational Q&amp;A</b> ("Why is Germany behind?") grounded on the same semantic layer.</li>
+      </ul>
+      <p><b>Guardrails:</b> AI text is labeled, shows its evidence and is never the only source of a number. Actions have a human owner, and confidence is shown where models estimate (ROMI, forecast).</p>
+
+      <h2>Data foundation and governance</h2>
+      <p>Sources: ERP (shipments, COGS), TPM system (trade spend, promo calendar), distributor management system (DMS) and retailer point-of-sale data (secondary sales), syndicated retail audit (market size, share, competitor pricing), MMM outputs, supply-chain planning (fill rate, OOS), and plan/budget (targets, RGM plan). They are unified in one semantic layer with governed metric definitions. Access is controlled through role-based access control (RBAC) with SSO and MFA, row-level security (for example country managers see only their markets), audit logs on exports, and refresh cadence shown on screen: weekly sell-in, weekly or monthly syndicated data.</p>
+
+      <h2>Success measures</h2>
+      <div class="two">
+        <ul>
+          <li><b>Adoption:</b> % of the leadership team active weekly; share of business reviews run from the Pulse instead of slide packs.</li>
+          <li><b>Time to insight:</b> minutes from opening to identifying the top 3 issues (target under 5).</li>
+          <li><b>Decision velocity:</b> days from a deviation appearing to an owned action; % of actions closed on time.</li>
+        </ul>
+        <ul>
+          <li><b>Business impact:</b> trade spend ROI, forecast accuracy (FY outlook error), share of gap recovered after action.</li>
+          <li><b>Trust:</b> number of "my number is different" disputes; count of legacy reports retired.</li>
+        </ul>
+      </div>
+
+      <h2>About this prototype</h2>
+      <p>Kestrel Consumer Group, its brands, competitors, events and every figure are <b>synthetic</b>. They are generated in the browser from a seeded model covering 6 brands, 3 categories, 9 countries, 7 channels and 52 weeks, with planted business stories: a competitor price cut, promo-funded growth, commodity inflation, a supply disruption, a declining category, an e-commerce breakout and general-trade expansion. Narratives and actions are rule-generated from that data to simulate the AI layer.</p>
+    </article>
+  </section>
+</div>
+
+<div id="tip" hidden></div>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" hidden>
+  <div class="dr-h"><div><div class="crumb" id="dr-crumb"></div><h2 id="dr-title"></h2></div><button class="close" id="dr-close" aria-label="Close detail">×</button></div>
+  <div class="dr-b" id="dr-body"></div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+/* ============================== SYNTHETIC DATA MODEL ============================== */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=mulberry32(20261015); const rn=s=>(R()-.5)*2*s;
+function hashSeed(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+
+const NW=52, CW=41;
+const BRANDS=[
+ {id:'morrow',name:'Morrow Oats',cat:'Food',lp:4.0,ucr:.46,ap:.06,romi:2.6,skus:['Classic Rolled Oats 500g','Honey Crunch Granola 400g','Instant Oats Sachets 10×40g'],skuW:[.5,.3,.2]},
+ {id:'crisply',name:'Crisply',cat:'Food',lp:2.2,ucr:.40,ap:.07,romi:2.1,skus:['Sea Salt Chips 150g','Chilli Lime Chips 150g','Party Pack 400g'],skuW:[.45,.3,.25]},
+ {id:'tidewell',name:'Tidewell',cat:'Beverages',lp:2.8,ucr:.44,ap:.08,romi:2.4,skus:['Orange Juice 1L','Mixed Fruit 1L','Kids Juice Box 200ml×6'],skuW:[.45,.35,.2]},
+ {id:'bolt',name:'Bolt Brew',cat:'Beverages',lp:1.9,ucr:.34,ap:.12,romi:2.8,skus:['Original 250ml can','Zero Sugar 250ml can','Original 4-pack'],skuW:[.5,.25,.25]},
+ {id:'lumen',name:'Lumen Care',cat:'Personal Care',lp:9.5,ucr:.26,ap:.14,romi:3.4,skus:['Daily Moisturiser 100ml','Vitamin C Serum 30ml','Sunscreen SPF50 50ml'],skuW:[.45,.3,.25]},
+ {id:'verdant',name:'Verdant',cat:'Personal Care',lp:6.0,ucr:.30,ap:.10,romi:2.7,skus:['Shampoo 340ml','Conditioner 340ml','Hair Oil 200ml'],skuW:[.5,.3,.2]},
+];
+const CATS=['Food','Beverages','Personal Care'];
+const REGIONS=[{id:'APAC',countries:['IN','ID','VN']},{id:'Middle East',countries:['AE','SA']},{id:'Europe',countries:['UK','DE']},{id:'Americas',countries:['US','MX']}];
+const COUNTRIES=[
+ {id:'IN',name:'India',region:'APAC',size:1.25,px:.45,cx:.48,lx:.7,cities:['Mumbai','Delhi NCR','Bengaluru','Kolkata'],cw:[.32,.3,.22,.16]},
+ {id:'ID',name:'Indonesia',region:'APAC',size:.8,px:.5,cx:.52,lx:.9,cities:['Jakarta','Surabaya','Bandung'],cw:[.5,.28,.22]},
+ {id:'VN',name:'Vietnam',region:'APAC',size:.45,px:.5,cx:.5,lx:.8,cities:['Ho Chi Minh City','Hanoi','Da Nang'],cw:[.48,.38,.14]},
+ {id:'AE',name:'UAE',region:'Middle East',size:.35,px:1.1,cx:1.0,lx:1.0,cities:['Dubai','Abu Dhabi','Sharjah'],cw:[.52,.3,.18]},
+ {id:'SA',name:'Saudi Arabia',region:'Middle East',size:.5,px:1.05,cx:1.0,lx:1.05,cities:['Riyadh','Jeddah','Dammam'],cw:[.45,.35,.2]},
+ {id:'UK',name:'UK',region:'Europe',size:.7,px:1.25,cx:1.15,lx:1.2,cities:['London','Manchester','Birmingham'],cw:[.5,.27,.23]},
+ {id:'DE',name:'Germany',region:'Europe',size:.6,px:1.2,cx:1.12,lx:1.15,cities:['Berlin','Munich','Hamburg'],cw:[.36,.34,.3]},
+ {id:'US',name:'USA',region:'Americas',size:1.3,px:1.3,cx:1.1,lx:1.1,cities:['New York','Chicago','Los Angeles','Dallas'],cw:[.3,.22,.28,.2]},
+ {id:'MX',name:'Mexico',region:'Americas',size:.6,px:.7,cx:.65,lx:.85,cities:['Mexico City','Guadalajara','Monterrey'],cw:[.5,.26,.24]},
+];
+const CHANNELS=['Modern Trade','Large Retail','Drug & Pharmacy','Convenience','Discount & Dollar','E-commerce','General Trade'];
+const CH_PX=[1,.96,1.05,1.12,.85,.97,1.0], CH_PR=[.13,.15,.08,.05,.10,.14,.04], CH_LG=[1,.85,1.1,1.35,.9,1.5,1.25];
+const CH_W={IN:[.18,.08,.10,.04,0,.14,.46],ID:[.30,.10,.06,.12,0,.08,.34],VN:[.26,.08,.06,.14,0,.10,.36],AE:[.30,.28,.16,.12,0,.14,0],SA:[.28,.30,.14,.12,0,.08,.08],UK:[.30,.22,.10,.16,.10,.12,0],DE:[.26,.20,.18,.08,.20,.08,0],US:[.22,.26,.12,.12,.16,.12,0],MX:[.22,.12,.08,.12,.06,.06,.34]};
+const B_W={morrow:{IN:.6,ID:.4,VN:.3,AE:.7,SA:.6,UK:1.2,DE:1.1,US:1.0,MX:.5},crisply:{IN:1.0,ID:.8,VN:.7,AE:.6,SA:.7,UK:.8,DE:.6,US:1.2,MX:1.1},tidewell:{IN:.7,ID:1.1,VN:.9,AE:.8,SA:.9,UK:.6,DE:.7,US:.6,MX:.8},bolt:{IN:.5,ID:.6,VN:.8,AE:.7,SA:.9,UK:1.2,DE:1.0,US:.9,MX:.6},lumen:{IN:1.1,ID:.9,VN:.7,AE:1.0,SA:.8,UK:.8,DE:.7,US:.9,MX:.5},verdant:{IN:.9,ID:.8,VN:.6,AE:1.1,SA:1.0,UK:.5,DE:.6,US:.5,MX:.7}};
+const AFF={morrow:[1.1,1.2,.3,.6,1.0,1.0,.8],crisply:[1,1,.2,1.5,1.4,.8,1.2],tidewell:[1.1,1.1,.3,1.2,.9,.8,1],bolt:[.9,.8,.3,1.8,1.0,.8,1.1],lumen:[.9,.8,2.2,.4,.6,1.6,.6],verdant:[1,1,1.8,.5,.9,1.2,.9]};
+const G_C={IN:.10,ID:.08,VN:.08,AE:.06,SA:.06,UK:.04,DE:.03,US:.045,MX:.07}, G_B={morrow:.01,crisply:0,tidewell:0,bolt:.01,lumen:.04,verdant:0};
+const MG={IN:{Food:.10,Beverages:.11,'Personal Care':.12},ID:{Food:.09,Beverages:.10,'Personal Care':.10},VN:{Food:.10,Beverages:.11,'Personal Care':.08},AE:{Food:.05,Beverages:.06,'Personal Care':-.07},SA:{Food:.06,Beverages:.07,'Personal Care':-.06},UK:{Food:.05,Beverages:.07,'Personal Care':.04},DE:{Food:.03,Beverages:.04,'Personal Care':.05},US:{Food:.07,Beverages:.06,'Personal Care':.065},MX:{Food:.07,Beverages:.07,'Personal Care':.06}};
+const BMAP=Object.fromEntries(BRANDS.map(b=>[b.id,b])), CMAP=Object.fromEntries(COUNTRIES.map(c=>[c.id,c]));
+
+function season(cat,c,w){const t=2*Math.PI;let s;
+ if(cat==='Food')s=1+.09*Math.cos(t*(w-2)/52); else if(cat==='Beverages')s=1+.26*Math.sin(t*(w-10)/52); else s=1+.06*Math.sin(t*(w-5)/52);
+ if(c==='IN'&&w>=43&&w<=45)s*=1.22; if((c==='US'||c==='UK'||c==='DE')&&w>=48&&w<=51&&cat!=='Beverages')s*=1.12; if((c==='AE'||c==='SA')&&w>=8&&w<=11)s*=1.12; return s}
+const CHI=n=>CHANNELS.indexOf(n);
+function story(b,c,ch,w){const m={u:1,pr:0,lp:1,uc:1,lc:1,ap:1,fr:null,romi:null};
+ if(b==='bolt'&&c==='UK'&&w>=34){m.u*=ch===CHI('Convenience')?.72:.86;m.romi=1.4}
+ if(b==='bolt'&&c==='DE'&&w>=36){m.u*=.94}
+ if(b==='crisply'&&(c==='US'||c==='MX')&&[0,1,4].includes(ch)&&w>=24){m.pr+=.10;m.u*=1.22}
+ if(b==='crisply'&&(c==='US'||c==='MX'))m.romi=1.7;
+ if(b==='lumen'&&(c==='IN'||c==='ID')&&w>=18){m.u*=ch===CHI('E-commerce')?1.45:1.10;m.ap*=1.25;if(ch===CHI('E-commerce'))m.romi=6.0}
+ if(b==='tidewell'&&c==='ID'&&w>=35&&ch!==CHI('E-commerce')){m.fr=.80;m.u*=.80/.97;m.lc*=1.3}
+ if(b==='morrow'&&w>=14){m.uc*=1.11;if(['UK','DE','AE','SA'].includes(c))m.lp*=w<=33?.955:.985;else m.lp*=.99}
+ if(b==='verdant'&&(c==='AE'||c==='SA'))m.u*=.905;
+ if(c==='MX'&&ch===CHI('General Trade')&&w>=20)m.u*=1.12;
+ return m}
+function compIdx(c,cat,w){let v=1;if(c==='UK'&&cat==='Beverages'&&w>=34)v=.88;else if(c==='US'&&cat==='Food'&&w>=28)v=.97;else if(c==='DE'&&cat==='Beverages'&&w>=36)v=.96;return v}
+
+const mk=()=>({u:new Float64Array(NW+1),gs:new Float64Array(NW+1),tr:new Float64Array(NW+1),cogs:new Float64Array(NW+1),lg:new Float64Array(NW+1),ap:new Float64Array(NW+1),fr:new Float64Array(NW+1),inc:new Float64Array(NW+1),lost:new Float64Array(NW+1)});
+const SERIES=[];
+for(const b of BRANDS)for(const c of COUNTRIES)CHANNELS.forEach((_,chi)=>{const w=c.size*CH_W[c.id][chi]*B_W[b.id][c.id]*AFF[b.id][chi];if(w>0)SERIES.push({b:b.id,c:c.id,ch:chi,cat:b.cat,w})});
+const sumW=SERIES.reduce((a,s)=>a+s.w,0), K=3.2e9/(52*sumW);
+function put(X,w,u,lp,pr,uc,lc,ap,fr,inc){X.u[w]=u;X.gs[w]=u*lp;X.tr[w]=u*lp*pr;X.cogs[w]=u*uc;X.lg[w]=u*lc;X.ap[w]=ap;X.fr[w]=fr;X.inc[w]=inc;X.lost[w]=fr<.97?u*(.97-fr)/fr*lp*(1-pr):0}
+for(const s of SERIES){
+ const B=BMAP[s.b],C=CMAP[s.c],chi=s.ch;
+ const lpT=B.lp*C.px*CH_PX[chi]*(1+rn(.02)), pp=(s.b==='morrow'?.06:.035)+rn(.008), lpL=lpT/(1+pp);
+ const prT=CH_PR[chi]*(1+rn(.1))+(s.b==='crisply'?.015:0), prL=Math.max(.01,prT+rn(.004));
+ const ucT=B.lp*B.ucr*C.cx*(1+rn(.03)), ucL=ucT/1.025, lcT=B.lp*.045*C.lx*CH_LG[chi], lcL=lcT/1.02;
+ const g=G_C[s.c]+G_B[s.b]+rn(.015), gv=(1+g)/(1+pp)-1, perf=rn(.025)-.004;
+ const gmT=1-ucT/(lpT*(1-prT)); s.gmT=gmT;
+ const A=mk(),T=mk(),L=mk(); const nb=s.w*K;
+ for(let w=1;w<=NW;w++){
+  const base=nb*season(s.cat,s.c,w)/(lpL*(1-prL));
+  const uL=base*(1+rn(.045)), uT=base*(1+gv);
+  const apL=uL*lpL*(1-prL)*B.ap*.97, apT=uT*lpT*(1-prT)*B.ap;
+  put(L,w,uL,lpL,prL,ucL,lcL,apL,.965,apL*B.romi*.97*gmT);
+  put(T,w,uT,lpT,prT,ucT,lcT,apT,.97,apT*B.romi*gmT);
+  if(w<=CW){const m=story(s.b,s.c,chi,w);const uA=uT*(1+perf)*(1+rn(.05))*m.u;const apA=apT*m.ap*(1+rn(.12));
+   put(A,w,uA,lpT*(1+rn(.005))*m.lp,Math.max(.01,prT+rn(.006)+m.pr),ucT*(1+rn(.01))*m.uc*1.008,lcT*(1+rn(.03))*m.lc,apA,m.fr??(.968+rn(.012)),apA*(m.romi??B.romi)*gmT)}
+ }
+ let su=0,st=0,gs=0,tr=0,cg=0,lg=0;for(let w=38;w<=41;w++){su+=A.u[w];st+=T.u[w];gs+=A.gs[w];tr+=A.tr[w];cg+=A.cogs[w];lg+=A.lg[w]}
+ const att=su/st, lpF=gs/su, prF=tr/gs, ucF=cg/su, lcF=lg/su, rom=(A.inc[41]/A.ap[41])||B.romi*gmT;
+ for(let w=CW+1;w<=NW;w++){const tw=s.b==='tidewell'&&s.c==='ID'&&s.ch!==CHI('E-commerce');let f=.6*att+.4;if(tw&&w>=44)f=.98;
+  put(A,w,T.u[w]*f,lpF,prF,ucF,lcF,T.ap[w],tw&&w<44?.82:.968,T.ap[w]*rom)}
+ s.A=A;s.T=T;s.L=L;
+}
+// market (syndicated) by country × category
+const MKT={};
+for(const c of COUNTRIES)for(const cat of CATS){
+ const sh={Food:.11,Beverages:.085,'Personal Care':.13}[cat]*(1+rn(.35));
+ const mL=new Float64Array(NW+1),mA=new Float64Array(NW+1),ourL=new Float64Array(NW+1);
+ for(const s of SERIES)if(s.c===c.id&&s.cat===cat)for(let w=1;w<=NW;w++)ourL[w]+=s.L.gs[w]-s.L.tr[w];
+ for(let w=1;w<=NW;w++){mL[w]=ourL[w]/sh;mA[w]=mL[w]*(1+MG[c.id][cat])*(w<=CW?1+rn(.012):1)}
+ MKT[c.id+'|'+cat]={L:mL,A:mA};
+}
+
+const PROMOS=[
+ {b:'crisply',c:'US',ch:4,name:'Buy 2 get 1 free',w0:24,w1:33,depth:.33,spend:9.8e6,lift:.46,incNR:8.1e6,incGM:5.4e6},
+ {b:'crisply',c:'US',ch:1,name:'Endcap + 20% off',w0:30,w1:37,depth:.20,spend:4.4e6,lift:.38,incNR:5.0e6,incGM:3.0e6},
+ {b:'crisply',c:'MX',ch:0,name:'25% off price cut',w0:26,w1:35,depth:.25,spend:3.6e6,lift:.31,incNR:3.9e6,incGM:2.3e6},
+ {b:'lumen',c:'IN',ch:5,name:'Mega sale-day bundle',w0:27,w1:28,depth:.18,spend:1.9e6,lift:1.40,incNR:7.0e6,incGM:5.1e6},
+ {b:'lumen',c:'ID',ch:5,name:'Flash sale + creator livestream',w0:33,w1:34,depth:.15,spend:1.1e6,lift:.95,incNR:3.3e6,incGM:2.4e6},
+ {b:'bolt',c:'UK',ch:3,name:'Price-marked pack £1.19',w0:36,w1:41,depth:.12,spend:2.2e6,lift:.09,incNR:1.7e6,incGM:1.1e6},
+ {b:'bolt',c:'DE',ch:4,name:'Multibuy 4 for 3',w0:20,w1:25,depth:.25,spend:1.6e6,lift:.22,incNR:2.9e6,incGM:1.9e6},
+ {b:'tidewell',c:'ID',ch:0,name:'2×1L bundle',w0:36,w1:39,depth:.15,spend:1.3e6,lift:.04,incNR:.7e6,incGM:.4e6},
+ {b:'verdant',c:'AE',ch:2,name:'Gift with purchase',w0:18,w1:22,depth:.10,spend:.9e6,lift:.26,incNR:2.0e6,incGM:1.4e6},
+ {b:'morrow',c:'UK',ch:1,name:'Multibuy 2 for £5',w0:10,w1:15,depth:.17,spend:2.8e6,lift:.28,incNR:6.3e6,incGM:3.4e6},
+ {b:'morrow',c:'US',ch:0,name:'Back-to-school 15% off',w0:32,w1:35,depth:.15,spend:2.1e6,lift:.17,incNR:3.1e6,incGM:1.7e6},
+ {b:'tidewell',c:'VN',ch:6,name:'Retailer display incentive',w0:14,w1:22,depth:.08,spend:.8e6,lift:.19,incNR:2.3e6,incGM:1.3e6},
+ {b:'verdant',c:'IN',ch:6,name:'Free 50ml sachet',w0:30,w1:34,depth:.09,spend:1.2e6,lift:.21,incNR:2.6e6,incGM:1.7e6},
+ {b:'tidewell',c:'MX',ch:6,name:'Summer cooler placement',w0:18,w1:26,depth:.06,spend:1.0e6,lift:.24,incNR:2.9e6,incGM:1.8e6},
+].map((p,i)=>({...p,id:'p'+i,roi:p.incGM/p.spend}));
+
+const SIGNALS=[
+ {w:34,c:['UK'],cat:'Beverages',type:'Competitor',text:'Rival energy drink "Voltra" (fictional) cut shelf price 12% in UK convenience and gained 6 pts of distribution.',link:{b:'bolt',c:'UK'}},
+ {w:36,c:['DE'],cat:'Beverages',type:'Competitor',text:'Voltra enters German discounters with a 4-pack priced 8% below Bolt Brew.',link:{b:'bolt',c:'DE'}},
+ {w:30,c:'*',cat:'Food',type:'Input cost',text:'Oat futures +18% YTD and wheat +6%. Hedged cover ends in Wk 13; spot exposure is now about 60%.',link:{b:'morrow'}},
+ {w:35,c:['ID'],cat:'*',type:'Supply',text:'Port congestion at Tanjung Priok delayed 3 inbound juice-concentrate shipments; DC stock cover fell to 4 days.',link:{b:'tidewell',c:'ID'}},
+ {w:28,c:['IN','ID'],cat:'Personal Care',type:'Category',text:'Skincare category +11% YoY; e-commerce reaches 31% of category sales in India.',link:{b:'lumen',c:'IN'}},
+ {w:22,c:['AE','SA'],cat:'Personal Care',type:'Category',text:'Haircare category −6% to −7% YoY as pharmacy private label expands.',link:{b:'verdant',c:'AE'}},
+ {w:38,c:['US'],cat:'*',type:'Demand',text:'Consumer confidence −3 pts; shoppers trading down to discount and dollar channels.',link:{b:'crisply',c:'US'}},
+ {w:25,c:['MX'],cat:'*',type:'Distribution',text:'General-trade route-to-market program added 4,200 outlets across central Mexico.',link:{c:'MX'}},
+ {w:39,c:['DE','UK'],cat:'Beverages',type:'Weather',text:'Cooler-than-usual September: soft drinks −5% vs the 5-year average.',link:{c:'DE'}},
+ {w:40,c:['IN'],cat:'*',type:'Seasonality',text:'Diwali falls in Wk 44: gifting peak expected for snacks and skincare; plan +22% vs base.',link:{c:'IN'}},
+ {w:28,c:['US'],cat:'Food',type:'Pricing',text:'Private-label snacks cut prices about 3% at two national retailers.',link:{b:'crisply',c:'US'}},
+ {w:33,c:['UK','DE','AE','SA'],cat:'Food',type:'Pricing',text:'Morrow list-price increase (+6%) accepted late by 3 key accounts; full pass-through from Wk 34.',link:{b:'morrow',c:'UK'}},
+];
+
+/* ============================== FORMATTERS ============================== */
+const MINUS='−';
+const fmt$=v=>{const a=Math.abs(v),s=v<0?MINUS:'';if(a>=1e9)return s+'$'+(a/1e9).toFixed(2)+'B';if(a>=1e6)return s+'$'+(a/1e6).toFixed(a>=1e8?0:1)+'M';if(a>=1e3)return s+'$'+(a/1e3).toFixed(0)+'K';return s+'$'+a.toFixed(0)};
+const s$=v=>(v>=0?'+':'')+fmt$(v);
+const pct=(v,d=1)=>(v*100).toFixed(d)+'%';
+const sPct=(v,d=1)=>(v>=0?'+':MINUS)+Math.abs(v*100).toFixed(d)+'%';
+const sBps=v=>(v>=0?'+':MINUS)+Math.abs(Math.round(v))+' bps';
+const sPts=v=>(v>=0?'+':MINUS)+Math.abs(v).toFixed(1)+' pts';
+const fmtN=v=>{const a=Math.abs(v);if(a>=1e9)return(v/1e9).toFixed(2)+'B';if(a>=1e6)return(v/1e6).toFixed(1)+'M';if(a>=1e3)return(v/1e3).toFixed(0)+'K';return v.toFixed(0)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const WK_END=w=>{const d=new Date(Date.UTC(2026,9,11)-(41-w)*7*864e5);return d};
+const wkLabel=w=>{const d=WK_END(w);return d.getUTCDate()+' '+d.toLocaleString('en-GB',{month:'short',timeZone:'UTC'})};
+const varOf=(a,c)=>c===0?0:(a-c)/Math.abs(c);
+
+/* ============================== STATE ============================== */
+const ROLES={
+ CEO:{label:'CEO',kpis:['nr','cm','gmp','share','outlook','fill'],rank:'nr',boost:{},bridge:'cm',focus:['market'],line:'ceo'},
+ CFO:{label:'CFO',kpis:['nr','cm','gmp','trade','outlook','ap'],rank:'cm',boost:{buying:1.7,cost:1.5,pricing:1.3},bridge:'cm',focus:['mkting'],line:'cfo'},
+ CMO:{label:'CMO',kpis:['share','gvm','romi','ap','nr','promoRoi'],rank:'nr',boost:{competitor:1.8,outperform:1.6,market:1.3},bridge:'nr',focus:['market','mkting','signals'],line:'cmo'},
+ Sales:{label:'Sales',kpis:['nr','vol','outlook','trade','share','fill'],rank:'nr',boost:{volume:1.4,competitor:1.3,supply:1.2},bridge:'nr',focus:['market'],line:'sales'},
+ COO:{label:'Supply chain',kpis:['vol','fill','lost','cts','cogsU','cm'],rank:'nr',boost:{supply:3},bridge:'cm',focus:['signals'],line:'coo'},
+ CPO:{label:'Procurement',kpis:['cogsU','gmp','cm','cts','nr','fill'],rank:'cm',boost:{cost:3},bridge:'cm',focus:['signals'],line:'cpo'},
+ RGM:{label:'RGM',kpis:['price','trade','promoRoi','gmp','nr','cm'],rank:'cm',boost:{buying:2,pricing:2},bridge:'nr',focus:['mkting'],line:'rgm'},
+};
+const LENS={
+ LW:{label:'Last week',w0:41,w1:41,p0:40,p1:40,prior:'prior week',desc:'Wk 41'},
+ R4W:{label:'Rolling 4 wks',w0:38,w1:41,p0:34,p1:37,prior:'prior 4 wks',desc:'Wk 38–41'},
+ QTD:{label:'QTD',w0:40,w1:41,p0:27,p1:28,prior:'same wks of Q3',desc:'Q4 to date, Wk 40–41'},
+ YTD:{label:'YTD',w0:1,w1:41,desc:'Wk 1–41'},
+ FY:{label:'FY outlook',w0:1,w1:52,desc:'Wk 1–41 actual + Wk 42–52 forecast'},
+};
+const state={role:'CEO',lens:'YTD',comp:'T',geo:'all',brand:'all',ch:'all',trendMetric:'nr',trendMode:'week',bridge:'cm',hmMetric:'nrVar',hmCols:'country',quad:'brand'};
+const actionStatus={};
+const compName=()=>state.comp==='T'?'target':'last year';
+const compShort=()=>state.comp==='T'?'Target':'LY';
+
+/* ============================== AGGREGATION ============================== */
+const newSums=()=>({u:0,gs:0,tr:0,cogs:0,lg:0,ap:0,frU:0,inc:0,lost:0});
+function addRange(o,X,w0,w1){for(let w=w0;w<=w1;w++){o.u+=X.u[w];o.gs+=X.gs[w];o.tr+=X.tr[w];o.cogs+=X.cogs[w];o.lg+=X.lg[w];o.ap+=X.ap[w];o.frU+=X.fr[w]*X.u[w];o.inc+=X.inc[w];o.lost+=X.lost[w]}return o}
+function addS(o,x){for(const k in x)o[k]=(o[k]||0)+x[k];return o}
+function fin(o){o.nr=o.gs-o.tr;o.gm=o.nr-o.cogs;o.cm=o.gm-o.lg-o.ap;return o}
+for(const s of SERIES){s.FA=fin(addRange(newSums(),s.A,1,NW));s.FT=fin(addRange(newSums(),s.T,1,NW))}
+let PS=[];
+function computePS(){const L=LENS[state.lens];PS=SERIES.map(s=>{const o={A:fin(addRange(newSums(),s.A,L.w0,L.w1)),T:fin(addRange(newSums(),s.T,L.w0,L.w1)),L:fin(addRange(newSums(),s.L,L.w0,L.w1))};if(L.p0)o.P=fin(addRange(newSums(),s.A,L.p0,L.p1));o.C=state.comp==='T'?o.T:o.L;return o})}
+
+function filterSlice(){
+ const sl={b:null,c:null,ch:null};
+ if(state.geo.startsWith('r:'))sl.c=new Set(REGIONS.find(r=>r.id===state.geo.slice(2)).countries);
+ else if(state.geo.startsWith('c:'))sl.c=new Set([state.geo.slice(2)]);
+ if(state.brand.startsWith('k:'))sl.b=new Set(BRANDS.filter(b=>b.cat===state.brand.slice(2)).map(b=>b.id));
+ else if(state.brand.startsWith('b:'))sl.b=new Set([state.brand.slice(2)]);
+ if(state.ch!=='all')sl.ch=new Set([+state.ch]);
+ return sl}
+const inter=(a,b)=>a==null?b:b==null?a:new Set([...a].filter(x=>b.has(x)));
+const sub=(base,o)=>({b:inter(base.b,o.b?new Set(o.b):null),c:inter(base.c,o.c?new Set(o.c):null),ch:inter(base.ch,o.ch!=null?new Set(o.ch):null)});
+const m=(s,sl)=>(!sl.b||sl.b.has(s.b))&&(!sl.c||sl.c.has(s.c))&&(!sl.ch||sl.ch.has(s.ch));
+const mNoCh=(s,sl)=>(!sl.b||sl.b.has(s.b))&&(!sl.c||sl.c.has(s.c));
+const sliceCountries=sl=>COUNTRIES.filter(c=>!sl.c||sl.c.has(c.id)).map(c=>c.id);
+const sliceBrands=sl=>BRANDS.filter(b=>!sl.b||sl.b.has(b.id)).map(b=>b.id);
+const sliceCats=sl=>[...new Set(sliceBrands(sl).map(b=>BMAP[b].cat))];
+
+function mktSum(cs,cats,sc,w0,w1){let t=0;for(const c of cs)for(const k of cats){const a=MKT[c+'|'+k][sc];for(let w=w0;w<=w1;w++)t+=a[w]}return t}
+
+function S(sl){
+ const L=LENS[state.lens];
+ const o={A:newSums(),T:newSums(),L:newSums(),P:newSums(),FA:newSums(),FT:newSums()};
+ let oA=0,oL=0,oT=0,pa=0,pdL=0,pdT=0,n=0;
+ SERIES.forEach((s,i)=>{
+  if(mNoCh(s,sl)){oA+=PS[i].A.nr;oL+=PS[i].L.nr;oT+=PS[i].T.nr}
+  if(!m(s,sl))return; n++;
+  const p=PS[i];addS(o.A,p.A);addS(o.T,p.T);addS(o.L,p.L);if(p.P)addS(o.P,p.P);addS(o.FA,s.FA);addS(o.FT,s.FT);
+  const lpL=p.L.gs/p.L.u, lpT=p.T.gs/p.T.u; pa+=p.A.gs; pdL+=p.A.u*lpL; pdT+=p.A.u*lpT;
+ });
+ ['A','T','L','P','FA','FT'].forEach(k=>fin(o[k]));
+ const cs=sliceCountries(sl),cats=sliceCats(sl);
+ o.A.mkt=mktSum(cs,cats,'A',L.w0,L.w1);o.L.mkt=mktSum(cs,cats,'L',L.w0,L.w1);o.T.mkt=o.L.mkt;
+ o.A.oAll=oA;o.L.oAll=oL;o.T.oAll=oT;
+ o.C=state.comp==='T'?o.T:o.L; o.n=n;
+ o.share=oA/o.A.mkt; o.shareL=oL/o.L.mkt; o.growth=oA/oL-1; o.mktG=o.A.mkt/o.L.mkt-1;
+ o.priceReal=pa/pdL-1; o.pricePlan=pdT/pdL-1;
+ let ci=0,cn=0;for(const c of cs)for(const k of cats){for(let w=L.w0;w<=Math.min(L.w1,CW);w++){ci+=compIdx(c,k,w);cn++}} o.compIdx=cn?ci/cn:1;
+ const pr=PROMOS.filter(p=>(!sl.b||sl.b.has(p.b))&&(!sl.c||sl.c.has(p.c))&&(!sl.ch||sl.ch.has(p.ch)));
+ o.promoRoi=pr.length?pr.reduce((a,p)=>a+p.incGM,0)/pr.reduce((a,p)=>a+p.spend,0):NaN;
+ return o}
+
+function weekly(sl){
+ const out={A:[],T:[],L:[]};for(const k of['A','T','L'])for(let w=0;w<=NW;w++)out[k][w]=newSums();
+ SERIES.forEach(s=>{if(!m(s,sl))return;for(const k of['A','T','L']){const X=s[k];for(let w=1;w<=NW;w++){const o=out[k][w];o.u+=X.u[w];o.gs+=X.gs[w];o.tr+=X.tr[w];o.cogs+=X.cogs[w];o.lg+=X.lg[w];o.ap+=X.ap[w];o.frU+=X.fr[w]*X.u[w];o.inc+=X.inc[w];o.lost+=X.lost[w]}}});
+ const cs=sliceCountries(sl),cats=sliceCats(sl);
+ const oAll={A:new Float64Array(NW+1),L:new Float64Array(NW+1)};SERIES.forEach(s=>{if(!mNoCh(s,sl))return;for(let w=1;w<=NW;w++){oAll.A[w]+=s.A.gs[w]-s.A.tr[w];oAll.L[w]+=s.L.gs[w]-s.L.tr[w]}});
+ for(const k of['A','T','L'])for(let w=1;w<=NW;w++){const o=fin(out[k][w]);const sc=k==='A'?'A':'L';o.mkt=mktSum(cs,cats,sc,w,w);o.oAll=(k==='A'?oAll.A:oAll.L)[w]}
+ return out}
+
+function bridge(sl,kind){
+ const ck=state.comp==='T'?'T':'L';let vol=0,price=0,promo=0,cogs=0,lg=0,ap=0,Ua=0,Uc=0,Cc=0;const A=newSums(),C=newSums();
+ SERIES.forEach((s,i)=>{if(!m(s,sl))return;const a=PS[i].A,c=PS[i][ck];if(c.u<=0||a.u<=0)return;
+  addS(A,a);addS(C,c);
+  const lpa=a.gs/a.u,lpc=c.gs/c.u,prc=c.tr/c.gs,ucc=c.cogs/c.u,lcc=c.lg/c.u;
+  const unit=kind==='nr'?lpc*(1-prc):lpc*(1-prc)-ucc-lcc;
+  Ua+=a.u;Uc+=c.u;Cc+=c.u*unit;vol+=(a.u-c.u)*unit;price+=a.u*(lpa-lpc)*(1-prc);promo+=-(a.tr-a.gs*prc);
+  if(kind==='cm'){cogs+=-(a.cogs-a.u*ucc);lg+=-(a.lg-a.u*lcc);ap+=-(a.ap-c.ap)}});
+ fin(A);fin(C);const aggVol=Uc?(Ua-Uc)*(Cc/Uc):0;
+ const items=[['Volume',aggVol,'vol'],['Mix',vol-aggVol,'mix'],['Price',price,'price'],['Trade & promo',promo,'promo']];
+ if(kind==='cm')items.push(['COGS',cogs,'cogs'],['Logistics',lg,'lg'],['A&P',ap,'ap']);
+ return{kind,start:kind==='nr'?C.nr:C.cm,end:kind==='nr'?A.nr:A.cm,items,perSeriesVol:vol}}
+
+/* ============================== KPI CATALOG ============================== */
+const KPI={
+ nr:{label:'Net revenue',fmt:fmt$,val:x=>x.nr,delta:'pct',good:1,sec:true,def:'Gross sales less trade spend, discounts and promotions.'},
+ cm:{label:'Contribution margin',fmt:fmt$,val:x=>x.cm,delta:'pct',good:1,sec:true,def:'Gross margin less logistics (cost-to-serve) and A&P.'},
+ gmp:{label:'Gross margin %',fmt:v=>pct(v),val:x=>x.gm/x.nr,delta:'bps',good:1,def:'(Net revenue − COGS) ÷ net revenue.'},
+ trade:{label:'Trade spend % GS',fmt:v=>pct(v),val:x=>x.tr/x.gs,delta:'bps',good:-1,def:'Trade spend, discounts and promotions as a share of gross sales (gross-to-net leakage).'},
+ vol:{label:'Volume',fmt:v=>fmtN(v)+' cs',val:x=>x.u,delta:'pct',good:1,sec:true,def:'Shipments in standard cases.'},
+ share:{label:'Value market share',fmt:v=>pct(v),val:x=>x.oAll/x.mkt,comp:s=>s.L.oAll/s.L.mkt,delta:'bps',good:1,compLbl:'vs LY',def:'Our net revenue ÷ category market value in the selected countries and categories (syndicated, all channels).'},
+ gvm:{label:'Growth vs market',fmt:v=>sPts(v*100),val:(x,s)=>s?s.growth-s.mktG:0,comp:()=>0,delta:'pts',good:1,compLbl:'gap',spark:x=>x.oAll/x.mkt,def:'Our net revenue growth vs LY minus category market growth vs LY. Positive means we are gaining share.'},
+ outlook:{label:'FY revenue outlook',fmt:fmt$,val:(x,s)=>s?s.FA.nr:x.nr,comp:s=>s.FT.nr,delta:'pct',good:1,compLbl:'vs FY target',spark:x=>x.nr,def:'YTD actual plus forecast for Wk 42–52 (run-rate adjusted), compared with the full-year target.'},
+ fill:{label:'Fill rate',fmt:v=>pct(v),val:x=>x.frU/x.u,comp:()=>.97,delta:'bps',good:1,compLbl:'vs 97% goal',def:'Volume-weighted case fill rate (ordered vs shipped). Below 97% means lost sales.'},
+ lost:{label:'Lost sales (OOS)',fmt:fmt$,val:x=>x.lost,comp:()=>0,delta:'lost',good:-1,compLbl:'of net revenue',def:'Estimated revenue lost to stock-outs: the demand not served when fill rate falls below 97%.'},
+ romi:{label:'Marketing ROI',fmt:v=>v.toFixed(2)+'x',val:x=>x.inc/x.ap,comp:s=>s.T.inc/s.T.ap,delta:'x',good:1,compLbl:'vs plan',def:'Incremental gross margin per $1 of A&P, from the marketing mix model.'},
+ ap:{label:'A&P spend',fmt:fmt$,val:x=>x.ap,delta:'pct',good:-1,soft:true,def:'Advertising & promotion (media, shopper, digital). Shown vs budget; overspend is flagged, not judged.'},
+ price:{label:'Price realization',fmt:v=>sPct(v),val:(x,s)=>s?s.priceReal:0,comp:s=>s.pricePlan,delta:'pts',good:1,compLbl:'vs RGM plan',spark:x=>x.gs/x.u,def:'Like-for-like list price change vs LY at current mix, compared with the RGM plan.'},
+ promoRoi:{label:'Promotion ROI',fmt:v=>isNaN(v)?'—':v.toFixed(2)+'x',val:(x,s)=>s?s.promoRoi:NaN,comp:()=>1.2,delta:'x',good:1,compLbl:'vs 1.2x hurdle',spark:null,def:'Incremental gross margin ÷ trade investment, across evaluated promotion events in scope (YTD).'},
+ cogsU:{label:'COGS per case',fmt:v=>'$'+v.toFixed(2),val:x=>x.cogs/x.u,delta:'pct',good:-1,def:'Cost of goods sold per standard case (materials, packaging, conversion).'},
+ cts:{label:'Cost to serve / case',fmt:v=>'$'+v.toFixed(2),val:x=>x.lg/x.u,delta:'pct',good:-1,def:'Freight, warehousing and distribution cost per case.'},
+};
+function kEval(id,s){
+ const k=KPI[id];const v=k.val(s.A,s);const c=k.comp?k.comp(s):k.val(s.C,s);let d,txt,st;
+ if(k.delta==='pct'){d=varOf(v,c);txt=sPct(d);const f=d*k.good;st=k.soft?(f>=-.05?'good':f>=-.12?'warn':'crit'):(f>=-.005?'good':f>=-.02?'warn':'crit')}
+ else if(k.delta==='bps'){d=(v-c)*1e4;txt=sBps(d);const f=d*k.good;st=f>=-10?'good':f>=-60?'warn':'crit'}
+ else if(k.delta==='pts'){d=(v-c)*100;txt=sPts(d);const f=d*k.good;st=f>=-.1?'good':f>=-1?'warn':'crit'}
+ else if(k.delta==='x'){d=v-c;txt=isNaN(d)?'—':(d>=0?'+':MINUS)+Math.abs(d).toFixed(2)+'x';st=isNaN(d)?'neu':d>=-.02?'good':d>=-.2?'warn':'crit'}
+ else if(k.delta==='lost'){d=v/s.A.nr;txt=pct(d,2);st=d<.004?'good':d<.012?'warn':'crit'}
+ return{v,c,d,txt,st}}
+const ST_LBL={good:'▲ On track',warn:'● At risk',crit:'▼ Off track',opp:'◆ Opportunity',neu:'Info'};
+
+/* ============================== DIAGNOSIS & EXCEPTIONS ============================== */
+const OWNERS={supply:'COO · Supply chain',competitor:'CMO + Country sales lead',buying:'CFO + RGM lead',cost:'Procurement + CFO',pricing:'RGM + Key accounts',market:'CFO + Category GM',outperform:'CMO + COO',volume:'Chief Sales Officer',watch:'Country GM'};
+const CLS_LBL={supply:'Supply constraint',competitor:'Competitor action',buying:'Promo-funded growth',cost:'Input-cost inflation',pricing:'Price realization gap',market:'Market decline',outperform:'Outperforming',volume:'Volume shortfall',watch:'Watch'};
+function nameOf(sl){const bs=sl.b?[...sl.b]:null,cs=sl.c?[...sl.c]:null,ch=sl.ch?[...sl.ch]:null;const p=[];
+ p.push(bs&&bs.length===1?BMAP[bs[0]].name:bs&&bs.length<BRANDS.length?(new Set(bs.map(b=>BMAP[b].cat)).size===1&&bs.length===BRANDS.filter(b=>b.cat===BMAP[bs[0]].cat).length?BMAP[bs[0]].cat:bs.length+' brands'):'All brands');
+ p.push(cs&&cs.length===1?CMAP[cs[0]].name:cs&&cs.length<COUNTRIES.length?(REGIONS.find(r=>r.countries.length===cs.length&&r.countries.every(x=>cs.includes(x)))||{id:cs.length+' countries'}).id:'All markets');
+ if(ch&&ch.length===1)p.push(CHANNELS[ch[0]]);return p.join(' · ')}
+
+function diagnose(sl,s,br){
+ const nrGap=s.A.nr-s.C.nr,cmGap=s.A.cm-s.C.cm,nrV=varOf(s.A.nr,s.C.nr),cmV=varOf(s.A.cm,s.C.cm);
+ const fill=s.A.frU/s.A.u,shareChg=(s.share-s.shareL)*1e4,get=k=>br.items.find(i=>i[2]===k)?.[1]||0;
+ const negs=br.items.filter(i=>i[1]<0).sort((a,b)=>a[1]-b[1]);const worst=negs[0]?.[2];
+ const fyGap=s.FA.nr-s.FT.nr,fyCm=s.FA.cm-s.FT.cm;const bName=sl.b&&sl.b.size===1?BMAP[[...sl.b][0]].name:'the portfolio';
+ // worst/best channel
+ let chTxt='';if(!(sl.ch&&sl.ch.size===1)){let best=null;CHANNELS.forEach((_,i)=>{if(sl.ch&&!sl.ch.has(i))return;const ss=S({...sl,ch:new Set([i])});if(!ss.n)return;const g=ss.A.nr-ss.C.nr;if(!best||(nrGap<0?g<best.g:g>best.g))best={i,g,v:varOf(ss.A.nr,ss.C.nr)}});if(best&&Math.abs(best.g)>Math.abs(nrGap)*.35)chTxt=`, concentrated in ${CHANNELS[best.i]} (${s$(best.g)}, ${sPct(best.v)})`}
+ let cls;
+ if(nrGap<0&&fill<.92)cls='supply';
+ else if(nrGap>0&&cmV<-.01&&get('promo')<0&&Math.abs(get('promo'))>Math.abs(cmGap)*.5)cls='buying';
+ else if(nrGap<0&&s.compIdx<.97&&shareChg<0)cls='competitor';
+ else if(nrGap<0&&s.mktG<0&&shareChg>=0)cls='market';
+ else if(cmGap<0&&worst==='cogs')cls='cost';
+ else if(cmGap<0&&worst==='price')cls='pricing';
+ else if(nrV>.02&&cmV>=-.01)cls='outperform';
+ else if(nrV<-.01)cls='volume';
+ else cls='watch';
+ const d={cls,nrGap,cmGap,nrV,cmV,fyGap,fyCm,shareChg,fill,owner:OWNERS[cls],label:CLS_LBL[cls]};
+ const lostFY=s.A.lost*(LENS[state.lens].w1>=41?1:1);
+ switch(cls){
+  case'supply':d.cause=`Fill rate fell to ${pct(fill)} vs the 97% goal${chTxt}. Demand is intact; an estimated ${fmt$(s.A.lost)} of sales was lost to stock-outs.`;d.impl=`If service is not restored, the FY gap reaches ${s$(fyGap)}, and shelf space and share are at risk with retailers.`;d.action=`Expedite inbound supply (air-freight concentrate), reallocate stock from neighbouring markets and protect key accounts. Target 95% fill within 3 weeks.`;d.impact=Math.abs(s.A.lost)*1.4;break;
+  case'competitor':d.cause=`Volume ${sPct(get('vol')/Math.abs(s.C.nr||1))} of revenue below ${compName()}${chTxt}. The competitor price index is at ${s.compIdx.toFixed(2)} and we lost ${Math.abs(shareChg).toFixed(0)} bps of share while the category grew ${sPct(s.mktG)}.`;d.impl=`Market growth rules out a category issue: we are losing share to a competitor price move. Run-rate FY gap: ${s$(fyGap)}.`;d.action=`Respond surgically: a price-pack at parity (for example a 4-pack) and visibility in the affected channel, not a blanket price cut. Review in 4 weeks.`;d.impact=Math.abs(fyGap)*.5;break;
+  case'buying':d.cause=`Revenue is ${sPct(nrV)} vs ${compName()}, but contribution margin is ${sPct(cmV)}. Trade & promo absorbed ${fmt$(Math.abs(get('promo')))}: growth is being bought through deeper discounts${chTxt}.`;d.impl=`Every incremental dollar is diluting margin. FY contribution margin gap: ${s$(fyCm)}.`;d.action=`Cap promo depth back to plan, move from deep price cuts to multibuy and display mechanics, and stop events with ROI below 0.8x.`;d.impact=Math.abs(get('promo'))*.6;break;
+  case'cost':d.cause=`COGS is ${fmt$(Math.abs(get('cogs')))} above budget, the largest drag on contribution margin (${sPct(cmV)}). Revenue is ${sPct(nrV)}.`;d.impl=`Input inflation is not yet recovered through price. FY contribution margin gap: ${s$(fyCm)}.`;d.action=`Extend hedge cover into H1 FY27, accelerate the pending list-price increase, and assess pack-size (shrink) and recipe value-engineering options.`;d.impact=Math.abs(fyCm)*.5;break;
+  case'pricing':d.cause=`Price realization is short by ${fmt$(Math.abs(get('price')))}: a planned price increase landed late or only partly${chTxt}.`;d.impl=`Margin plan assumed full pass-through. FY contribution margin gap: ${s$(fyCm)}.`;d.action=`Close the remaining price negotiations with key accounts and enforce the price corridor; use price-pack architecture where list-price headroom is exhausted.`;d.impact=Math.abs(get('price'))*.7;break;
+  case'market':d.cause=`Revenue is ${sPct(nrV)} vs ${compName()}, but the category is ${sPct(s.mktG)} and we <b>gained ${Math.abs(shareChg).toFixed(0)} bps</b> of share.`;d.impl=`The miss is market-driven, not execution. The target assumed category growth that did not happen.`;d.action=`Re-base the FY target for this market, protect share with existing levers, and avoid chasing volume with deeper promotions.`;d.impact=0;break;
+  case'outperform':d.cause=`Revenue is ${sPct(nrV)} vs ${compName()} (${s$(nrGap)}) with contribution margin ${sPct(cmV)}${chTxt}. Share is ${shareChg>=0?'up':'down'} ${Math.abs(shareChg).toFixed(0)} bps.`;d.impl=`Profitable momentum to scale. FY outlook ${s$(fyGap)} vs target.`;d.action=`Scale what works: shift A&P toward the highest-ROMI channels, secure supply for the peak (Diwali / festive) and lock in retailer space.`;d.impact=Math.abs(fyGap)*.3;break;
+  case'volume':d.cause=`Volume is behind ${compName()}${chTxt}. Share is ${shareChg>=0?'up':'down'} ${Math.abs(shareChg).toFixed(0)} bps and the category is ${sPct(s.mktG)}.`;d.impl=`Run-rate FY gap: ${s$(fyGap)}.`;d.action=`Review numeric distribution, out-of-stocks and in-store execution with the country sales team. Check promo calendar compliance.`;d.impact=Math.abs(fyGap)*.4;break;
+  default:d.cause=`Within tolerance: revenue ${sPct(nrV)}, contribution margin ${sPct(cmV)} vs ${compName()}.`;d.impl='No material implication.';d.action='Monitor.';d.impact=0;
+ }
+ const sevV=cls==='outperform'?'opp':cls==='buying'?'warn':cls==='market'?'warn':(Math.min(nrV,cmV)<=-.06?'crit':Math.min(nrV,cmV)<=-.02?'warn':nrV>=.03?'opp':'neu');
+ d.sev=sevV;return d}
+
+function exceptions(base){
+ const role=ROLES[state.role];const out=[];
+ for(const b of sliceBrands(base))for(const c of sliceCountries(base)){
+  const sl=sub(base,{b:[b],c:[c]});const s=S(sl);if(!s.n||s.C.nr<=0)continue;
+  const br=bridge(sl,'cm');const d=diagnose(sl,s,br);
+  const gap=role.rank==='cm'?d.cmGap:d.nrGap;
+  const score=Math.abs(gap)*(role.boost[d.cls]||1)*(d.cls==='watch'?.2:1);
+  out.push({id:b+'-'+c,b,c,sl,s,br,d,gap,score,title:BMAP[b].name+' · '+CMAP[c].name});
+ }
+ out.sort((a,b)=>b.score-a.score);return out}
+
+/* ============================== UI HELPERS ============================== */
+const $=s=>document.querySelector(s);
+const tip=$('#tip');
+function showTip(e,html){tip.innerHTML=html;tip.hidden=false;const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
+const hideTip=()=>{tip.hidden=true};
+function seg(el,opts,cur,on){el.innerHTML=opts.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${v===cur}">${l}</button>`).join('');el.onclick=e=>{const b=e.target.closest('button');if(b)on(b.dataset.v)}}
+const NS='http://www.w3.org/2000/svg';
+function niceTicks(lo,hi,n=4){const span=hi-lo||1;const step0=span/n;const mag=Math.pow(10,Math.floor(Math.log10(step0)));const st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||mag*10;const t=[];for(let v=Math.ceil(lo/st)*st;v<=hi+1e-9;v+=st)t.push(v);return t}
+const statusPill=st=>`<span class="pill ${st}">${ST_LBL[st]}</span>`;
+const dCls=st=>st==='good'?'d-good':st==='warn'?'d-warn':st==='crit'?'d-crit':st==='opp'?'':'d-neu';
+
+/* ============================== CHARTS ============================== */
+function lineChart(el,o){
+ const W=Math.max(280,el.clientWidth||520),H=o.h||220,M={l:52,r:12,t:12,b:24};
+ const x0=o.x0,x1=o.x1,pw=W-M.l-M.r,ph=H-M.t-M.b;
+ let lo=Infinity,hi=-Infinity;o.series.forEach(s=>{for(let w=s.from;w<=s.to;w++){const v=s.vals[w];if(v<lo)lo=v;if(v>hi)hi=v}});
+ if(o.zero)lo=Math.min(0,lo);const pad=(hi-lo)*.08||1;lo-=o.zero?0:pad;hi+=pad;
+ const X=w=>M.l+(w-x0)/(x1-x0)*pw,Y=v=>M.t+(1-(v-lo)/(hi-lo))*ph;
+ let g=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(o.aria||'trend chart')}">`;
+ if(o.band)g+=`<rect x="${X(o.band[0]-.5)}" y="${M.t}" width="${Math.max(3,X(o.band[1]+.5)-X(o.band[0]-.5))}" height="${ph}" fill="var(--accent)" opacity=".07"/>`;
+ niceTicks(lo,hi,4).forEach(t=>{g+=`<line x1="${M.l}" x2="${W-M.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)"/><text x="${M.l-6}" y="${Y(t)+3.5}" text-anchor="end" class="num">${o.yfmt(t)}</text>`});
+ if(o.months){let last=-1;for(let w=x0;w<=x1;w++){const mo=WK_END(w).getUTCMonth();if(mo!==last){last=mo;if(X(w)<W-M.r-10)g+=`<text x="${X(w)}" y="${H-6}" text-anchor="start">${WK_END(w).toLocaleString('en-GB',{month:'short',timeZone:'UTC'})}</text>`}}}
+ if(o.today&&o.today<x1)g+=`<line x1="${X(o.today)}" x2="${X(o.today)}" y1="${M.t}" y2="${M.t+ph}" stroke="var(--axis)" stroke-dasharray="2 3"/><text x="${X(o.today)+4}" y="${M.t+10}" class="lbl">Forecast →</text>`;
+ o.series.forEach(s=>{let d='';for(let w=s.from;w<=s.to;w++)d+=(w===s.from?'M':'L')+X(w).toFixed(1)+' '+Y(s.vals[w]).toFixed(1);
+  if(s.area){g+=`<path d="${d} L${X(s.to)} ${M.t+ph} L${X(s.from)} ${M.t+ph}Z" fill="${s.color}" opacity=".08"/>`}
+  g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.wd||2}" ${s.dash?`stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round" stroke-linecap="round"/>`;
+  if(s.end)g+=`<circle cx="${X(s.to)}" cy="${Y(s.vals[s.to])}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`});
+ g+=`<line class="xh" x1="0" x2="0" y1="${M.t}" y2="${M.t+ph}" stroke="var(--ink-2)" stroke-width="1" opacity="0"/><rect class="hit" x="${M.l}" y="${M.t}" width="${pw}" height="${ph}" fill="transparent"/></svg>`;
+ el.innerHTML=g;
+ const svg=el.querySelector('svg'),xh=svg.querySelector('.xh');
+ svg.querySelector('.hit').addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(W/r.width);let w=Math.round(x0+(px-M.l)/pw*(x1-x0));w=Math.max(x0,Math.min(x1,w));xh.setAttribute('x1',X(w));xh.setAttribute('x2',X(w));xh.setAttribute('opacity',.5);showTip(e,o.tip(w))});
+ svg.querySelector('.hit').addEventListener('mouseleave',()=>{xh.setAttribute('opacity',0);hideTip()});
+}
+
+function waterfall(el,br,onClick,h){
+ const W=Math.max(280,el.clientWidth||400),H=h||250,M={l:8,r:8,t:22,b:30};
+ const its=[{l:compShort(),v:br.start,t:'tot'}];let run=br.start;const lv=[run];
+ br.items.forEach(([l,v,k])=>{its.push({l:l==='Trade & promo'?'Trade':l,v,t:'d',from:run,to:run+v,k});run+=v;lv.push(run)});
+ its.push({l:'Actual',v:br.end,t:'tot'});lv.push(br.end);
+ let lo=Math.min(...lv),hi=Math.max(...lv);const rg=(hi-lo)||Math.abs(hi)*.1||1;lo-=rg*.45;hi+=rg*.22;
+ const pw=W-M.l-M.r,ph=H-M.t-M.b,bw=pw/its.length,Y=v=>M.t+(1-(v-lo)/(hi-lo))*ph;
+ let g=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Variance bridge">`;
+ g+=`<line x1="${M.l}" x2="${W-M.r}" y1="${M.t+ph}" y2="${M.t+ph}" stroke="var(--axis)"/>`;
+ its.forEach((it,i)=>{const cx=M.l+bw*i+bw/2,w=Math.min(46,bw*.62),x=cx-w/2;let y0,y1,fill,lab;
+  if(it.t==='tot'){y0=Y(it.v);y1=M.t+ph;fill=i===0?'var(--ly)':'var(--ink)';lab=fmt$(it.v)}else{y0=Y(Math.max(it.from,it.to));y1=Y(Math.min(it.from,it.to));fill=it.v>=0?'var(--pos)':'var(--neg)';lab=s$(it.v)}
+  const hgt=Math.max(1.5,y1-y0);
+  g+=`<g class="wf" data-i="${i}" style="cursor:${it.t==='d'?'pointer':'default'}" tabindex="${it.t==='d'?0:-1}" role="${it.t==='d'?'button':'img'}" aria-label="${esc(it.l+' '+lab)}">`;
+  g+=`<rect x="${cx-bw/2}" y="${M.t}" width="${bw}" height="${ph}" fill="transparent"/>`;
+  g+=`<rect x="${x}" y="${y0}" width="${w}" height="${hgt}" rx="3" fill="${fill}"/>`;
+  g+=`<text x="${cx}" y="${y0-6}" text-anchor="middle" class="${it.t==='tot'?'strong':'lbl'} num" style="font-size:${bw<44?9.5:10.5}px">${lab}</text>`;
+  g+=`<text x="${cx}" y="${H-10}" text-anchor="middle" style="font-size:${bw<44?9.5:10.5}px">${esc(it.l)}</text></g>`;
+  if(i<its.length-1){const nx=M.l+bw*(i+1)+bw/2-w/2;const yy=Y(it.t==='tot'?it.v:it.to);g+=`<line x1="${x+w}" x2="${nx}" y1="${yy}" y2="${yy}" stroke="var(--axis)" stroke-dasharray="2 2"/>`}
+ });
+ g+=`<path d="M${M.l+bw/2-10} ${M.t+ph-8} l5 -4 l5 4 l5 -4 l5 4" stroke="var(--surface)" stroke-width="3" fill="none"/>`;
+ g+='</svg>';el.innerHTML=g;
+ el.querySelectorAll('.wf').forEach(n=>{const it=its[+n.dataset.i];
+  n.addEventListener('mousemove',e=>showTip(e,`<div class="th">${esc(it.t==='tot'?(it.l==='Actual'?'Actual':compShort())+' '+(br.kind==='nr'?'net revenue':'contribution margin'):it.l+' effect')}</div><div class="num">${it.t==='tot'?fmt$(it.v):s$(it.v)}</div>${it.t==='d'?'<div class="foot" style="margin-top:4px">Click for contributors</div>':''}`));
+  n.addEventListener('mouseleave',hideTip);
+  if(it.t==='d'&&onClick){n.addEventListener('click',()=>{hideTip();onClick(it)});n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onClick(it)}})}});
+}
+
+/* ============================== RENDER ============================== */
+let CTX={};
+function render(){
+ computePS();
+ const base=filterSlice();
+ const S0=S(base);
+ const ex=exceptions(base);
+ CTX={base,S0,ex,W:weekly(base)};
+ renderScope();renderBrief();renderKpis();renderTrend();renderBridge();renderEx();renderHeat();renderQuad();renderRGM();renderMarket();renderMkting();renderSignals();renderActions();renderFocus();
+}
+
+function renderScope(){
+ const L=LENS[state.lens];const b=CTX.base;
+ $('#scope').innerHTML=`Showing <b>${esc(nameOf(b))}${b.ch?'':' · All channels'}</b> · <b>${L.label}</b> (${L.desc}) vs <b>${compName()}</b> · Lens: <b>${ROLES[state.role].label}</b>`;
+}
+
+function contributorsOf(key,kind,limit=5){
+ const base=CTX.base;const rows=[];
+ for(const b of sliceBrands(base))for(const c of sliceCountries(base)){const sl=sub(base,{b:[b],c:[c]});if(!SERIES.some(s=>m(s,sl)))continue;const br=bridge(sl,kind);const it=br.items.find(i=>i[2]===key);if(!it)continue;rows.push({b,c,v:key==='mix'?br.perSeriesVol-br.items[0][1]:it[1],sl})}
+ rows.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));return rows.slice(0,limit)}
+
+function renderBrief(){
+ const s=CTX.S0,role=ROLES[state.role],L=LENS[state.lens];
+ const nrV=varOf(s.A.nr,s.C.nr),cmV=varOf(s.A.cm,s.C.cm),worst=Math.min(nrV,cmV);
+ const st=worst<-.03?'crit':worst<-.005?'warn':'good';
+ const br=bridge(CTX.base,'cm');const negs=br.items.filter(i=>i[1]<0).sort((a,b)=>a[1]-b[1]).slice(0,2);const pos=br.items.filter(i=>i[1]>0).sort((a,b)=>b[1]-a[1])[0];
+ const why=negs.map(([l,v,k])=>{const top=contributorsOf(k,'cm',1)[0];return `${/^[A-Z&]{2,}/.test(l)?l:l.toLowerCase()} (${s$(v)}${top&&k!=='mix'?`, led by ${BMAP[top.b].name} ${CMAP[top.c].name}`:''})`}).join(' and ');
+ const fyV=varOf(s.FA.nr,s.FT.nr),shareBps=(s.share-s.shareL)*1e4;
+ const exNeg=CTX.ex.filter(e=>e.d.sev==='crit'||e.d.sev==='warn').slice(0,2),exPos=CTX.ex.find(e=>e.d.sev==='opp');
+ const roleLine={
+  ceo:()=>`Three things move the year: ${CTX.ex.slice(0,3).map(e=>e.title).join(', ')}. Each has an owner in the Action list below.`,
+  cfo:()=>{const tr=s.A.tr/s.A.gs,trc=s.C.tr/s.C.gs;return `Trade spend is ${pct(tr)} of gross sales vs ${pct(trc)} (${sBps((tr-trc)*1e4)}), worth ${fmt$(Math.abs((tr-trc)*s.A.gs))} of gross-to-net leakage. GM% is ${pct(s.A.gm/s.A.nr)} (${sBps((s.A.gm/s.A.nr-s.C.gm/s.C.nr)*1e4)}).`},
+  cmo:()=>{let bestB=null;for(const b of sliceBrands(CTX.base)){const ss=S(sub(CTX.base,{b:[b]}));const r=ss.A.inc/ss.A.ap;if(!bestB||r>bestB.r)bestB={b,r}}return `A&P ${fmt$(s.A.ap)} (${sPct(varOf(s.A.ap,s.C.ap))} vs ${compName()}); blended ROMI ${(s.A.inc/s.A.ap).toFixed(2)}x. Highest return: ${BMAP[bestB.b].name} at ${bestB.r.toFixed(2)}x.`},
+  sales:()=>`Volume ${sPct(varOf(s.A.u,s.C.u))} vs ${compName()}. The FY outlook needs ${fmt$(Math.max(0,s.FT.nr-s.FA.nr))} of recovery in the remaining 11 weeks to hit target.`,
+  coo:()=>`Fill rate ${pct(s.A.frU/s.A.u)} vs the 97% goal; estimated lost sales ${fmt$(s.A.lost)}. Cost to serve is $${(s.A.lg/s.A.u).toFixed(2)}/case (${sPct(varOf(s.A.lg/s.A.u,s.C.lg/s.C.u))}).`,
+  cpo:()=>`COGS per case $${(s.A.cogs/s.A.u).toFixed(2)} (${sPct(varOf(s.A.cogs/s.A.u,s.C.cogs/s.C.u))} vs ${compName()}); the COGS effect on contribution margin is ${s$(br.items.find(i=>i[2]==='cogs')[1])}.`,
+  rgm:()=>`Price realization ${sPct(s.priceReal)} vs a plan of ${sPct(s.pricePlan)}; trade spend is ${pct(s.A.tr/s.A.gs)} of gross sales; promotion ROI ${isNaN(s.promoRoi)?'n/a':s.promoRoi.toFixed(2)+'x'} vs the 1.2x hurdle.`,
+ }[role.line]();
+ $('#brief').innerHTML=`
+  <div class="card-h"><div class="brief-status">${statusPill(st)}<span class="ai-tag">AI briefing · generated from data on this page</span></div></div>
+  <p class="brief-head">${L.label} net revenue <span class="num">${fmt$(s.A.nr)}</span>, ${sPct(nrV)} vs ${compName()} (${s$(s.A.nr-s.C.nr)}). Contribution margin ${sPct(cmV)} (${s$(s.A.cm-s.C.cm)}).</p>
+  <dl>
+   <dt>Why</dt><dd>${negs.length?`The contribution-margin gap comes mainly from ${why}`:'No material negative drivers'}${pos?`, partly offset by ${/^[A-Z&]{2,}/.test(pos[0])?pos[0]:pos[0].toLowerCase()} (${s$(pos[1])})`:''}.</dd>
+   <dt>Market</dt><dd>Category ${sPct(s.mktG)} vs our ${sPct(s.growth)}: share ${pct(s.share)} (${sBps(shareBps)} vs LY). ${shareBps>=0?'We are outgrowing the market.':'We are losing ground to the market.'}</dd>
+   <dt>Outlook</dt><dd>FY revenue landing ${fmt$(s.FA.nr)} vs target ${fmt$(s.FT.nr)} (${sPct(fyV)}); FY contribution margin ${s$(s.FA.cm-s.FT.cm)} vs target.</dd>
+   <dt>Attention</dt><dd>${exNeg.map(e=>`<button class="link" data-ex="${e.id}">${esc(e.title)}</button> (${e.d.label.toLowerCase()})`).join('; ')||'None material'}${exPos?`. Opportunity: <button class="link" data-ex="${exPos.id}">${esc(exPos.title)}</button>`:''}.</dd>
+   <dt>${esc(role.label)}</dt><dd>${roleLine}</dd>
+  </dl>`;
+ $('#brief').querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>openEx(b.dataset.ex));
+}
+
+function renderKpis(){
+ const s=CTX.S0,W=CTX.W,L=LENS[state.lens];
+ $('#kpis').innerHTML=ROLES[state.role].kpis.map(id=>{
+  const k=KPI[id],e=kEval(id,s);
+  let sec='';
+  if(k.sec){const alt=state.comp==='T'?s.L:s.T;sec=`vs ${state.comp==='T'?'LY':'target'} ${sPct(varOf(k.val(s.A),k.val(alt)))}`;if(L.p0)sec+=` · vs ${L.prior} ${sPct(varOf(k.val(s.A),k.val(s.P)))}`}
+  else if(id==='share')sec=`Category ${sPct(s.mktG)} · us ${sPct(s.growth)}`;
+  else if(id==='outlook')sec=`FY target ${fmt$(s.FT.nr)}`;
+  else if(id==='fill')sec=`Lost sales ${fmt$(s.A.lost)}`;
+  else if(id==='romi')sec=`On A&P of ${fmt$(s.A.ap)}`;
+  else if(id==='price')sec=`Plan ${sPct(s.pricePlan)} vs LY`;
+  else if(id==='gvm')sec=`Us ${sPct(s.growth)} · market ${sPct(s.mktG)}`;
+  else if(id==='lost')sec=`Fill rate ${pct(s.A.frU/s.A.u)}`;
+  else if(id==='promoRoi')sec='Evaluated events, YTD';
+  else{const c=k.comp?k.comp(s):k.val(s.C,s);sec=`${compShort()}: ${k.fmt(c)}`}
+  const sp=k.spark===null?'':spark(id,W);
+  return `<button class="kpi" data-k="${id}" aria-label="${esc(k.label)} details">
+   <div class="k-top"><span class="k-l">${esc(k.label)}</span>${statusPill(e.st)}</div>
+   <div class="k-v num">${k.fmt(e.v)}</div>
+   <div class="k-d ${dCls(e.st)} num">${e.txt} <span style="font-weight:400;color:var(--muted)">${k.compLbl||'vs '+compName()}</span></div>
+   <div class="k-s num">${sec}</div>${sp}</button>`}).join('');
+ $('#kpis').querySelectorAll('.kpi').forEach(b=>b.onclick=()=>openKpi(b.dataset.k));
+}
+function spark(id,W){
+ const k=KPI[id],f=k.spark||k.val,w0=29,w1=41;const a=[],c=[];
+ for(let w=w0;w<=w1;w++){a.push(f(W.A[w]));const cs=state.comp==='T'?W.T[w]:W.L[w];c.push(id==='share'||id==='gvm'?f(W.L[w]):f(cs))}
+ const all=a.concat(k.spark?a:c).filter(v=>isFinite(v));let lo=Math.min(...all),hi=Math.max(...all);if(hi-lo<1e-12){hi+=1;lo-=1}
+ const X=i=>2+i/(a.length-1)*196,Y=v=>26-(v-lo)/(hi-lo)*22;
+ const p=arr=>arr.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join('');
+ const showC=!k.spark&&!['fill','lost','romi'].includes(id)||id==='romi';
+ return `<svg viewBox="0 0 200 28" preserveAspectRatio="none" aria-hidden="true">${showC?`<path d="${p(c)}" fill="none" stroke="var(--tgt)" stroke-width="1.2" stroke-dasharray="3 2" vector-effect="non-scaling-stroke"/>`:''}<path d="${p(a)} L${X(a.length-1)} 28 L2 28Z" fill="var(--s1)" opacity=".1"/><path d="${p(a)}" fill="none" stroke="var(--s1)" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+function renderTrend(){
+ const W=CTX.W,L=LENS[state.lens],met=state.trendMetric,cum=state.trendMode==='cum';
+ seg($('#trend-metric'),[['nr','Net revenue'],['cm','Contrib. margin'],['u','Volume']],met,v=>{state.trendMetric=v;renderTrend()});
+ seg($('#trend-mode'),[['week','Weekly'],['cum','Cumulative']],state.trendMode,v=>{state.trendMode=v;renderTrend()});
+ const get=x=>x[met];const mk=k=>{const a=new Float64Array(NW+1);let r=0;for(let w=1;w<=NW;w++){r=cum?r+get(W[k][w]):get(W[k][w]);a[w]=r}return a};
+ const A=mk('A'),T=mk('T'),Ly=mk('L');const yf=met==='u'?v=>fmtN(v):v=>fmt$(v);
+ const series=[{vals:Ly,from:1,to:52,color:'var(--ly)',wd:1.5,dash:'1 3'},{vals:T,from:1,to:52,color:'var(--tgt)',wd:1.5,dash:'5 3'},{vals:A,from:1,to:CW,color:'var(--s1)',wd:2,area:true,end:true},{vals:A,from:CW,to:52,color:'var(--s1)',wd:2,dash:'4 3'}];
+ lineChart($('#trend'),{series,x0:1,x1:52,band:[L.w0,L.w1],today:CW+.5,months:true,yfmt:yf,zero:cum,h:230,aria:'Weekly trend actual vs target vs last year',
+  tip:w=>`<div class="th">Wk ${w} · w/e ${wkLabel(w)}${w>CW?' · forecast':''}</div><div class="tr"><span>${w>CW?'Forecast':'Actual'}</span><b class="num">${yf(A[w])}</b></div><div class="tr"><span>Target</span><span class="num">${yf(T[w])} (${sPct(varOf(A[w],T[w]))})</span></div><div class="tr"><span>Last year</span><span class="num">${yf(Ly[w])} (${sPct(varOf(A[w],Ly[w]))})</span></div>`});
+ const nm={nr:'Net revenue',cm:'Contribution margin',u:'Volume (cases)'}[met];
+ $('#trend-title').textContent=nm+(cum?', cumulative':', weekly');
+ const s=CTX.S0,fa=met==='u'?s.FA.u:s.FA[met],ft=met==='u'?s.FT.u:s.FT[met];
+ $('#trend-sub').innerHTML=`FY outlook <b class="num">${yf(fa)}</b> vs target ${yf(ft)} (<span class="${varOf(fa,ft)>=0?'d-good':'d-crit'}">${sPct(varOf(fa,ft))}</span>). Shaded = selected period.`;
+ $('#trend-legend').innerHTML=`<span><i style="background:var(--s1)"></i>Actual</span><span><svg width="18" height="6" aria-hidden="true"><path d="M0 3H18" stroke="var(--s1)" stroke-width="2" stroke-dasharray="4 3"/></svg> Forecast</span><span><svg width="18" height="6" aria-hidden="true"><path d="M0 3H18" stroke="var(--tgt)" stroke-width="1.5" stroke-dasharray="5 3"/></svg> Target</span><span><svg width="18" height="6" aria-hidden="true"><path d="M0 3H18" stroke="var(--ly)" stroke-width="1.5" stroke-dasharray="1 3"/></svg> Last year</span>`;
+}
+
+function renderBridge(){
+ seg($('#bridge-metric'),[['nr','Net revenue'],['cm','Contrib. margin']],state.bridge,v=>{state.bridge=v;renderBridge()});
+ const br=bridge(CTX.base,state.bridge);
+ $('#bridge-title').textContent=(state.bridge==='nr'?'Net revenue':'Contribution margin')+' bridge';
+ $('#bridge-sub').textContent=`${compShort()} → actual, ${LENS[state.lens].label}. Gap ${s$(br.end-br.start)} (${sPct(varOf(br.end,br.start))})`;
+ waterfall($('#bridge'),br,it=>openBridgeItem(it,br.kind));
+}
+
+function renderEx(){
+ const role=ROLES[state.role];const list=CTX.ex.filter(e=>e.d.cls!=='watch').slice(0,6);
+ $('#ex-sub').textContent=`Ranked by $ impact on ${role.rank==='cm'?'contribution margin':'net revenue'}, weighted for ${role.label}`;
+ $('#exlist').innerHTML=list.map((e,i)=>`<li><button class="ex" data-ex="${e.id}"><span class="rank">${i+1}</span>
+   <span class="t"><span>${esc(e.title)}</span><span class="pill ${e.d.sev}">${esc(e.d.label)}</span></span>
+   <span class="g num"><b class="${e.d.nrGap<0?'d-crit':'d-good'}">${s$(e.d.nrGap)}</b> NR (${sPct(e.d.nrV)}) · <b class="${e.d.cmGap<0?'d-crit':'d-good'}">${s$(e.d.cmGap)}</b> CM</span>
+   <span class="c">Owner: ${esc(e.d.owner)}</span></button></li>`).join('')||'<li class="foot">No material exceptions in this scope.</li>';
+ $('#exlist').querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>openEx(b.dataset.ex));
+}
+
+const HM_METRICS={nrVar:{l:()=>'NR vs '+compShort(),f:s=>varOf(s.A.nr,s.C.nr),fmt:v=>sPct(v,1),sc:.15},cmVar:{l:()=>'CM vs '+compShort(),f:s=>varOf(s.A.cm,s.C.cm),fmt:v=>sPct(v,0),sc:.25},grow:{l:()=>'Growth vs LY',f:s=>varOf(s.A.nr,s.L.nr),fmt:v=>sPct(v,1),sc:.15},share:{l:()=>'Share Δ',f:s=>(s.share-s.shareL)*1e4,fmt:v=>(v>=0?'+':MINUS)+Math.abs(Math.round(v)),sc:250}};
+function divColor(t){const p=Math.round(Math.min(1,Math.abs(t))*82);return{bg:`color-mix(in oklab, ${t<0?'var(--neg)':'var(--pos)'} ${p}%, var(--mid))`,fg:p>48?'#fff':'var(--ink)'}}
+function renderHeat(){
+ if(state.hmCols==='channel'&&state.hmMetric==='share')state.hmMetric='nrVar';
+ seg($('#hm-metric'),Object.entries(HM_METRICS).filter(([k])=>!(k==='share'&&state.hmCols==='channel')).map(([k,v])=>[k,v.l()]),state.hmMetric,v=>{state.hmMetric=v;renderHeat()});
+ seg($('#hm-cols'),[['country','By country'],['channel','By channel']],state.hmCols,v=>{state.hmCols=v;renderHeat()});
+ const base=CTX.base,M=HM_METRICS[state.hmMetric];
+ const cols=state.hmCols==='country'?sliceCountries(base).map(c=>({k:c,l:CMAP[c].name,o:{c:[c]}})):CHANNELS.map((n,i)=>({k:i,l:n.replace(' & ',' & ').replace('Discount & Dollar','Discount').replace('Drug & Pharmacy','Drug'),o:{ch:[i]}})).filter(c=>!base.ch||base.ch.has(c.k));
+ const rows=sliceBrands(base).map(b=>({k:b,l:BMAP[b].name,cat:BMAP[b].cat,o:{b:[b]}}));
+ const flagged=new Set(CTX.ex.filter(e=>e.d.cls!=='watch').slice(0,6).map(e=>e.id));
+ const cell=(o,cls,flag)=>{const sl=sub(base,o);if(!SERIES.some(s=>m(s,sl)))return'<td class="na">—</td>';const s=S(sl);if(!s.n||s.C.nr<=0)return'<td class="na">—</td>';const v=M.f(s);const c=divColor(v/M.sc);
+  return `<td class="${cls||''}"><button class="${flag?'flag':''}" style="background:${c.bg};color:${c.fg}" data-o='${JSON.stringify(o)}' aria-label="${esc(nameOf(sl))}: ${M.fmt(v)}">${M.fmt(v)}</button></td>`};
+ let h=`<table class="hm"><thead><tr><th class="rh"></th>${cols.map(c=>`<th scope="col">${esc(c.l)}</th>`).join('')}<th scope="col">All</th></tr></thead><tbody>`;
+ rows.forEach(r=>{h+=`<tr><th class="rh" scope="row">${esc(r.l)}<small>${esc(r.cat)}</small></th>${cols.map(c=>cell({...r.o,...c.o},'',state.hmCols==='country'&&flagged.has(r.k+'-'+c.k))).join('')}${cell(r.o,'tot')}</tr>`});
+ h+=`<tr class="tot"><th class="rh" scope="row">All brands</th>${cols.map(c=>cell(c.o,'tot')).join('')}${cell({},'tot')}</tr></tbody></table>`;
+ $('#heat').innerHTML=h;
+ $('#heat').querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>{const o=JSON.parse(b.dataset.o);openSlice(sub(base,o))});
+ $('#hm-title').textContent='Performance map: '+M.l()+(state.hmMetric==='share'?' (bps)':'');
+ const ramp=[-1,-.66,-.33,0,.33,.66,1].map(t=>`<span style="background:${divColor(t).bg}"></span>`).join('');
+ $('#hm-legend').innerHTML=`<span>Behind ${M.fmt(-M.sc)}</span><span class="ramp" aria-hidden="true">${ramp}</span><span>Ahead ${M.fmt(M.sc)}</span><span style="margin-left:auto">● ranked exception</span>`;
+}
+
+function renderQuad(){
+ seg($('#quad-dim'),[['brand','Brands'],['country','Countries']],state.quad,v=>{state.quad=v;renderQuad()});
+ const base=CTX.base;const el=$('#quad');
+ const pts=(state.quad==='brand'?sliceBrands(base).map(b=>({id:b,l:BMAP[b].name,o:{b:[b]},cat:BMAP[b].cat})):sliceCountries(base).map(c=>({id:c,l:CMAP[c].name,o:{c:[c]}}))).map(p=>{const s=S(sub(base,p.o));if(!s.n)return null;return{...p,x:varOf(s.A.nr,s.L.nr),y:(s.A.gm/s.A.nr-s.L.gm/s.L.nr)*1e4,r:s.A.nr,s}}).filter(Boolean);
+ const Wd=Math.max(280,el.clientWidth||420),H=250,M={l:44,r:14,t:14,b:30};
+ let xl=Math.min(-.02,...pts.map(p=>p.x)),xh=Math.max(.04,...pts.map(p=>p.x)),yl=Math.min(-80,...pts.map(p=>p.y)),yh=Math.max(80,...pts.map(p=>p.y));
+ const px=(xh-xl)*.14,py=(yh-yl)*.14;xl-=px;xh+=px;yl-=py;yh+=py;
+ const X=v=>M.l+(v-xl)/(xh-xl)*(Wd-M.l-M.r),Y=v=>M.t+(1-(v-yl)/(yh-yl))*(H-M.t-M.b);
+ const maxR=Math.max(...pts.map(p=>p.r));const rad=r=>5+Math.sqrt(r/maxR)*13;
+ const col=p=>state.quad==='brand'?['var(--s1)','var(--s2)','var(--s3)'][CATS.indexOf(p.cat)]:'var(--s1)';
+ let g=`<svg viewBox="0 0 ${Wd} ${H}" height="${H}" role="img" aria-label="Growth vs margin quadrant">`;
+ niceTicks(xl,xh,4).forEach(t=>g+=`<line x1="${X(t)}" x2="${X(t)}" y1="${M.t}" y2="${H-M.b}" stroke="var(--grid)"/><text x="${X(t)}" y="${H-M.b+14}" text-anchor="middle" class="num">${sPct(t,0)}</text>`);
+ niceTicks(yl,yh,4).forEach(t=>g+=`<line x1="${M.l}" x2="${Wd-M.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)"/><text x="${M.l-6}" y="${Y(t)+3.5}" text-anchor="end" class="num">${t>0?'+':''}${Math.round(t)}</text>`);
+ g+=`<line x1="${X(0)}" x2="${X(0)}" y1="${M.t}" y2="${H-M.b}" stroke="var(--axis)" stroke-width="1.5"/><line x1="${M.l}" x2="${Wd-M.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--axis)" stroke-width="1.5"/>`;
+ g+=`<text x="${Wd-M.r-4}" y="${M.t+12}" text-anchor="end" class="lbl" style="font-weight:600">Profitable growth</text><text x="${Wd-M.r-4}" y="${H-M.b-6}" text-anchor="end" class="lbl" style="font-weight:600;fill:var(--crit-t)">Buying growth</text><text x="${M.l+4}" y="${M.t+12}" class="lbl">Margin over volume</text><text x="${M.l+4}" y="${H-M.b-6}" class="lbl">Shrinking</text>`;
+ g+=`<text x="${Wd-M.r}" y="${H-4}" text-anchor="end">Net revenue growth vs LY →</text><text x="${M.l-38}" y="${M.t-2}" >GM% Δ bps</text>`;
+ pts.sort((a,b)=>b.r-a.r).forEach((p,i)=>{const cx=X(p.x),cy=Y(p.y),r=rad(p.r);g+=`<g class="qp" data-i="${i}" style="cursor:pointer" tabindex="0" role="button" aria-label="${esc(p.l)}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${col(p)}" fill-opacity=".75" stroke="var(--surface)" stroke-width="2"/><text x="${cx+(cx>Wd-90?-r-4:r+4)}" y="${cy+3.5}" text-anchor="${cx>Wd-90?'end':'start'}" class="lbl" style="font-weight:500">${esc(p.l)}</text></g>`});
+ g+='</svg>';el.innerHTML=g;
+ el.querySelectorAll('.qp').forEach(n=>{const p=pts[+n.dataset.i];n.onmousemove=e=>showTip(e,`<div class="th">${esc(p.l)}</div><div class="tr"><span>NR growth vs LY</span><b class="num">${sPct(p.x)}</b></div><div class="tr"><span>GM% change</span><b class="num">${sBps(p.y)}</b></div><div class="tr"><span>Net revenue</span><span class="num">${fmt$(p.r)}</span></div><div class="tr"><span>Trade % GS</span><span class="num">${pct(p.s.A.tr/p.s.A.gs)} (LY ${pct(p.s.L.tr/p.s.L.gs)})</span></div>`);n.onmouseleave=hideTip;const go=()=>{hideTip();openSlice(sub(base,p.o))};n.onclick=go;n.onkeydown=e=>{if(e.key==='Enter')go()}});
+ $('#quad-legend').innerHTML=state.quad==='brand'?CATS.map((c,i)=>`<span><i style="background:${['var(--s1)','var(--s2)','var(--s3)'][i]}"></i>${c}</span>`).join('')+'<span style="margin-left:auto">Bubble size = net revenue</span>':'<span>Bubble size = net revenue</span>';
+}
+
+function renderRGM(){
+ const s=CTX.S0;const mix=bridge(CTX.base,'nr').items.find(i=>i[2]==='mix')[1];
+ const np=x=>x.nr/x.u;const npA=np(s.A)/np(s.L)-1,npT=np(s.T)/np(s.L)-1;
+ const rows=[
+  ['Price realization vs LY',sPct(s.pricePlan),sPct(s.priceReal),(s.priceReal-s.pricePlan)*100,'pts'],
+  ['Trade spend % gross sales',pct(s.T.tr/s.T.gs),pct(s.A.tr/s.A.gs),-(s.A.tr/s.A.gs-s.T.tr/s.T.gs)*1e4,'bps'],
+  ['Net price per case vs LY',sPct(npT),sPct(npA),(npA-npT)*100,'pts'],
+  ['Mix effect on net revenue','neutral',s$(mix),mix/s.C.nr*100,'pts'],
+  ['Promotion ROI (YTD events)','1.20x',isNaN(s.promoRoi)?'—':s.promoRoi.toFixed(2)+'x',isNaN(s.promoRoi)?0:(s.promoRoi-1.2)*10,'x'],
+ ];
+ $('#rgm').innerHTML=`<thead><tr><th>Lever</th><th class="r">RGM plan</th><th class="r">Actual</th><th class="r">Status</th></tr></thead><tbody>${rows.map(r=>{const st=r[3]>=-.05?'good':r[3]>=(r[4]==='bps'?-60:-1)?'warn':'crit';return `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r"><b>${r[2]}</b></td><td class="r"><span class="pill ${st}">${{good:'▲ On plan',warn:'● Watch',crit:'▼ Off plan'}[st]}</span></td></tr>`}).join('')}</tbody>`;
+}
+
+function renderMarket(){
+ const base=CTX.base,el=$('#mkt');
+ const rows=sliceCountries(base).map(c=>{const s=S(sub(base,{c:[c]}));return{c,l:CMAP[c].name,us:s.growth,mk:s.mktG,bps:(s.share-s.shareL)*1e4,o:{c:[c]}}}).filter(r=>isFinite(r.us));
+ rows.sort((a,b)=>a.bps-b.bps);
+ const Wd=Math.max(260,el.clientWidth||360),rh=24,H=rows.length*rh+30,M={l:86,r:58,t:6,b:24};
+ const lo=Math.min(-.04,...rows.map(r=>Math.min(r.us,r.mk)))-.01,hi=Math.max(.08,...rows.map(r=>Math.max(r.us,r.mk)))+.01;
+ const X=v=>M.l+(v-lo)/(hi-lo)*(Wd-M.l-M.r);
+ let g=`<svg viewBox="0 0 ${Wd} ${H}" height="${H}" role="img" aria-label="Our growth vs market growth by country">`;
+ niceTicks(lo,hi,4).forEach(t=>g+=`<line x1="${X(t)}" x2="${X(t)}" y1="${M.t}" y2="${H-M.b}" stroke="${Math.abs(t)<1e-9?'var(--axis)':'var(--grid)'}"/><text x="${X(t)}" y="${H-8}" text-anchor="middle" class="num">${sPct(t,0)}</text>`);
+ rows.forEach((r,i)=>{const y=M.t+i*rh+rh/2;const gain=r.bps>=0;g+=`<g class="mr" data-i="${i}" style="cursor:pointer" tabindex="0" role="button" aria-label="${esc(r.l)}"><rect x="0" y="${y-rh/2}" width="${Wd}" height="${rh}" fill="transparent"/><text x="${M.l-8}" y="${y+3.5}" text-anchor="end" class="lbl">${esc(r.l)}</text><line x1="${X(r.mk)}" x2="${X(r.us)}" y1="${y}" y2="${y}" stroke="var(--axis)" stroke-width="2"/><circle cx="${X(r.mk)}" cy="${y}" r="4.5" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.5"/><circle cx="${X(r.us)}" cy="${y}" r="5" fill="${gain?'var(--pos)':'var(--neg)'}" stroke="var(--surface)" stroke-width="1.5"/><text x="${Wd-4}" y="${y+3.5}" text-anchor="end" class="num" style="font-weight:600;fill:${gain?'var(--pos)':'var(--crit-t)'}">${sBps(r.bps).replace(' bps','')}</text></g>`});
+ g+=`<text x="${Wd-4}" y="${H-8}" text-anchor="end">share bps</text></svg>`;el.innerHTML=g;
+ el.querySelectorAll('.mr').forEach(n=>{const r=rows[+n.dataset.i];n.onmousemove=e=>showTip(e,`<div class="th">${esc(r.l)}</div><div class="tr"><span>Our NR growth</span><b class="num">${sPct(r.us)}</b></div><div class="tr"><span>Category growth</span><span class="num">${sPct(r.mk)}</span></div><div class="tr"><span>Share change</span><b class="num">${sBps(r.bps)}</b></div>`);n.onmouseleave=hideTip;const go=()=>{hideTip();openSlice(sub(base,r.o))};n.onclick=go;n.onkeydown=e=>{if(e.key==='Enter')go()}});
+ const win=rows.filter(r=>r.bps>=0).length;$('#mkt-sub').textContent=`Gaining share in ${win} of ${rows.length} countries · ${LENS[state.lens].label} vs LY`;
+}
+
+function renderMkting(){
+ const base=CTX.base;
+ const rows=sliceBrands(base).map(b=>{const s=S(sub(base,{b:[b]}));return{b,r:s.A.inc/s.A.ap,ap:s.A.ap,apv:varOf(s.A.ap,s.C.ap),plan:s.T.inc/s.T.ap}}).filter(r=>r.ap>0).sort((a,b)=>b.r-a.r);
+ const mx=Math.max(3,...rows.map(r=>r.r))*1.05,H=1.2;
+ $('#romi').innerHTML=rows.map(r=>`<div class="bar-row"><span>${esc(BMAP[r.b].name)}</span><div class="bar-track" title="ROMI ${r.r.toFixed(2)}x"><div class="bar-fill ${r.r<H?'low':''}" style="width:${r.r/mx*62}%"></div><div class="bar-hurdle" style="left:${H/mx*62}%"></div><span class="bar-txt num" style="left:calc(${r.r/mx*62}% + 6px)"><b style="color:var(--ink)">${r.r.toFixed(2)}x</b> · ${fmt$(r.ap)} (${sPct(r.apv,0)} vs ${compShort()})</span></div></div>`).join('')+`<div class="foot">Dashed line = 1.2x hurdle. Red bars are below hurdle.</div>`;
+ const pr=PROMOS.filter(p=>(!base.b||base.b.has(p.b))&&(!base.c||base.c.has(p.c))&&(!base.ch||base.ch.has(p.ch))).sort((a,b)=>b.spend-a.spend).slice(0,6);
+ const vd=r=>r>=1.2?['good','Repeat']:r>=.8?['warn','Optimise']:['crit','Stop / redesign'];
+ $('#promos').innerHTML=pr.length?`<thead><tr><th>Promotion (YTD)</th><th class="r">Spend</th><th class="r">Lift</th><th class="r">ROI</th><th class="r">Call</th></tr></thead><tbody>${pr.map(p=>{const v=vd(p.roi);return `<tr class="click" data-p="${p.id}" tabindex="0"><td><b>${esc(BMAP[p.b].name)}</b> · ${esc(CMAP[p.c].name)}<br><span class="foot">${esc(p.name)}</span></td><td class="r">${fmt$(p.spend)}</td><td class="r">${sPct(p.lift,0)}</td><td class="r"><b>${p.roi.toFixed(2)}x</b></td><td class="r"><span class="pill ${v[0]}">${v[1]}</span></td></tr>`}).join('')}</tbody>`:'<tbody><tr><td class="foot">No evaluated promotions in this scope.</td></tr></tbody>';
+ $('#promos').querySelectorAll('[data-p]').forEach(r=>{const go=()=>openPromo(r.dataset.p);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter')go()}});
+}
+
+function renderSignals(){
+ const base=CTX.base,cs=new Set(sliceCountries(base)),cats=new Set(sliceCats(base));
+ const sg=SIGNALS.filter(x=>(x.c==='*'||x.c.some(c=>cs.has(c)))&&(x.cat==='*'||cats.has(x.cat))).sort((a,b)=>b.w-a.w);
+ $('#signals').innerHTML=sg.map(x=>`<div class="sig"><span class="wk">Wk ${x.w}</span><span class="tx">${esc(x.text)}</span><span class="meta"><span class="chip">${esc(x.type)}</span>${x.c==='*'?'All markets':x.c.map(c=>CMAP[c].name).join(', ')}${x.link&&(x.link.b||x.link.c)?` · <button class="link" data-l='${JSON.stringify(x.link)}'>See impact</button>`:''}</span></div>`).join('')||'<p class="foot">No external signals in scope.</p>';
+ $('#signals').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{const l=JSON.parse(b.dataset.l);openSlice(sub(CTX.base,{b:l.b?[l.b]:null,c:l.c?[l.c]:null}))});
+}
+
+function renderActions(){
+ const list=CTX.ex.filter(e=>e.d.cls!=='watch'&&e.d.cls!=='market'||e.d.cls==='market').filter(e=>e.d.cls!=='watch').slice(0,6);
+ const due=['This week','This week','Next 2 weeks','Next 2 weeks','This month','This month'];
+ $('#actions').innerHTML=`<thead><tr><th>#</th><th>Recommended action</th><th>Why (exception)</th><th>Owner</th><th class="r">Value at stake</th><th>Due</th><th>Status</th></tr></thead><tbody>${list.map((e,i)=>{const st=actionStatus[e.id]||'Open';return `<tr><td class="mono">${i+1}</td><td style="min-width:240px">${e.d.action}</td><td style="min-width:150px"><button class="link" data-ex="${e.id}">${esc(e.title)}</button><br><span class="pill ${e.d.sev}" style="margin-top:3px">${esc(e.d.label)}</span></td><td style="white-space:nowrap">${esc(e.d.owner)}</td><td class="r"><b>${e.d.impact?fmt$(e.d.impact):'Re-base'}</b></td><td style="white-space:nowrap">${due[i]}</td><td><button class="status-btn" data-s="${st}" data-id="${e.id}" aria-label="Status ${st}, click to change">${st}</button></td></tr>`}).join('')}</tbody>`;
+ $('#actions').querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>openEx(b.dataset.ex));
+ $('#actions').querySelectorAll('.status-btn').forEach(b=>b.onclick=()=>{const n={Open:'Assigned',Assigned:'Done',Done:'Open'}[b.dataset.s];actionStatus[b.dataset.id]=n;b.dataset.s=n;b.textContent=n;b.setAttribute('aria-label','Status '+n+', click to change')});
+}
+function renderFocus(){const f=ROLES[state.role].focus;document.querySelectorAll('#band4 .card').forEach(c=>{c.querySelector('.focus-tag').hidden=!f.includes(c.dataset.key);c.style.order=f.includes(c.dataset.key)?0:1})}
+
+/* ============================== DRAWER ============================== */
+let lastFocus=null;
+function openDrawer(crumb,title,html,after){
+ lastFocus=document.activeElement;$('#dr-crumb').textContent=crumb;$('#dr-title').textContent=title;$('#dr-body').innerHTML=html;
+ $('#drawer').hidden=false;$('#scrim').hidden=false;$('#dr-body').scrollTop=0;$('#dr-close').focus();if(after)requestAnimationFrame(after)}
+function closeDrawer(){$('#drawer').hidden=true;$('#scrim').hidden=true;hideTip();if(lastFocus)lastFocus.focus()}
+$('#dr-close').onclick=closeDrawer;$('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#drawer').hidden)closeDrawer()});
+
+function statBox(l,v,d,st){return `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div><div class="d ${dCls(st)} num">${d}</div></div>`}
+function splitRows(names,weights,seedKey,aTot,cTot,lTot){
+ const r=mulberry32(hashSeed(seedKey));const e=weights.map(w=>w*(1+(r()-.5)*.24));const se=e.reduce((a,b)=>a+b,0);const sw=weights.reduce((a,b)=>a+b,0);
+ const r2=mulberry32(hashSeed(seedKey+'L'));const el=weights.map(w=>w*(1+(r2()-.5)*.12));const sl=el.reduce((a,b)=>a+b,0);
+ return names.map((n,i)=>({l:n,a:aTot*e[i]/se,c:cTot*weights[i]/sw,ly:lTot*el[i]/sl}))}
+
+function openSlice(sl,exItem){
+ const s=S(sl);if(!s.n)return;const br=bridge(sl,'cm');const d=exItem?exItem.d:diagnose(sl,s,br);
+ const nrE={st:d.nrV>=-.005?'good':d.nrV>=-.02?'warn':'crit'},cmE={st:d.cmV>=-.005?'good':d.cmV>=-.02?'warn':'crit'};
+ const fill=s.A.frU/s.A.u,sh=(s.share-s.shareL)*1e4;
+ const bs=sl.b?[...sl.b]:null,cs=sl.c?[...sl.c]:null;
+ const tabs=[];
+ const tblRows=rows=>`<table class="t"><thead><tr><th></th><th class="r">Net revenue</th><th class="r">vs ${compShort()}</th><th class="r">vs LY</th></tr></thead><tbody>${rows.map(r=>{const v=varOf(r.a,r.c);return `<tr ${r.o?`class="click" data-o='${JSON.stringify(r.o)}' tabindex="0"`:''}><td>${esc(r.l)}</td><td class="r">${fmt$(r.a)}</td><td class="r ${v<-.02?'d-crit':v<-.005?'d-warn':'d-good'}"><b>${sPct(v)}</b></td><td class="r">${sPct(varOf(r.a,r.ly))}</td></tr>`}).join('')}</tbody></table>`;
+ const chRows=CHANNELS.map((n,i)=>{const o={...sl,ch:inter(sl.ch,new Set([i]))};if(o.ch&&!o.ch.size)return null;const ss=S(o);if(!ss.n)return null;return{l:n,a:ss.A.nr,c:ss.C.nr,ly:ss.L.nr,o:{b:bs,c:cs,ch:[i]}}}).filter(Boolean).sort((a,b)=>varOf(a.a,a.c)-varOf(b.a,b.c));
+ if(chRows.length>1)tabs.push(['By channel',tblRows(chRows)]);
+ if(bs&&bs.length===1){const B=BMAP[bs[0]];tabs.push(['By SKU',tblRows(splitRows(B.skus,B.skuW,'sku'+B.id+(cs||[]).join()+state.lens,s.A.nr,s.C.nr,s.L.nr))+'<p class="foot">SKU split is illustrative (synthetic).</p>'])}
+ else{const br2=sliceBrands(sl).map(b=>{const ss=S(sub(sl,{b:[b]}));return ss.n?{l:BMAP[b].name,a:ss.A.nr,c:ss.C.nr,ly:ss.L.nr,o:{b:[b],c:cs,ch:sl.ch?[...sl.ch]:null}}:null}).filter(Boolean);if(br2.length>1)tabs.push(['By brand',tblRows(br2)])}
+ if(cs&&cs.length===1){const C=CMAP[cs[0]];tabs.push(['By city',tblRows(splitRows(C.cities,C.cw,'city'+C.id+(bs||[]).join()+state.lens,s.A.nr,s.C.nr,s.L.nr))+'<p class="foot">City split is illustrative (synthetic).</p>'])}
+ else{const cr=sliceCountries(sl).map(c=>{const ss=S(sub(sl,{c:[c]}));return ss.n?{l:CMAP[c].name,a:ss.A.nr,c:ss.C.nr,ly:ss.L.nr,o:{b:bs,c:[c],ch:sl.ch?[...sl.ch]:null}}:null}).filter(Boolean);if(cr.length>1)tabs.push(['By country',tblRows(cr)])}
+ const sigs=SIGNALS.filter(x=>(x.c==='*'||x.c.some(c=>!cs||cs.includes(c)))&&(x.cat==='*'||sliceCats(sl).includes(x.cat))&&(!x.link.b||!bs||bs.includes(x.link.b))).slice(0,3);
+ const html=`
+ <div class="stats">${statBox('Net revenue',fmt$(s.A.nr),sPct(d.nrV)+' vs '+compShort(),nrE.st)}${statBox('Contribution margin',fmt$(s.A.cm),sPct(d.cmV)+' vs '+compShort(),cmE.st)}${statBox('Share Δ vs LY',sBps(sh),'Category '+sPct(s.mktG),sh>=0?'good':'crit')}${statBox('Fill rate',pct(fill),'Lost '+fmt$(s.A.lost),fill>=.955?'good':fill>=.92?'warn':'crit')}</div>
+ <dl class="diag"><dt>Signal</dt><dd><span class="pill ${d.sev}">${esc(d.label)}</span> <span class="ai-tag">AI diagnosis</span></dd><dt>What changed</dt><dd>${d.cause}</dd><dt>So what</dt><dd>${d.impl}</dd><dt>Do next</dt><dd><b>${d.action}</b></dd><dt>Owner</dt><dd>${esc(d.owner)}${d.impact?` · value at stake <b>${fmt$(d.impact)}</b>`:''}</dd></dl>
+ <div><h4>Contribution margin bridge · ${compShort()} → actual</h4><div class="chart" id="dr-wf"></div></div>
+ <div><h4>Weekly net revenue</h4><div class="chart" id="dr-trend"></div></div>
+ ${tabs.length?`<div><div class="seg sm" id="dr-tabs" role="group" aria-label="Breakdown">${tabs.map((t,i)=>`<button type="button" data-i="${i}" aria-pressed="${i===0}">${t[0]}</button>`).join('')}</div><div id="dr-tab" style="margin-top:8px"></div></div>`:''}
+ ${sigs.length?`<div><h4>Related external signals</h4>${sigs.map(x=>`<div class="sig"><span class="wk">Wk ${x.w}</span><span class="tx">${esc(x.text)}</span><span class="meta"><span class="chip">${esc(x.type)}</span></span></div>`).join('')}</div>`:''}
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="dr-focus">Focus dashboard on this</button><button class="btn" id="dr-close2">Close</button></div>`;
+ openDrawer(LENS[state.lens].label+' · vs '+compName(),nameOf(sl),html,()=>{
+  waterfall($('#dr-wf'),br,null,220);
+  const W=weekly(sl);const a=new Float64Array(NW+1),t=new Float64Array(NW+1),l=new Float64Array(NW+1);for(let w=1;w<=NW;w++){a[w]=W.A[w].nr;t[w]=W.T[w].nr;l[w]=W.L[w].nr}
+  lineChart($('#dr-trend'),{series:[{vals:l,from:1,to:52,color:'var(--ly)',wd:1.5,dash:'1 3'},{vals:t,from:1,to:52,color:'var(--tgt)',wd:1.5,dash:'5 3'},{vals:a,from:1,to:CW,color:'var(--s1)',area:true,end:true},{vals:a,from:CW,to:52,color:'var(--s1)',dash:'4 3'}],x0:1,x1:52,band:[LENS[state.lens].w0,LENS[state.lens].w1],today:CW+.5,months:true,yfmt:fmt$,h:170,tip:w=>`<div class="th">Wk ${w}</div><div class="tr"><span>${w>CW?'Forecast':'Actual'}</span><b class="num">${fmt$(a[w])}</b></div><div class="tr"><span>Target</span><span class="num">${fmt$(t[w])}</span></div><div class="tr"><span>LY</span><span class="num">${fmt$(l[w])}</span></div>`});
+  const showTab=i=>{$('#dr-tab').innerHTML=tabs[i][1];$('#dr-tabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.i==i));$('#dr-tab').querySelectorAll('[data-o]').forEach(r=>{const go=()=>{const o=JSON.parse(r.dataset.o);openSlice({b:o.b?new Set(o.b):null,c:o.c?new Set(o.c):null,ch:o.ch?new Set(o.ch):null})};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter')go()}})};
+  if(tabs.length){showTab(0);$('#dr-tabs').onclick=e=>{const b=e.target.closest('button');if(b)showTab(+b.dataset.i)}}
+  $('#dr-close2').onclick=closeDrawer;
+  $('#dr-focus').onclick=()=>{focusOn(sl);closeDrawer()};
+ });
+}
+function focusOn(sl){
+ const bs=sl.b?[...sl.b]:null,cs=sl.c?[...sl.c]:null,ch=sl.ch?[...sl.ch]:null;
+ state.brand=bs&&bs.length===1?'b:'+bs[0]:bs&&bs.length<BRANDS.length&&new Set(bs.map(b=>BMAP[b].cat)).size===1?'k:'+BMAP[bs[0]].cat:'all';
+ const reg=cs&&REGIONS.find(r=>r.countries.length===cs.length&&r.countries.every(x=>cs.includes(x)));
+ state.geo=cs&&cs.length===1?'c:'+cs[0]:reg?'r:'+reg.id:'all';
+ state.ch=ch&&ch.length===1?String(ch[0]):'all';syncControls();render();window.scrollTo({top:0,behavior:'smooth'})}
+function openEx(id){const e=CTX.ex.find(x=>x.id===id);if(e)openSlice(e.sl,e)}
+function openKpi(id){
+ const k=KPI[id],s=CTX.S0,e=kEval(id,s),base=CTX.base;
+ const mkRows=dim=>(dim==='b'?sliceBrands(base).map(b=>({l:BMAP[b].name,o:{b:[b]}})):sliceCountries(base).map(c=>({l:CMAP[c].name,o:{c:[c]}}))).map(r=>{const ss=S(sub(base,r.o));if(!ss.n)return null;const ee=kEval(id,ss);return{...r,ee,ss}}).filter(Boolean).sort((a,b)=>(isNaN(a.ee.d)?0:a.ee.d*k.good)-(isNaN(b.ee.d)?0:b.ee.d*k.good));
+ const tbl=(rows,title)=>`<div><h4>${title}</h4><table class="t"><thead><tr><th></th><th class="r">Value</th><th class="r">${esc(k.compLbl||'vs '+compShort())}</th><th class="r">Status</th></tr></thead><tbody>${rows.map(r=>`<tr class="click" data-o='${JSON.stringify(r.o)}' tabindex="0"><td>${esc(r.l)}</td><td class="r">${k.fmt(r.ee.v)}</td><td class="r ${dCls(r.ee.st)}"><b>${r.ee.txt}</b></td><td class="r"><span class="pill ${r.ee.st}">${ST_LBL[r.ee.st].split(' ')[0]}</span></td></tr>`).join('')}</tbody></table></div>`;
+ const html=`<div class="stats">${statBox('Current',k.fmt(e.v),e.txt+' '+(k.compLbl||'vs '+compName()),e.st)}${statBox(k.comp?'Reference':compShort(),k.fmt(e.c),'',null)}</div>
+  <p style="margin:0;color:var(--ink-2)">${esc(k.def)}</p>
+  <div><h4>Weekly trend, Wk 1–41</h4><div class="chart" id="dr-k"></div></div>
+  ${tbl(mkRows('b'),'By brand, worst first')}${tbl(mkRows('c'),'By country, worst first')}<p class="foot">Click a row to diagnose that slice.</p>`;
+ openDrawer('KPI · '+LENS[state.lens].label,k.label,html,()=>{
+  const W=CTX.W,f=k.spark||k.val;if(k.spark===null){$('#dr-k').innerHTML='<p class="foot">Event-based KPI: see the promotion table in band 4.</p>'}else{
+  const a=new Float64Array(NW+1),c=new Float64Array(NW+1);for(let w=1;w<=CW;w++){a[w]=f(W.A[w]);c[w]=f((id==='share'||id==='gvm')?W.L[w]:state.comp==='T'?W.T[w]:W.L[w])}
+  const ff=['nr','cm','ap','lost','outlook'].includes(id)?fmt$:['gmp','trade','fill','share','gvm'].includes(id)?v=>pct(v):id==='vol'?fmtN:id==='romi'?v=>v.toFixed(2)+'x':v=>'$'+v.toFixed(2);
+  const ser=[{vals:a,from:1,to:CW,color:'var(--s1)',area:true,end:true}];if(!['fill','lost'].includes(id))ser.unshift({vals:c,from:1,to:CW,color:'var(--tgt)',wd:1.5,dash:'5 3'});
+  lineChart($('#dr-k'),{series:ser,x0:1,x1:CW,months:true,yfmt:ff,h:170,band:[LENS[state.lens].w0,Math.min(CW,LENS[state.lens].w1)],tip:w=>`<div class="th">Wk ${w}</div><div class="tr"><span>Actual</span><b class="num">${ff(a[w])}</b></div>${['fill','lost'].includes(id)?'':`<div class="tr"><span>${id==='share'||id==='gvm'?'LY':compShort()}</span><span class="num">${ff(c[w])}</span></div>`}`})}
+  $('#dr-body').querySelectorAll('[data-o]').forEach(r=>{const go=()=>openSlice(sub(base,JSON.parse(r.dataset.o)));r.onclick=go;r.onkeydown=ev=>{if(ev.key==='Enter')go()}});
+ });
+}
+function openBridgeItem(it,kind){
+ const rows=contributorsOf(it.k,kind,8);
+ const expl={vol:'Change in cases sold, valued at planned unit contribution.',mix:'Shift in volume between higher- and lower-margin brands, countries and channels.',price:'List-price realization vs plan on actual volume.',promo:'Trade spend and promotion depth vs plan (negative = deeper discounting).',cogs:'Cost of goods per case vs plan (commodities, packaging, conversion).',lg:'Freight and distribution cost per case vs plan.',ap:'A&P spend vs budget (negative = overspend).'}[it.k];
+ const html=`<div class="stats">${statBox('Effect',s$(it.v),kind==='nr'?'on net revenue':'on contribution margin',it.v>=0?'good':'crit')}</div><p style="margin:0;color:var(--ink-2)">${expl}</p>
+  <div><h4>Largest contributors (brand × country)</h4><table class="t"><thead><tr><th></th><th class="r">Effect</th></tr></thead><tbody>${rows.map(r=>`<tr class="click" data-b="${r.b}" data-c="${r.c}" tabindex="0"><td>${esc(BMAP[r.b].name)} · ${esc(CMAP[r.c].name)}</td><td class="r ${r.v<0?'d-crit':'d-good'}"><b>${s$(r.v)}</b></td></tr>`).join('')}</tbody></table>${it.k==='mix'?'<p class="foot">Mix within each brand × country reflects channel mix.</p>':''}</div>`;
+ openDrawer('Bridge driver · '+LENS[state.lens].label,it.l+' effect',html,()=>{$('#dr-body').querySelectorAll('[data-b]').forEach(r=>{const go=()=>openSlice(sub(CTX.base,{b:[r.dataset.b],c:[r.dataset.c]}));r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter')go()}})});
+}
+function openPromo(id){
+ const p=PROMOS.find(x=>x.id===id);const v=p.roi>=1.2?['good','Repeat']:p.roi>=.8?['warn','Optimise']:['crit','Stop / redesign'];
+ const why=p.b==='crisply'?'Deep discounts in a trading-down market pulled forward demand and subsidised loyal buyers. Incremental margin does not cover the investment.':p.b==='tidewell'&&p.c==='ID'?'The event ran during the supply disruption: lift was capped by out-of-stocks, so the spend was largely wasted.':p.b==='bolt'&&p.c==='UK'?'The price-marked pack response came too late and too shallow against the competitor cut; mechanic needs redesign.':p.roi>=1.2?'Strong incremental response with limited subsidy of baseline volume; fits brand strategy.':'Positive but below hurdle; refine depth, timing or retailer execution.';
+ const html=`<div class="stats">${statBox('Trade spend',fmt$(p.spend),'Depth '+pct(p.depth,0),null)}${statBox('Volume lift',sPct(p.lift,0),'vs baseline',p.lift>.15?'good':'warn')}${statBox('Incremental NR',fmt$(p.incNR),'',null)}${statBox('ROI',p.roi.toFixed(2)+'x','Hurdle 1.2x',v[0])}</div>
+  <dl class="diag"><dt>Event</dt><dd><b>${esc(p.name)}</b> · ${esc(BMAP[p.b].name)} · ${esc(CMAP[p.c].name)} · ${esc(CHANNELS[p.ch])} · Wk ${p.w0}–${p.w1}</dd><dt>Verdict</dt><dd><span class="pill ${v[0]}">${v[1]}</span></dd><dt>Why</dt><dd>${why}</dd><dt>Method</dt><dd>Post-event evaluation: incremental volume vs a modeled baseline, net of cannibalisation and pantry-loading (synthetic).</dd></dl>
+  <div><button class="btn primary" id="pr-slice">Diagnose ${esc(BMAP[p.b].name)} · ${esc(CMAP[p.c].name)}</button></div>`;
+ openDrawer('Promotion evaluation',p.name,html,()=>{$('#pr-slice').onclick=()=>openSlice(sub(CTX.base,{b:[p.b],c:[p.c]}))});
+}
+
+/* ============================== CONTROLS ============================== */
+function buildControls(){
+ const geo=$('#f-geo');geo.innerHTML='<option value="all">All geographies</option>'+REGIONS.map(r=>`<optgroup label="${r.id}"><option value="r:${r.id}">All ${r.id}</option>${r.countries.map(c=>`<option value="c:${c}">${CMAP[c].name}</option>`).join('')}</optgroup>`).join('');
+ const br=$('#f-brand');br.innerHTML='<option value="all">All brands</option>'+CATS.map(k=>`<optgroup label="${k}"><option value="k:${k}">All ${k}</option>${BRANDS.filter(b=>b.cat===k).map(b=>`<option value="b:${b.id}">${b.name}</option>`).join('')}</optgroup>`).join('');
+ $('#f-ch').innerHTML='<option value="all">All channels</option>'+CHANNELS.map((c,i)=>`<option value="${i}">${c}</option>`).join('');
+ geo.onchange=()=>{state.geo=geo.value;render()};br.onchange=()=>{state.brand=br.value;render()};$('#f-ch').onchange=e=>{state.ch=e.target.value;render()};
+ $('#f-reset').onclick=()=>{Object.assign(state,{lens:'YTD',comp:'T',geo:'all',brand:'all',ch:'all'});syncControls();render()};
+ syncControls()}
+function syncControls(){
+ seg($('#f-role'),Object.entries(ROLES).map(([k,v])=>[k,v.label]),state.role,v=>{state.role=v;state.bridge=ROLES[v].bridge;try{localStorage.setItem('kp-role',v)}catch(e){}syncControls();render()});
+ seg($('#f-lens'),Object.entries(LENS).map(([k,v])=>[k,v.label]),state.lens,v=>{state.lens=v;syncControls();render()});
+ seg($('#f-comp'),[['T','Target'],['L','Last year']],state.comp,v=>{state.comp=v;syncControls();render()});
+ $('#f-geo').value=state.geo;$('#f-brand').value=state.brand;$('#f-ch').value=state.ch}
+
+// tabs
+function setTab(t){$('#tab-dash').setAttribute('aria-selected',t==='dash');$('#tab-approach').setAttribute('aria-selected',t!=='dash');$('#view-dash').hidden=t!=='dash';$('#view-approach').hidden=t==='dash';if(t==='dash')render()}
+$('#tab-dash').onclick=()=>setTab('dash');$('#tab-approach').onclick=()=>setTab('approach');
+if(location.hash==='#approach')setTab('approach');
+
+try{const r=localStorage.getItem('kp-role');if(r&&ROLES[r]){state.role=r;state.bridge=ROLES[r].bridge}}catch(e){}
+buildControls();render();
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#view-dash').hidden)render()},150)});
+})();
+</script>

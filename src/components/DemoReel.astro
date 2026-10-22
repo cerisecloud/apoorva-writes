@@ -1,0 +1,138 @@
+---
+// "Watch it work": the live dashboard in a frame, stepping through one CEO morning on its own.
+// Each step reloads the frame on a shareable view of the dashboard; hovering the frame pauses it.
+const base = '/experiments/executive-pulse/';
+const steps = [
+	{ hash: '#CEO', text: 'The CEO lands on Pulse: what needs attention, four core metrics and the actions under way.' },
+	{ hash: '#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9NIiwicGYiOnt9LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJjaGFydCI6bnVsbCwicGF0aCI6W119', text: 'Operating margin opens in place. The walk shows gross margin lost 108 bps, hidden by an overhead freeze.' },
+	{ hash: '#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9NIiwicGYiOnsiYiI6WyJvYXRzIl19LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJjaGFydCI6bnVsbCwicGF0aCI6W119', text: 'Cut to Sunrise Oats: 318 bps behind plan, with oat costs up 18%. The fix is assigned and three days overdue.' },
+	{ hash: '#v=eyJyb2xlIjoiQ0VPIiwiY2FyZCI6Ik9TRyIsInBmIjp7ImMiOlsiSUQiXSwiYiI6WyJvcmNoYXJkIl19LCJwZXJpb2QiOiJZVEQiLCJjb21wIjoiVCIsInllYXIiOiJDQUwiLCJjaGFydCI6bnVsbCwicGF0aCI6W3siZm4iOiJvcGVuTm9kZSIsImFyZ3MiOlsiT1ZHIl19LHsiZm4iOiJvcGVuTm9kZSIsImFyZ3MiOlsiTE9TVFMiXX1dfQ', text: 'Orchard Juice in Indonesia: shoppers want it, fill rate is near 82%. Assign the Indonesia Supply Lead to rush the shipments.' },
+	{ hash: '#CEO/actions', text: 'Every action lands in My actions with an owner, a due date and the analysis behind it.' },
+];
+---
+
+<section class="reel" aria-label="Demo: one CEO morning in Pulse" data-base={base}>
+	<div class="win">
+		<div class="bar"><i></i><i></i><i></i><span>Pulse · CEO</span><a class="open" data-open href={base + '#CEO'} target="_blank" rel="noopener">Open full screen ↗</a></div>
+		<div class="view"><iframe title="Pulse dashboard demo" tabindex="-1" loading="lazy"></iframe></div>
+		<div class="prog" aria-hidden="true"><i></i></div>
+	</div>
+	<div class="cap">
+		<button class="play" type="button" aria-label="Pause demo">❚❚</button>
+		<p aria-live="polite"></p>
+		<ol class="dots">
+			{steps.map((s, i) => <li><button type="button" data-k={i} data-hash={s.hash} data-text={s.text} aria-label={`Step ${i + 1}`}></button></li>)}
+		</ol>
+	</div>
+	<p class="phone">The dashboard is built for desktop. <a href={base + '#CEO'} target="_blank" rel="noopener">Open it on a laptop to try it →</a></p>
+</section>
+
+<style>
+	.reel {
+		--w: min(1240px, calc(100vw - 2rem));
+		width: var(--w);
+		margin: 1em 0 2.5em calc((100% - var(--w)) / 2);
+	}
+	.win {
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		overflow: hidden;
+		box-shadow: var(--box-shadow);
+		background: #fff;
+	}
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 12px;
+		background: #2a2a2e;
+		font-size: 0.65em;
+		color: rgb(var(--gray));
+	}
+	.bar i { width: 10px; height: 10px; border-radius: 50%; background: #48484e; }
+	.bar span { margin-left: 8px; }
+	.bar .open { margin-left: auto; }
+	.view { position: relative; overflow: hidden; }
+	.view iframe {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 1440px;
+		height: 900px;
+		border: 0;
+		transform-origin: 0 0;
+	}
+	.cap {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 0.8em;
+		font-size: 0.85em;
+	}
+	.cap p { flex: 1; margin: 0; min-height: 3.2em; }
+	.play {
+		flex: none;
+		width: 2.2em;
+		height: 2.2em;
+		border-radius: 50%;
+		border: 1px solid var(--border);
+		background: none;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		font-size: 0.8em;
+	}
+	.dots { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+	/* 24px targets around small dots */
+	.dots button { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+	.dots button::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: #48484e; transition: width 0.35s cubic-bezier(0.22, 0.8, 0.2, 1), background 0.35s ease; }
+	.dots button.on::before { width: 18px; background: var(--accent); }
+	.dots button:focus-visible, .play:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+	/* a thin line under the window fills while each step plays */
+	.prog { height: 3px; background: #2a2a2e; }
+	.prog i { display: block; height: 100%; width: 0; background: var(--accent); }
+	.prog i.run { animation: fill var(--dur, 7s) linear forwards; }
+	.reel.paused .prog i.run { animation-play-state: paused; }
+	@keyframes fill { to { width: 100%; } }
+	.phone { display: none; }
+	@media (max-width: 860px) {
+		.win, .cap { display: none; }
+		.phone { display: block; }
+	}
+</style>
+
+<script>
+	const reel = document.querySelector<HTMLElement>('.reel');
+	if (reel && matchMedia('(min-width: 861px)').matches) {
+		const base = reel.dataset.base!, frame = reel.querySelector('iframe')!, view = reel.querySelector<HTMLElement>('.view')!;
+		const cap = reel.querySelector('.cap p')!, play = reel.querySelector<HTMLButtonElement>('.play')!, open = reel.querySelector<HTMLAnchorElement>('[data-open]')!;
+		const dots = [...reel.querySelectorAll<HTMLButtonElement>('.dots button')];
+		const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		let k = -1, timer = 0, playing = !still, inView = false, hover = false, n = 0;
+		const fit = () => { const s = view.clientWidth / 1440; frame.style.transform = `scale(${s})`; view.style.height = `${900 * s}px`; };
+		new ResizeObserver(fit).observe(view);
+		// a fresh query string makes the frame reload, since the dashboard reads its view on load
+		const go = (i: number) => {
+			k = (i + dots.length) % dots.length; const d = dots[k];
+			frame.src = `${base}?d=${++n}${d.dataset.hash}`; open.href = base + d.dataset.hash;
+			cap.textContent = d.dataset.text!; dots.forEach((b, j) => b.classList.toggle('on', j === k));
+			started = 0; restart(); tick();
+		};
+		const bar = reel.querySelector<HTMLElement>('.prog i')!;
+		let left = 7000, started = 0;
+		// restart the progress line for each step; pausing freezes both the line and the timer
+		const restart = () => { bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run'); left = 7000; };
+		const tick = () => {
+			clearTimeout(timer);
+			if (started) left -= Date.now() - started;
+			const run = playing && inView && !hover; reel.classList.toggle('paused', !run); started = run ? Date.now() : 0;
+			if (run) timer = window.setTimeout(() => go(k + 1), Math.max(0, left));
+		};
+		const setPlay = (p: boolean) => { playing = p; play.textContent = p ? '❚❚' : '▶'; play.setAttribute('aria-label', p ? 'Pause demo' : 'Play demo'); tick(); };
+		play.addEventListener('click', () => setPlay(!playing));
+		dots.forEach((b, i) => b.addEventListener('click', () => go(i)));
+		view.addEventListener('pointerenter', () => { hover = true; tick(); });
+		view.addEventListener('pointerleave', () => { hover = false; tick(); });
+		new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (inView && k < 0) go(0); else tick(); }, { threshold: 0.4 }).observe(view);
+		setPlay(playing);
+	}
+</script>
